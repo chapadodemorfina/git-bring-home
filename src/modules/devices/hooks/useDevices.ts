@@ -295,7 +295,4 @@ export function useDeleteDevicePhoto() {
   });
 }
 
-export function getPhotoUrl(path: string) {
-  const { data } = supabase.storage.from("device-photos").getPublicUrl(path);
-  return data.publicUrl;
-}
+export { useSignedUrl as useDevicePhotoUrl } from "@/hooks/useSignedUrl";
