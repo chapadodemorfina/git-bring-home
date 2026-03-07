@@ -30,6 +30,12 @@ import DeviceCreatePage from "./modules/devices/pages/DeviceCreatePage";
 import DeviceEditPage from "./modules/devices/pages/DeviceEditPage";
 import DeviceDetailPage from "./modules/devices/pages/DeviceDetailPage";
 
+// Service Orders Module
+import ServiceOrdersListPage from "./modules/service-orders/pages/ServiceOrdersListPage";
+import ServiceOrderCreatePage from "./modules/service-orders/pages/ServiceOrderCreatePage";
+import ServiceOrderEditPage from "./modules/service-orders/pages/ServiceOrderEditPage";
+import ServiceOrderDetailPage from "./modules/service-orders/pages/ServiceOrderDetailPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
