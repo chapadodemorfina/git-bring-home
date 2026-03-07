@@ -581,15 +581,156 @@ export type Database = {
           },
         ]
       }
+      diagnosis_faults: {
+        Row: {
+          confirmed: boolean
+          created_at: string
+          diagnosis_id: string
+          fault_description: string | null
+          fault_type: string
+          id: string
+          severity: Database["public"]["Enums"]["fault_severity"]
+        }
+        Insert: {
+          confirmed?: boolean
+          created_at?: string
+          diagnosis_id: string
+          fault_description?: string | null
+          fault_type: string
+          id?: string
+          severity?: Database["public"]["Enums"]["fault_severity"]
+        }
+        Update: {
+          confirmed?: boolean
+          created_at?: string
+          diagnosis_id?: string
+          fault_description?: string | null
+          fault_type?: string
+          id?: string
+          severity?: Database["public"]["Enums"]["fault_severity"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosis_faults_diagnosis_id_fkey"
+            columns: ["diagnosis_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnosis_parts: {
+        Row: {
+          created_at: string
+          diagnosis_id: string
+          estimated_unit_cost: number
+          id: string
+          notes: string | null
+          part_name: string
+          product_id: string | null
+          quantity: number
+          supplier: string | null
+        }
+        Insert: {
+          created_at?: string
+          diagnosis_id: string
+          estimated_unit_cost?: number
+          id?: string
+          notes?: string | null
+          part_name: string
+          product_id?: string | null
+          quantity?: number
+          supplier?: string | null
+        }
+        Update: {
+          created_at?: string
+          diagnosis_id?: string
+          estimated_unit_cost?: number
+          id?: string
+          notes?: string | null
+          part_name?: string
+          product_id?: string | null
+          quantity?: number
+          supplier?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosis_parts_diagnosis_id_fkey"
+            columns: ["diagnosis_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnosis_parts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnosis_tests: {
+        Row: {
+          created_at: string
+          diagnosis_id: string
+          id: string
+          measured_value: string | null
+          notes: string | null
+          sort_order: number | null
+          test_category: string | null
+          test_name: string
+          test_result: Database["public"]["Enums"]["test_result"]
+        }
+        Insert: {
+          created_at?: string
+          diagnosis_id: string
+          id?: string
+          measured_value?: string | null
+          notes?: string | null
+          sort_order?: number | null
+          test_category?: string | null
+          test_name: string
+          test_result?: Database["public"]["Enums"]["test_result"]
+        }
+        Update: {
+          created_at?: string
+          diagnosis_id?: string
+          id?: string
+          measured_value?: string | null
+          notes?: string | null
+          sort_order?: number | null
+          test_category?: string | null
+          test_name?: string
+          test_result?: Database["public"]["Enums"]["test_result"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosis_tests_diagnosis_id_fkey"
+            columns: ["diagnosis_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnostics: {
         Row: {
           created_at: string
           diagnosed_by: string | null
+          diagnosis_completed_at: string | null
+          diagnosis_started_at: string | null
+          diagnosis_status: Database["public"]["Enums"]["diagnosis_status"]
+          estimated_cost: number | null
           estimated_repair_hours: number | null
           id: string
           internal_notes: string | null
+          not_repairable_reason: string | null
           probable_cause: string | null
           repair_complexity: Database["public"]["Enums"]["repair_complexity"]
+          repair_viability:
+            | Database["public"]["Enums"]["repair_viability"]
+            | null
           required_parts: string | null
           service_order_id: string
           technical_findings: string | null
@@ -598,11 +739,19 @@ export type Database = {
         Insert: {
           created_at?: string
           diagnosed_by?: string | null
+          diagnosis_completed_at?: string | null
+          diagnosis_started_at?: string | null
+          diagnosis_status?: Database["public"]["Enums"]["diagnosis_status"]
+          estimated_cost?: number | null
           estimated_repair_hours?: number | null
           id?: string
           internal_notes?: string | null
+          not_repairable_reason?: string | null
           probable_cause?: string | null
           repair_complexity?: Database["public"]["Enums"]["repair_complexity"]
+          repair_viability?:
+            | Database["public"]["Enums"]["repair_viability"]
+            | null
           required_parts?: string | null
           service_order_id: string
           technical_findings?: string | null
@@ -611,11 +760,19 @@ export type Database = {
         Update: {
           created_at?: string
           diagnosed_by?: string | null
+          diagnosis_completed_at?: string | null
+          diagnosis_started_at?: string | null
+          diagnosis_status?: Database["public"]["Enums"]["diagnosis_status"]
+          estimated_cost?: number | null
           estimated_repair_hours?: number | null
           id?: string
           internal_notes?: string | null
+          not_repairable_reason?: string | null
           probable_cause?: string | null
           repair_complexity?: Database["public"]["Enums"]["repair_complexity"]
+          repair_viability?:
+            | Database["public"]["Enums"]["repair_viability"]
+            | null
           required_parts?: string | null
           service_order_id?: string
           technical_findings?: string | null
@@ -2529,6 +2686,8 @@ export type Database = {
         | "electronic_module"
         | "motherboard"
         | "other"
+      diagnosis_status: "in_progress" | "completed" | "cancelled"
+      fault_severity: "minor" | "moderate" | "severe" | "critical"
       financial_entry_status:
         | "pending"
         | "partial"
@@ -2579,6 +2738,7 @@ export type Database = {
       quote_item_type: "labor" | "part"
       quote_status: "draft" | "sent" | "approved" | "rejected" | "expired"
       repair_complexity: "simple" | "moderate" | "complex" | "specialized"
+      repair_viability: "repairable" | "not_repairable" | "uncertain"
       service_order_priority: "low" | "normal" | "high" | "urgent"
       service_order_status:
         | "received"
@@ -2600,6 +2760,7 @@ export type Database = {
         | "return"
         | "reserved"
         | "consumed"
+      test_result: "pass" | "fail" | "abnormal" | "inconclusive" | "not_tested"
       transfer_status:
         | "pending_pickup"
         | "in_transit_to_center"
@@ -2779,6 +2940,8 @@ export const Constants = {
         "motherboard",
         "other",
       ],
+      diagnosis_status: ["in_progress", "completed", "cancelled"],
+      fault_severity: ["minor", "moderate", "severe", "critical"],
       financial_entry_status: [
         "pending",
         "partial",
@@ -2835,6 +2998,7 @@ export const Constants = {
       quote_item_type: ["labor", "part"],
       quote_status: ["draft", "sent", "approved", "rejected", "expired"],
       repair_complexity: ["simple", "moderate", "complex", "specialized"],
+      repair_viability: ["repairable", "not_repairable", "uncertain"],
       service_order_priority: ["low", "normal", "high", "urgent"],
       service_order_status: [
         "received",
@@ -2858,6 +3022,7 @@ export const Constants = {
         "reserved",
         "consumed",
       ],
+      test_result: ["pass", "fail", "abnormal", "inconclusive", "not_tested"],
       transfer_status: [
         "pending_pickup",
         "in_transit_to_center",
