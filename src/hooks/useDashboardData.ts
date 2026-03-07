@@ -30,7 +30,7 @@ export function useDashboardData(dateRange: DateRange) {
       const { data, error } = await supabase
         .from("service_order_status_history")
         .select("service_order_id, created_at, from_status, to_status")
-        .in("to_status", ["delivered", "completed"])
+        .in("to_status", ["delivered", "ready_for_pickup"])
         .gte("created_at", from)
         .lte("created_at", to);
       if (error) throw error;
