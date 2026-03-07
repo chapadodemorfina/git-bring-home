@@ -56,12 +56,22 @@ Deno.serve(async (req) => {
       console.error("process-notifications call error:", err);
     }
 
+    // 5. Expire stale WhatsApp pending states
+    const { data: expiredStates, error: wpsErr } = await supabase.rpc("wa_expire_pending_states");
+    if (wpsErr) console.error("wa_expire_pending_states error:", wpsErr);
+
+    // 6. Archive stale WhatsApp conversations
+    const { data: archivedConvs, error: waErr } = await supabase.rpc("wa_archive_stale_conversations");
+    if (waErr) console.error("wa_archive_stale_conversations error:", waErr);
+
     const result = {
       success: true,
       expired_quotes: expiredCount ?? 0,
       overdue_entries: overdueCount ?? 0,
       notification_events: notifEvents ?? null,
       notification_delivery: notifResult,
+      expired_wa_states: expiredStates ?? 0,
+      archived_wa_conversations: archivedConvs ?? 0,
       ran_at: new Date().toISOString(),
     };
 
