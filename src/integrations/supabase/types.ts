@@ -2264,6 +2264,56 @@ export type Database = {
           },
         ]
       }
+      whatsapp_pending_states: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          pending_action: string | null
+          pending_context: Json | null
+          pending_entity_id: string | null
+          pending_entity_type: string | null
+          pending_intent: string
+          pending_question: string | null
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          pending_action?: string | null
+          pending_context?: Json | null
+          pending_entity_id?: string | null
+          pending_entity_type?: string | null
+          pending_intent: string
+          pending_question?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          pending_action?: string | null
+          pending_context?: Json | null
+          pending_entity_id?: string | null
+          pending_entity_type?: string | null
+          pending_intent?: string
+          pending_question?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_pending_states_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2346,6 +2396,8 @@ export type Database = {
         }
         Returns: Json
       }
+      wa_archive_stale_conversations: { Args: never; Returns: number }
+      wa_expire_pending_states: { Args: never; Returns: number }
       wa_get_customer_balance: { Args: { _customer_id: string }; Returns: Json }
       wa_get_customer_logistics: {
         Args: { _customer_id: string }
@@ -2357,7 +2409,19 @@ export type Database = {
         Args: { _customer_id: string }
         Returns: Json
       }
+      wa_lookup_by_order_number: {
+        Args: { _order_number: string }
+        Returns: Json
+      }
+      wa_lookup_by_quote_number: {
+        Args: { _quote_number: string }
+        Returns: Json
+      }
       wa_lookup_customer: { Args: { _phone: string }; Returns: Json }
+      wa_lookup_customer_by_document: {
+        Args: { _document: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role:

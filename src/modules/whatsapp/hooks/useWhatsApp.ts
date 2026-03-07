@@ -98,25 +98,23 @@ export function useSendHumanReply() {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async ({ conversationId, text }: { conversationId: string; text: string }) => {
-      // Store as outbound message from human
-      const { error } = await db.from("whatsapp_messages").insert({
-        conversation_id: conversationId,
-        direction: "outbound",
-        message_type: "text",
-        text_content: text,
-        sent_by_user_id: (await supabase.auth.getUser()).data.user?.id,
+      // Call the whatsapp-send edge function for actual delivery
+      const { data, error } = await supabase.functions.invoke("whatsapp-send", {
+        body: { conversation_id: conversationId, text },
       });
       if (error) throw error;
-
-      // Update conversation
-      await db.from("whatsapp_conversations")
-        .update({ status: "human_active", last_message_at: new Date().toISOString() })
-        .eq("id", conversationId);
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
-    onSuccess: (_, vars) => {
+    onSuccess: (data, vars) => {
       qc.invalidateQueries({ queryKey: ["wa-messages", vars.conversationId] });
       qc.invalidateQueries({ queryKey: ["wa-conversations"] });
-      toast({ title: "Mensagem enviada!" });
+      const delivery = data?.delivery;
+      if (delivery?.mode === "dev_fallback") {
+        toast({ title: "Mensagem salva (modo dev)", description: "Provedor WhatsApp não configurado. Mensagem armazenada localmente." });
+      } else {
+        toast({ title: "Mensagem enviada!" });
+      }
     },
     onError: (err: Error) => {
       toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" });
@@ -133,11 +131,15 @@ export function useResolveConversation() {
         .update({ status: "resolved", current_handoff_state: null })
         .eq("id", conversationId);
 
-      // Resolve active handoffs
       await db.from("whatsapp_handoffs")
         .update({ status: "resolved", resolved_at: new Date().toISOString() })
         .eq("conversation_id", conversationId)
         .in("status", ["pending", "assigned", "active"]);
+
+      // Clear any pending states
+      await db.from("whatsapp_pending_states")
+        .delete()
+        .eq("conversation_id", conversationId);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["wa-conversations"] });
