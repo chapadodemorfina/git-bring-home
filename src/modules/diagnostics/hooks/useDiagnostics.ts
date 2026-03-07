@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Diagnostic, DiagnosticFormData, RepairQuote, RepairQuoteItem,
   QuoteItemFormData, QuoteApproval, QuoteStatus,
+  DiagnosisTest, DiagnosisFault, DiagnosisPart, TestResult, FaultSeverity,
 } from "../types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -43,6 +44,8 @@ export function useSaveDiagnostic() {
         repair_complexity: data.repair_complexity,
         estimated_repair_hours: data.estimated_repair_hours ?? null,
         internal_notes: data.internal_notes || null,
+        repair_viability: data.repair_viability || null,
+        not_repairable_reason: data.not_repairable_reason || null,
       };
 
       if (id) {
@@ -61,6 +64,222 @@ export function useSaveDiagnostic() {
     },
     onError: (error: Error) => {
       toast({ title: "Erro ao salvar diagnóstico", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+export function useCompleteDiagnosis() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, serviceOrderId }: { id: string; serviceOrderId: string }) => {
+      const { error } = await db.from("diagnostics").update({
+        diagnosis_status: "completed",
+        diagnosis_completed_at: new Date().toISOString(),
+      }).eq("id", id);
+      if (error) throw error;
+      return serviceOrderId;
+    },
+    onSuccess: (soId) => {
+      qc.invalidateQueries({ queryKey: ["diagnostic", soId] });
+      toast({ title: "Diagnóstico concluído!" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// ─── Diagnosis Tests ──────────────────────────────────────────
+export function useDiagnosisTests(diagnosisId: string | undefined) {
+  return useQuery({
+    queryKey: ["diagnosis-tests", diagnosisId],
+    enabled: !!diagnosisId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("diagnosis_tests")
+        .select("*")
+        .eq("diagnosis_id", diagnosisId!)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as DiagnosisTest[];
+    },
+  });
+}
+
+export function useAddDiagnosisTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ diagnosisId, testName, testCategory, sortOrder }: {
+      diagnosisId: string; testName: string; testCategory?: string; sortOrder?: number;
+    }) => {
+      const { error } = await db.from("diagnosis_tests").insert({
+        diagnosis_id: diagnosisId,
+        test_name: testName,
+        test_category: testCategory || null,
+        sort_order: sortOrder || 0,
+      });
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-tests", diagId] });
+    },
+  });
+}
+
+export function useUpdateTestResult() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, diagnosisId, result, notes, measuredValue }: {
+      id: string; diagnosisId: string; result: TestResult; notes?: string; measuredValue?: string;
+    }) => {
+      const { error } = await db.from("diagnosis_tests").update({
+        test_result: result,
+        notes: notes || null,
+        measured_value: measuredValue || null,
+      }).eq("id", id);
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-tests", diagId] });
+    },
+  });
+}
+
+export function useDeleteDiagnosisTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, diagnosisId }: { id: string; diagnosisId: string }) => {
+      const { error } = await db.from("diagnosis_tests").delete().eq("id", id);
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-tests", diagId] });
+    },
+  });
+}
+
+// ─── Diagnosis Faults ─────────────────────────────────────────
+export function useDiagnosisFaults(diagnosisId: string | undefined) {
+  return useQuery({
+    queryKey: ["diagnosis-faults", diagnosisId],
+    enabled: !!diagnosisId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("diagnosis_faults")
+        .select("*")
+        .eq("diagnosis_id", diagnosisId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as DiagnosisFault[];
+    },
+  });
+}
+
+export function useAddDiagnosisFault() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ diagnosisId, faultType, faultDescription, severity }: {
+      diagnosisId: string; faultType: string; faultDescription?: string; severity: FaultSeverity;
+    }) => {
+      const { error } = await db.from("diagnosis_faults").insert({
+        diagnosis_id: diagnosisId,
+        fault_type: faultType,
+        fault_description: faultDescription || null,
+        severity,
+      });
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-faults", diagId] });
+    },
+  });
+}
+
+export function useToggleFaultConfirmed() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, diagnosisId, confirmed }: { id: string; diagnosisId: string; confirmed: boolean }) => {
+      const { error } = await db.from("diagnosis_faults").update({ confirmed }).eq("id", id);
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-faults", diagId] });
+    },
+  });
+}
+
+export function useDeleteDiagnosisFault() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, diagnosisId }: { id: string; diagnosisId: string }) => {
+      const { error } = await db.from("diagnosis_faults").delete().eq("id", id);
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-faults", diagId] });
+    },
+  });
+}
+
+// ─── Diagnosis Parts ──────────────────────────────────────────
+export function useDiagnosisParts(diagnosisId: string | undefined) {
+  return useQuery({
+    queryKey: ["diagnosis-parts", diagnosisId],
+    enabled: !!diagnosisId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("diagnosis_parts")
+        .select("*")
+        .eq("diagnosis_id", diagnosisId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as DiagnosisPart[];
+    },
+  });
+}
+
+export function useAddDiagnosisPart() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ diagnosisId, partName, quantity, estimatedUnitCost, supplier, notes }: {
+      diagnosisId: string; partName: string; quantity: number; estimatedUnitCost: number;
+      supplier?: string; notes?: string;
+    }) => {
+      const { error } = await db.from("diagnosis_parts").insert({
+        diagnosis_id: diagnosisId,
+        part_name: partName,
+        quantity,
+        estimated_unit_cost: estimatedUnitCost,
+        supplier: supplier || null,
+        notes: notes || null,
+      });
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-parts", diagId] });
+    },
+  });
+}
+
+export function useDeleteDiagnosisPart() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, diagnosisId }: { id: string; diagnosisId: string }) => {
+      const { error } = await db.from("diagnosis_parts").delete().eq("id", id);
+      if (error) throw error;
+      return diagnosisId;
+    },
+    onSuccess: (diagId) => {
+      qc.invalidateQueries({ queryKey: ["diagnosis-parts", diagId] });
     },
   });
 }
@@ -117,6 +336,75 @@ export function useCreateQuote() {
     },
     onError: (error: Error) => {
       toast({ title: "Erro ao criar orçamento", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+export function useCreateQuoteFromDiagnosis() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ serviceOrderId, diagnosisId, laborHours, laborRate }: {
+      serviceOrderId: string; diagnosisId: string; laborHours: number; laborRate: number;
+    }) => {
+      // Create quote
+      const { data: quote, error: qErr } = await db.from("repair_quotes").insert({
+        service_order_id: serviceOrderId,
+        notes: "Gerado a partir do diagnóstico",
+      }).select().single();
+      if (qErr) throw qErr;
+
+      // Get diagnosis parts
+      const { data: parts } = await db.from("diagnosis_parts").select("*").eq("diagnosis_id", diagnosisId);
+
+      const items: any[] = [];
+
+      // Add labor
+      if (laborHours > 0) {
+        items.push({
+          quote_id: quote.id,
+          item_type: "labor",
+          description: "Mão de obra técnica",
+          quantity: laborHours,
+          unit_price: laborRate,
+          total_price: laborHours * laborRate,
+          sort_order: 0,
+        });
+      }
+
+      // Add parts
+      if (parts?.length) {
+        parts.forEach((p: any, i: number) => {
+          items.push({
+            quote_id: quote.id,
+            item_type: "part",
+            description: p.part_name,
+            quantity: p.quantity,
+            unit_price: p.estimated_unit_cost,
+            total_price: p.quantity * p.estimated_unit_cost,
+            sort_order: i + 1,
+          });
+        });
+      }
+
+      if (items.length > 0) {
+        const { error: iErr } = await db.from("repair_quote_items").insert(items);
+        if (iErr) throw iErr;
+      }
+
+      // Recalculate total
+      const total = items.reduce((s, i) => s + i.total_price, 0);
+      await db.from("repair_quotes").update({ total_amount: total }).eq("id", quote.id);
+
+      return { quote, serviceOrderId };
+    },
+    onSuccess: ({ serviceOrderId }) => {
+      qc.invalidateQueries({ queryKey: ["quotes", serviceOrderId] });
+      toast({ title: "Orçamento gerado a partir do diagnóstico!" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erro ao gerar orçamento", description: error.message, variant: "destructive" });
     },
   });
 }
