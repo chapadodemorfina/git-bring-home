@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDiagnostic, useQuotes, useCreateQuote } from "../hooks/useDiagnostics";
+import { useDiagnostic, useQuotes, useCreateQuote, useCreateQuoteFromDiagnosis } from "../hooks/useDiagnostics";
 import DiagnosisForm from "./DiagnosisForm";
 import QuoteBuilder from "./QuoteBuilder";
 import ApprovalControls from "./ApprovalControls";
@@ -9,19 +9,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Stethoscope, FileText, Plus } from "lucide-react";
+import { Stethoscope, FileText, Plus, Zap } from "lucide-react";
 
 interface Props {
   serviceOrderId: string;
+  deviceType?: string | null;
 }
 
-export default function DiagnosticQuotePanel({ serviceOrderId }: Props) {
+export default function DiagnosticQuotePanel({ serviceOrderId, deviceType }: Props) {
   const { data: diagnostic, isLoading: diagLoading } = useDiagnostic(serviceOrderId);
   const { data: quotes, isLoading: quotesLoading } = useQuotes(serviceOrderId);
   const createQuote = useCreateQuote();
+  const createFromDiag = useCreateQuoteFromDiagnosis();
   const [newQuoteOpen, setNewQuoteOpen] = useState(false);
+  const [genQuoteOpen, setGenQuoteOpen] = useState(false);
   const [analysisFee, setAnalysisFee] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [laborRate, setLaborRate] = useState("80");
+  const [laborHours, setLaborHours] = useState(String(diagnostic?.estimated_repair_hours || "1"));
 
   const handleCreateQuote = async () => {
     await createQuote.mutateAsync({
@@ -32,6 +37,17 @@ export default function DiagnosticQuotePanel({ serviceOrderId }: Props) {
     setNewQuoteOpen(false);
     setAnalysisFee("");
     setExpiresAt("");
+  };
+
+  const handleGenerateFromDiag = async () => {
+    if (!diagnostic?.id) return;
+    await createFromDiag.mutateAsync({
+      serviceOrderId,
+      diagnosisId: diagnostic.id,
+      laborHours: parseFloat(laborHours) || 0,
+      laborRate: parseFloat(laborRate) || 0,
+    });
+    setGenQuoteOpen(false);
   };
 
   return (
@@ -52,12 +68,20 @@ export default function DiagnosticQuotePanel({ serviceOrderId }: Props) {
         {diagLoading ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : (
-          <DiagnosisForm serviceOrderId={serviceOrderId} existing={diagnostic} />
+          <DiagnosisForm serviceOrderId={serviceOrderId} existing={diagnostic} deviceType={deviceType} />
         )}
       </TabsContent>
 
       <TabsContent value="quotes" className="space-y-4">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {diagnostic?.id && diagnostic.diagnosis_status === "completed" && (
+            <Button size="sm" variant="outline" onClick={() => {
+              setLaborHours(String(diagnostic.estimated_repair_hours || 1));
+              setGenQuoteOpen(true);
+            }}>
+              <Zap className="mr-1 h-4 w-4" /> Gerar do Diagnóstico
+            </Button>
+          )}
           <Button size="sm" onClick={() => setNewQuoteOpen(true)}>
             <Plus className="mr-1 h-4 w-4" /> Novo Orçamento
           </Button>
@@ -100,6 +124,36 @@ export default function DiagnosticQuotePanel({ serviceOrderId }: Props) {
             <DialogFooter>
               <Button variant="outline" onClick={() => setNewQuoteOpen(false)}>Cancelar</Button>
               <Button onClick={handleCreateQuote} disabled={createQuote.isPending}>Criar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Generate from Diagnosis Dialog */}
+        <Dialog open={genQuoteOpen} onOpenChange={setGenQuoteOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Gerar Orçamento do Diagnóstico</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                As peças do diagnóstico serão incluídas automaticamente.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Horas de Mão de Obra</Label>
+                  <Input type="number" step="0.5" min="0" value={laborHours}
+                    onChange={(e) => setLaborHours(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Valor/Hora (R$)</Label>
+                  <Input type="number" step="1" min="0" value={laborRate}
+                    onChange={(e) => setLaborRate(e.target.value)} />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGenQuoteOpen(false)}>Cancelar</Button>
+              <Button onClick={handleGenerateFromDiag} disabled={createFromDiag.isPending}>
+                <Zap className="mr-2 h-4 w-4" /> Gerar
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
