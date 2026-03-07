@@ -607,6 +607,105 @@ export type Database = {
           },
         ]
       }
+      pickups_deliveries: {
+        Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          collection_point_id: string | null
+          completed_date: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          logistics_type: Database["public"]["Enums"]["logistics_type"]
+          notes: string | null
+          proof_notes: string | null
+          proof_storage_path: string | null
+          requested_date: string | null
+          scheduled_date: string | null
+          service_order_id: string
+          status: Database["public"]["Enums"]["logistics_status"]
+          updated_at: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          collection_point_id?: string | null
+          completed_date?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          logistics_type?: Database["public"]["Enums"]["logistics_type"]
+          notes?: string | null
+          proof_notes?: string | null
+          proof_storage_path?: string | null
+          requested_date?: string | null
+          scheduled_date?: string | null
+          service_order_id: string
+          status?: Database["public"]["Enums"]["logistics_status"]
+          updated_at?: string
+        }
+        Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          collection_point_id?: string | null
+          completed_date?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          logistics_type?: Database["public"]["Enums"]["logistics_type"]
+          notes?: string | null
+          proof_notes?: string | null
+          proof_storage_path?: string | null
+          requested_date?: string | null
+          scheduled_date?: string | null
+          service_order_id?: string
+          status?: Database["public"]["Enums"]["logistics_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickups_deliveries_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickups_deliveries_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand: string | null
@@ -1388,6 +1487,44 @@ export type Database = {
         }
         Relationships: []
       }
+      transport_events: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["logistics_status"] | null
+          id: string
+          notes: string | null
+          pickup_delivery_id: string
+          to_status: Database["public"]["Enums"]["logistics_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["logistics_status"] | null
+          id?: string
+          notes?: string | null
+          pickup_delivery_id: string
+          to_status: Database["public"]["Enums"]["logistics_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["logistics_status"] | null
+          id?: string
+          notes?: string | null
+          pickup_delivery_id?: string
+          to_status?: Database["public"]["Enums"]["logistics_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_events_pickup_delivery_id_fkey"
+            columns: ["pickup_delivery_id"]
+            isOneToOne: false
+            referencedRelation: "pickups_deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1565,6 +1702,16 @@ export type Database = {
         | "phone"
         | "email"
         | "website"
+      logistics_status:
+        | "pickup_requested"
+        | "pickup_scheduled"
+        | "picked_up"
+        | "in_transport"
+        | "received_at_lab"
+        | "ready_for_return"
+        | "return_scheduled"
+        | "returned"
+      logistics_type: "pickup" | "delivery" | "collection_point_transfer"
       quote_item_type: "labor" | "part"
       quote_status: "draft" | "sent" | "approved" | "rejected" | "expired"
       repair_complexity: "simple" | "moderate" | "complex" | "specialized"
@@ -1755,6 +1902,17 @@ export const Constants = {
         "email",
         "website",
       ],
+      logistics_status: [
+        "pickup_requested",
+        "pickup_scheduled",
+        "picked_up",
+        "in_transport",
+        "received_at_lab",
+        "ready_for_return",
+        "return_scheduled",
+        "returned",
+      ],
+      logistics_type: ["pickup", "delivery", "collection_point_transfer"],
       quote_item_type: ["labor", "part"],
       quote_status: ["draft", "sent", "approved", "rejected", "expired"],
       repair_complexity: ["simple", "moderate", "complex", "specialized"],
