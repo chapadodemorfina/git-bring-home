@@ -13,6 +13,18 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSignedUrl } from "@/hooks/useSignedUrl";
 
+function PortalAttachmentLink({ att }: { att: any }) {
+  const url = useSignedUrl("service-order-attachments", att.storage_path);
+  return (
+    <a href={url || "#"} target="_blank" rel="noopener noreferrer"
+      className="flex items-center gap-2 text-sm text-primary hover:underline"
+    >
+      <Download className="h-4 w-4" />
+      {att.file_name}
+    </a>
+  );
+}
+
 export default function PortalOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: order, isLoading } = usePortalServiceOrder(id);
