@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 
-export default function Login() {
+export default function PortalLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export default function Login() {
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
-      navigate("/dashboard");
+      navigate("/portal");
     }
   };
 
@@ -32,8 +33,13 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">i9 Solution</CardTitle>
-          <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
+          <div className="flex justify-center mb-2">
+            <div className="p-3 rounded-full bg-primary/10">
+              <Home className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold">Portal do Cliente</CardTitle>
+          <CardDescription>i9 Solution — Acompanhe seus serviços</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -61,18 +67,14 @@ export default function Login() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Entrar
+              Entrar no Portal
             </Button>
-            <div className="text-center space-y-1">
-              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
-                Esqueceu a senha?
-              </Link>
-              <br />
-              <Link to="/portal/login" className="text-sm text-muted-foreground hover:text-primary">
-                Portal do Cliente →
-              </Link>
-            </div>
           </form>
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            Acesso exclusivo para clientes i9 Solution.
+            <br />
+            <Link to="/login" className="text-primary hover:underline">Acesso administrativo →</Link>
+          </p>
         </CardContent>
       </Card>
     </div>
