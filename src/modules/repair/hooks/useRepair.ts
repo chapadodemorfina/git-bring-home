@@ -157,7 +157,7 @@ export function useCreateWarranty() {
   });
 }
 
-// ─── Warranty Returns ──────────────────────────────────────────
+// ─── Warranty Returns (ATOMIC via RPC) ─────────────────────────
 export function useWarrantyReturns(warrantyId: string | undefined) {
   return useQuery({
     queryKey: ["warranty-returns", warrantyId],
@@ -182,35 +182,12 @@ export function useCreateWarrantyReturn() {
     mutationFn: async ({ warrantyId, originalServiceOrderId, reason }: {
       warrantyId: string; originalServiceOrderId: string; reason: string;
     }) => {
-      // Create a new SO with status warranty_return
-      const { data: newSo, error: soErr } = await db.from("service_orders").insert({
-        customer_id: (await db.from("service_orders").select("customer_id, device_id").eq("id", originalServiceOrderId).single()).data.customer_id,
-        device_id: (await db.from("service_orders").select("device_id").eq("id", originalServiceOrderId).single()).data.device_id,
-        status: "received",
-        priority: "high",
-        intake_channel: "front_desk",
-        reported_issue: `Retorno de garantia: ${reason}`,
-      }).select().single();
-      if (soErr) throw soErr;
-
-      // Log status
-      await db.from("service_order_status_history").insert({
-        service_order_id: newSo.id,
-        to_status: "received",
-        notes: "OS criada por retorno de garantia",
+      const { data, error } = await db.rpc("create_warranty_return", {
+        _warranty_id: warrantyId,
+        _reason: reason,
       });
-
-      // Create return record
-      const { error: retErr } = await db.from("warranty_returns").insert({
-        warranty_id: warrantyId,
-        original_service_order_id: originalServiceOrderId,
-        new_service_order_id: newSo.id,
-        reason,
-        status: "open",
-      });
-      if (retErr) throw retErr;
-
-      return newSo;
+      if (error) throw error;
+      return data;
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["warranty-returns", vars.warrantyId] });
