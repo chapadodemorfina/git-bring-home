@@ -2066,6 +2066,204 @@ export type Database = {
           },
         ]
       }
+      whatsapp_ai_actions: {
+        Row: {
+          action_payload: Json | null
+          action_type: string
+          conversation_id: string
+          created_at: string
+          id: string
+          message_id: string | null
+          result_payload: Json | null
+          success: boolean
+        }
+        Insert: {
+          action_payload?: Json | null
+          action_type: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          result_payload?: Json | null
+          success?: boolean
+        }
+        Update: {
+          action_payload?: Json | null
+          action_type?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          result_payload?: Json | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_ai_actions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_ai_actions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_conversations: {
+        Row: {
+          assigned_to_user_id: string | null
+          channel: string
+          created_at: string
+          current_handoff_state:
+            | Database["public"]["Enums"]["whatsapp_handoff_status"]
+            | null
+          customer_id: string | null
+          id: string
+          last_message_at: string
+          metadata: Json | null
+          phone: string
+          status: Database["public"]["Enums"]["whatsapp_conversation_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          channel?: string
+          created_at?: string
+          current_handoff_state?:
+            | Database["public"]["Enums"]["whatsapp_handoff_status"]
+            | null
+          customer_id?: string | null
+          id?: string
+          last_message_at?: string
+          metadata?: Json | null
+          phone: string
+          status?: Database["public"]["Enums"]["whatsapp_conversation_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          channel?: string
+          created_at?: string
+          current_handoff_state?:
+            | Database["public"]["Enums"]["whatsapp_handoff_status"]
+            | null
+          customer_id?: string | null
+          id?: string
+          last_message_at?: string
+          metadata?: Json | null
+          phone?: string
+          status?: Database["public"]["Enums"]["whatsapp_conversation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_conversations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_handoffs: {
+        Row: {
+          assigned_to_user_id: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          requested_by: string
+          resolved_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["whatsapp_handoff_status"]
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requested_by?: string
+          resolved_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["whatsapp_handoff_status"]
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requested_by?: string
+          resolved_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["whatsapp_handoff_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_handoffs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_messages: {
+        Row: {
+          confidence: number | null
+          conversation_id: string
+          created_at: string
+          direction: Database["public"]["Enums"]["whatsapp_message_direction"]
+          id: string
+          intent: string | null
+          message_type: Database["public"]["Enums"]["whatsapp_message_type"]
+          payload: Json | null
+          provider_message_id: string | null
+          sent_by_user_id: string | null
+          text_content: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          conversation_id: string
+          created_at?: string
+          direction: Database["public"]["Enums"]["whatsapp_message_direction"]
+          id?: string
+          intent?: string | null
+          message_type?: Database["public"]["Enums"]["whatsapp_message_type"]
+          payload?: Json | null
+          provider_message_id?: string | null
+          sent_by_user_id?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          conversation_id?: string
+          created_at?: string
+          direction?: Database["public"]["Enums"]["whatsapp_message_direction"]
+          id?: string
+          intent?: string | null
+          message_type?: Database["public"]["Enums"]["whatsapp_message_type"]
+          payload?: Json | null
+          provider_message_id?: string | null
+          sent_by_user_id?: string | null
+          text_content?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2148,6 +2346,18 @@ export type Database = {
         }
         Returns: Json
       }
+      wa_get_customer_balance: { Args: { _customer_id: string }; Returns: Json }
+      wa_get_customer_logistics: {
+        Args: { _customer_id: string }
+        Returns: Json
+      }
+      wa_get_customer_orders: { Args: { _customer_id: string }; Returns: Json }
+      wa_get_customer_quotes: { Args: { _customer_id: string }; Returns: Json }
+      wa_get_customer_warranties: {
+        Args: { _customer_id: string }
+        Returns: Json
+      }
+      wa_lookup_customer: { Args: { _phone: string }; Returns: Json }
     }
     Enums: {
       app_role:
@@ -2249,6 +2459,27 @@ export type Database = {
         | "in_transit_to_collection_point"
         | "delivered_to_collection_point"
         | "delivered_to_customer"
+      whatsapp_conversation_status:
+        | "active"
+        | "bot_active"
+        | "waiting_human"
+        | "human_active"
+        | "resolved"
+        | "archived"
+      whatsapp_handoff_status:
+        | "pending"
+        | "assigned"
+        | "active"
+        | "resolved"
+        | "cancelled"
+      whatsapp_message_direction: "inbound" | "outbound"
+      whatsapp_message_type:
+        | "text"
+        | "image"
+        | "audio"
+        | "document"
+        | "location"
+        | "system"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2485,6 +2716,30 @@ export const Constants = {
         "in_transit_to_collection_point",
         "delivered_to_collection_point",
         "delivered_to_customer",
+      ],
+      whatsapp_conversation_status: [
+        "active",
+        "bot_active",
+        "waiting_human",
+        "human_active",
+        "resolved",
+        "archived",
+      ],
+      whatsapp_handoff_status: [
+        "pending",
+        "assigned",
+        "active",
+        "resolved",
+        "cancelled",
+      ],
+      whatsapp_message_direction: ["inbound", "outbound"],
+      whatsapp_message_type: [
+        "text",
+        "image",
+        "audio",
+        "document",
+        "location",
+        "system",
       ],
     },
   },
