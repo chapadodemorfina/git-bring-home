@@ -198,6 +198,141 @@ export type Database = {
         }
         Relationships: []
       }
+      device_accessories: {
+        Row: {
+          created_at: string
+          delivered: boolean
+          device_id: string
+          id: string
+          name: string
+          notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivered?: boolean
+          device_id: string
+          id?: string
+          name: string
+          notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivered?: boolean
+          device_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_accessories_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          device_id: string
+          id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          device_id: string
+          id?: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          device_id?: string
+          id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_photos_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devices: {
+        Row: {
+          brand: string | null
+          color: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          device_type: Database["public"]["Enums"]["device_type"]
+          id: string
+          imei: string | null
+          internal_notes: string | null
+          is_active: boolean
+          model: string | null
+          password_notes: string | null
+          physical_condition: string | null
+          reported_issue: string | null
+          serial_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          device_type?: Database["public"]["Enums"]["device_type"]
+          id?: string
+          imei?: string | null
+          internal_notes?: string | null
+          is_active?: boolean
+          model?: string | null
+          password_notes?: string | null
+          physical_condition?: string | null
+          reported_issue?: string | null
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          device_type?: Database["public"]["Enums"]["device_type"]
+          id?: string
+          imei?: string | null
+          internal_notes?: string | null
+          is_active?: boolean
+          model?: string | null
+          password_notes?: string | null
+          physical_condition?: string | null
+          reported_issue?: string | null
+          serial_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -307,6 +442,17 @@ export type Database = {
         | "collection_point_operator"
         | "customer"
       customer_type: "individual" | "business"
+      device_type:
+        | "notebook"
+        | "desktop_pc"
+        | "monitor"
+        | "tv"
+        | "smartphone"
+        | "tablet"
+        | "printer"
+        | "electronic_module"
+        | "motherboard"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -445,6 +591,18 @@ export const Constants = {
         "customer",
       ],
       customer_type: ["individual", "business"],
+      device_type: [
+        "notebook",
+        "desktop_pc",
+        "monitor",
+        "tv",
+        "smartphone",
+        "tablet",
+        "printer",
+        "electronic_module",
+        "motherboard",
+        "other",
+      ],
     },
   },
 } as const
