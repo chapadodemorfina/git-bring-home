@@ -89,7 +89,8 @@ export default function PublicTrackingPage() {
   const currentStep = getStepFromStatus(data.status);
   const quote = data.quote;
   const canApprove = quote && quote.status === "sent";
-  const whatsappNumber = "5511999999999"; // placeholder
+  const whatsappNumber = data.whatsapp_number || "";
+  const companyName = data.company_name || "i9 Solution";
   const whatsappMsg = encodeURIComponent(`Olá! Gostaria de informações sobre a OS ${data.order_number}.`);
 
   const handleQuoteAction = (decision: string) => {
@@ -318,21 +319,23 @@ export default function PublicTrackingPage() {
         )}
 
         {/* Support CTA */}
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground mb-3 text-center">Precisa de ajuda?</p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="outline" className="flex-1" asChild>
-                <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="mr-2 h-4 w-4" /> Falar no WhatsApp
-                </a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {whatsappNumber && (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground mb-3 text-center">Precisa de ajuda?</p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="flex-1" asChild>
+                  <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="mr-2 h-4 w-4" /> Falar no WhatsApp
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <p className="text-center text-xs text-muted-foreground pb-4">
-          i9 Solution · Assistência Técnica
+          {companyName} · Assistência Técnica
         </p>
       </div>
 
