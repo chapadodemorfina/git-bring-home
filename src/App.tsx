@@ -50,6 +50,12 @@ import CollectionPointCreatePage from "./modules/collection-points/pages/Collect
 import CollectionPointDetailPage from "./modules/collection-points/pages/CollectionPointDetailPage";
 import CollectionPointEditPage from "./modules/collection-points/pages/CollectionPointEditPage";
 
+// Logistics Module
+import LogisticsListPage from "./modules/logistics/pages/LogisticsListPage";
+import LogisticsCreatePage from "./modules/logistics/pages/LogisticsCreatePage";
+import LogisticsDetailPage from "./modules/logistics/pages/LogisticsDetailPage";
+import LogisticsEditPage from "./modules/logistics/pages/LogisticsEditPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -109,6 +115,12 @@ const App = () => (
               <Route path="/collection-points/new" element={<ProtectedPage><CollectionPointCreatePage /></ProtectedPage>} />
               <Route path="/collection-points/:id" element={<ProtectedPage><CollectionPointDetailPage /></ProtectedPage>} />
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><CollectionPointEditPage /></ProtectedPage>} />
+
+              {/* Logistics */}
+              <Route path="/logistics" element={<ProtectedPage><LogisticsListPage /></ProtectedPage>} />
+              <Route path="/logistics/new" element={<ProtectedPage><LogisticsCreatePage /></ProtectedPage>} />
+              <Route path="/logistics/:id" element={<ProtectedPage><LogisticsDetailPage /></ProtectedPage>} />
+              <Route path="/logistics/:id/edit" element={<ProtectedPage><LogisticsEditPage /></ProtectedPage>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

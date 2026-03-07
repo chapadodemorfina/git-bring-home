@@ -20,6 +20,7 @@ const routeLabels: Record<string, string> = {
   suppliers: "Fornecedores",
   movements: "Movimentações",
   "collection-points": "Pontos de Coleta",
+  logistics: "Logística",
 };
 
 export function AppBreadcrumb() {

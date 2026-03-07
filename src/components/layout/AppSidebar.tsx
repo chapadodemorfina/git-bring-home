@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, Shield, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin,
+  LayoutDashboard, Users, Shield, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -16,6 +16,7 @@ const mainItems = [
   { title: "Ordens de Serviço", url: "/service-orders", icon: ClipboardList },
   { title: "Estoque & Peças", url: "/inventory", icon: Package },
   { title: "Pontos de Coleta", url: "/collection-points", icon: MapPin },
+  { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Usuários", url: "/users", icon: Users },
   { title: "Perfis de Acesso", url: "/roles", icon: Shield },
 ];
