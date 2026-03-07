@@ -31,9 +31,7 @@ export default function LogisticsDetailPage() {
   if (!item) return <p className="text-center py-12 text-muted-foreground">Solicitação não encontrada.</p>;
 
   const canChangeStatus = (statusTransitions[item.status] || []).length > 0;
-  const proofUrl = item.proof_storage_path
-    ? supabase.storage.from("service-order-attachments").getPublicUrl(item.proof_storage_path).data.publicUrl
-    : null;
+  const proofUrl = useSignedUrl("service-order-attachments", item?.proof_storage_path);
 
   return (
     <div className="space-y-6">

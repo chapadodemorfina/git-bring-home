@@ -11,7 +11,7 @@ import { ArrowLeft, CheckCircle2, ArrowRight, Paperclip, Download } from "lucide
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
+import { useSignedUrl } from "@/hooks/useSignedUrl";
 
 export default function PortalOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -125,17 +125,9 @@ export default function PortalOrderDetailPage() {
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><Paperclip className="h-4 w-4" /> Anexos</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {(attachments as any[]).map((att: any) => {
-                const url = supabase.storage.from("service-order-attachments").getPublicUrl(att.storage_path).data.publicUrl;
-                return (
-                  <a key={att.id} href={url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline"
-                  >
-                    <Download className="h-4 w-4" />
-                    {att.file_name}
-                  </a>
-                );
-              })}
+              {(attachments as any[]).map((att: any) => (
+                <PortalAttachmentLink key={att.id} att={att} />
+              ))}
             </div>
           </CardContent>
         </Card>
