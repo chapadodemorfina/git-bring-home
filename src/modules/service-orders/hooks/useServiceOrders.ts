@@ -92,6 +92,15 @@ export function useCreateServiceOrder() {
         notes: "Ordem de serviço criada",
       });
 
+      // Auto-generate public tracking token
+      try {
+        await db.rpc("generate_public_tracking_token", {
+          _service_order_id: so.id,
+        });
+      } catch (e) {
+        console.warn("Failed to auto-generate tracking token:", e);
+      }
+
       return so as ServiceOrder;
     },
     onSuccess: () => {

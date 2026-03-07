@@ -7,19 +7,32 @@ import StatusChangeDialog from "../components/StatusChangeDialog";
 import SignatureCapture from "../components/SignatureCapture";
 import AttachmentUpload from "../components/AttachmentUpload";
 import IntakeReceipt from "../components/IntakeReceipt";
+import DeviceIntakeLabel from "../components/DeviceIntakeLabel";
 import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuotePanel";
 import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
+import { useServiceOrderPublicLinks } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSmartphone } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSmartphone, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+function printElement(el: HTMLElement | null, title: string) {
+  if (!el) return;
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+  printWindow.document.write(`
+    <html><head><title>${title}</title>
+    <style>body{margin:0;font-family:Arial,sans-serif}@media print{body{-webkit-print-color-adjust:exact}}</style>
+    </head><body>${el.innerHTML}</body></html>
+  `);
+  printWindow.document.close();
+  printWindow.print();
+}
 
 export default function ServiceOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,19 +41,13 @@ export default function ServiceOrderDetailPage() {
   const deleteMutation = useDeleteServiceOrder();
   const [statusOpen, setStatusOpen] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = () => {
-    if (!receiptRef.current) return;
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html><head><title>${order?.order_number}</title>
-      <style>body{margin:0;font-family:Arial,sans-serif}@media print{body{-webkit-print-color-adjust:exact}}</style>
-      </head><body>${receiptRef.current.innerHTML}</body></html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-  };
+  const { data: publicLinks } = useServiceOrderPublicLinks(id);
+  const activeLink = publicLinks?.find((l: any) => l.status === "active");
+  const trackingUrl = activeLink
+    ? `${window.location.origin}/track/${activeLink.public_token}`
+    : null;
 
   const handleDelete = async () => {
     if (!id) return;
@@ -74,8 +81,11 @@ export default function ServiceOrderDetailPage() {
               <RefreshCw className="mr-2 h-4 w-4" /> Alterar Status
             </Button>
           )}
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" /> Imprimir
+          <Button variant="outline" onClick={() => printElement(receiptRef.current, order.order_number)}>
+            <Printer className="mr-2 h-4 w-4" /> Recibo
+          </Button>
+          <Button variant="outline" onClick={() => printElement(labelRef.current, `Etiqueta ${order.order_number}`)}>
+            <Tag className="mr-2 h-4 w-4" /> Etiqueta
           </Button>
           <Button variant="outline" asChild>
             <Link to={`/service-orders/${order.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar</Link>
@@ -185,7 +195,7 @@ export default function ServiceOrderDetailPage() {
           <SignatureCapture orderId={order.id} />
         </div>
 
-        {/* Sidebar — Timeline */}
+        {/* Sidebar */}
         <div className="space-y-6">
           <Card>
             <CardHeader><CardTitle>Histórico de Status</CardTitle></CardHeader>
@@ -203,7 +213,20 @@ export default function ServiceOrderDetailPage() {
 
       {/* Hidden printable receipt */}
       <div className="hidden">
-        <IntakeReceipt ref={receiptRef} order={order} />
+        <IntakeReceipt ref={receiptRef} order={order} trackingUrl={trackingUrl} />
+      </div>
+
+      {/* Hidden printable label */}
+      <div className="hidden">
+        <DeviceIntakeLabel
+          ref={labelRef}
+          orderNumber={order.order_number}
+          deviceDescription={order.device_label || ""}
+          reportedIssue={order.reported_issue}
+          customerName={order.customer_name || ""}
+          intakeDate={order.created_at}
+          trackingUrl={trackingUrl}
+        />
       </div>
     </div>
   );
