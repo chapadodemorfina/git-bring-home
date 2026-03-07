@@ -36,6 +36,14 @@ import ServiceOrderCreatePage from "./modules/service-orders/pages/ServiceOrderC
 import ServiceOrderEditPage from "./modules/service-orders/pages/ServiceOrderEditPage";
 import ServiceOrderDetailPage from "./modules/service-orders/pages/ServiceOrderDetailPage";
 
+// Inventory Module
+import ProductsListPage from "./modules/inventory/pages/ProductsListPage";
+import ProductCreatePage from "./modules/inventory/pages/ProductCreatePage";
+import ProductDetailPage from "./modules/inventory/pages/ProductDetailPage";
+import ProductEditPage from "./modules/inventory/pages/ProductEditPage";
+import SuppliersPage from "./modules/inventory/pages/SuppliersPage";
+import StockMovementsPage from "./modules/inventory/pages/StockMovementsPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -81,6 +89,14 @@ const App = () => (
               <Route path="/service-orders/new" element={<ProtectedPage><ServiceOrderCreatePage /></ProtectedPage>} />
               <Route path="/service-orders/:id" element={<ProtectedPage><ServiceOrderDetailPage /></ProtectedPage>} />
               <Route path="/service-orders/:id/edit" element={<ProtectedPage><ServiceOrderEditPage /></ProtectedPage>} />
+
+              {/* Inventory */}
+              <Route path="/inventory" element={<ProtectedPage><ProductsListPage /></ProtectedPage>} />
+              <Route path="/inventory/products/new" element={<ProtectedPage><ProductCreatePage /></ProtectedPage>} />
+              <Route path="/inventory/products/:id" element={<ProtectedPage><ProductDetailPage /></ProtectedPage>} />
+              <Route path="/inventory/products/:id/edit" element={<ProtectedPage><ProductEditPage /></ProtectedPage>} />
+              <Route path="/inventory/suppliers" element={<ProtectedPage><SuppliersPage /></ProtectedPage>} />
+              <Route path="/inventory/movements" element={<ProtectedPage><StockMovementsPage /></ProtectedPage>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

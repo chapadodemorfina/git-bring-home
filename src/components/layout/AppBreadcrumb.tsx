@@ -15,6 +15,10 @@ const routeLabels: Record<string, string> = {
   roles: "Perfis de Acesso",
   settings: "Configurações",
   "audit-logs": "Logs de Auditoria",
+  inventory: "Estoque",
+  products: "Produtos",
+  suppliers: "Fornecedores",
+  movements: "Movimentações",
 };
 
 export function AppBreadcrumb() {
