@@ -607,6 +607,146 @@ export type Database = {
           },
         ]
       }
+      financial_entries: {
+        Row: {
+          amount: number
+          category: string | null
+          collection_point_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          description: string
+          due_date: string | null
+          entry_type: Database["public"]["Enums"]["financial_entry_type"]
+          id: string
+          notes: string | null
+          paid_amount: number
+          quote_id: string | null
+          service_order_id: string | null
+          status: Database["public"]["Enums"]["financial_entry_status"]
+          supplier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          collection_point_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description: string
+          due_date?: string | null
+          entry_type: Database["public"]["Enums"]["financial_entry_type"]
+          id?: string
+          notes?: string | null
+          paid_amount?: number
+          quote_id?: string | null
+          service_order_id?: string | null
+          status?: Database["public"]["Enums"]["financial_entry_status"]
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          collection_point_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string
+          due_date?: string | null
+          entry_type?: Database["public"]["Enums"]["financial_entry_type"]
+          id?: string
+          notes?: string | null
+          paid_amount?: number
+          quote_id?: string | null
+          service_order_id?: string | null
+          status?: Database["public"]["Enums"]["financial_entry_status"]
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_entries_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_entries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_entries_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "repair_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_entries_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_entries_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          financial_entry_id: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          reference: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          financial_entry_id: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          financial_entry_id?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_financial_entry_id_fkey"
+            columns: ["financial_entry_id"]
+            isOneToOne: false
+            referencedRelation: "financial_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pickups_deliveries: {
         Row: {
           address_city: string | null
@@ -1695,6 +1835,13 @@ export type Database = {
         | "electronic_module"
         | "motherboard"
         | "other"
+      financial_entry_status:
+        | "pending"
+        | "partial"
+        | "paid"
+        | "overdue"
+        | "cancelled"
+      financial_entry_type: "revenue" | "expense" | "commission"
       intake_channel:
         | "front_desk"
         | "collection_point"
@@ -1712,6 +1859,15 @@ export type Database = {
         | "return_scheduled"
         | "returned"
       logistics_type: "pickup" | "delivery" | "collection_point_transfer"
+      payment_method:
+        | "cash"
+        | "credit_card"
+        | "debit_card"
+        | "pix"
+        | "bank_transfer"
+        | "boleto"
+        | "check"
+        | "other"
       quote_item_type: "labor" | "part"
       quote_status: "draft" | "sent" | "approved" | "rejected" | "expired"
       repair_complexity: "simple" | "moderate" | "complex" | "specialized"
@@ -1894,6 +2050,14 @@ export const Constants = {
         "motherboard",
         "other",
       ],
+      financial_entry_status: [
+        "pending",
+        "partial",
+        "paid",
+        "overdue",
+        "cancelled",
+      ],
+      financial_entry_type: ["revenue", "expense", "commission"],
       intake_channel: [
         "front_desk",
         "collection_point",
@@ -1913,6 +2077,16 @@ export const Constants = {
         "returned",
       ],
       logistics_type: ["pickup", "delivery", "collection_point_transfer"],
+      payment_method: [
+        "cash",
+        "credit_card",
+        "debit_card",
+        "pix",
+        "bank_transfer",
+        "boleto",
+        "check",
+        "other",
+      ],
       quote_item_type: ["labor", "part"],
       quote_status: ["draft", "sent", "approved", "rejected", "expired"],
       repair_complexity: ["simple", "moderate", "complex", "specialized"],

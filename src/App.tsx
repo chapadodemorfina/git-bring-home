@@ -56,6 +56,12 @@ import LogisticsCreatePage from "./modules/logistics/pages/LogisticsCreatePage";
 import LogisticsDetailPage from "./modules/logistics/pages/LogisticsDetailPage";
 import LogisticsEditPage from "./modules/logistics/pages/LogisticsEditPage";
 
+// Finance Module
+import FinanceListPage from "./modules/finance/pages/FinanceListPage";
+import FinanceCreatePage from "./modules/finance/pages/FinanceCreatePage";
+import FinanceDetailPage from "./modules/finance/pages/FinanceDetailPage";
+import FinanceEditPage from "./modules/finance/pages/FinanceEditPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -121,6 +127,12 @@ const App = () => (
               <Route path="/logistics/new" element={<ProtectedPage><LogisticsCreatePage /></ProtectedPage>} />
               <Route path="/logistics/:id" element={<ProtectedPage><LogisticsDetailPage /></ProtectedPage>} />
               <Route path="/logistics/:id/edit" element={<ProtectedPage><LogisticsEditPage /></ProtectedPage>} />
+
+              {/* Finance */}
+              <Route path="/finance" element={<ProtectedPage><FinanceListPage /></ProtectedPage>} />
+              <Route path="/finance/new" element={<ProtectedPage><FinanceCreatePage /></ProtectedPage>} />
+              <Route path="/finance/:id" element={<ProtectedPage><FinanceDetailPage /></ProtectedPage>} />
+              <Route path="/finance/:id/edit" element={<ProtectedPage><FinanceEditPage /></ProtectedPage>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

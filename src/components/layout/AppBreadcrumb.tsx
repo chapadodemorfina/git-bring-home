@@ -21,6 +21,7 @@ const routeLabels: Record<string, string> = {
   movements: "Movimentações",
   "collection-points": "Pontos de Coleta",
   logistics: "Logística",
+  finance: "Financeiro",
 };
 
 export function AppBreadcrumb() {
