@@ -107,6 +107,14 @@ const IntakeReceipt = forwardRef<HTMLDivElement, Props>(({ order, trackingUrl },
         )}
       </div>
 
+      {/* QR Code for tracking */}
+      {trackingUrl && (
+        <div className="mt-6 flex flex-col items-center">
+          <QRCodeSVG value={trackingUrl} size={120} level="M" />
+          <p className="text-xs mt-2">Acompanhe seu reparo escaneando o QR Code</p>
+        </div>
+      )}
+
       {/* Footer */}
       <div className="mt-8 text-center text-xs border-t pt-2">
         <p>Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
