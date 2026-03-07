@@ -30,6 +30,12 @@ import DeviceCreatePage from "./modules/devices/pages/DeviceCreatePage";
 import DeviceEditPage from "./modules/devices/pages/DeviceEditPage";
 import DeviceDetailPage from "./modules/devices/pages/DeviceDetailPage";
 
+// Service Orders Module
+import ServiceOrdersListPage from "./modules/service-orders/pages/ServiceOrdersListPage";
+import ServiceOrderCreatePage from "./modules/service-orders/pages/ServiceOrderCreatePage";
+import ServiceOrderEditPage from "./modules/service-orders/pages/ServiceOrderEditPage";
+import ServiceOrderDetailPage from "./modules/service-orders/pages/ServiceOrderDetailPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -69,6 +75,12 @@ const App = () => (
               <Route path="/devices/new" element={<ProtectedPage><DeviceCreatePage /></ProtectedPage>} />
               <Route path="/devices/:id" element={<ProtectedPage><DeviceDetailPage /></ProtectedPage>} />
               <Route path="/devices/:id/edit" element={<ProtectedPage><DeviceEditPage /></ProtectedPage>} />
+
+              {/* Service Orders */}
+              <Route path="/service-orders" element={<ProtectedPage><ServiceOrdersListPage /></ProtectedPage>} />
+              <Route path="/service-orders/new" element={<ProtectedPage><ServiceOrderCreatePage /></ProtectedPage>} />
+              <Route path="/service-orders/:id" element={<ProtectedPage><ServiceOrderDetailPage /></ProtectedPage>} />
+              <Route path="/service-orders/:id/edit" element={<ProtectedPage><ServiceOrderEditPage /></ProtectedPage>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
