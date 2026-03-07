@@ -18,6 +18,12 @@ import SettingsPage from "./pages/SettingsPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import NotFound from "./pages/NotFound";
 
+// CRM Module
+import CustomersListPage from "./modules/customers/pages/CustomersListPage";
+import CustomerCreatePage from "./modules/customers/pages/CustomerCreatePage";
+import CustomerEditPage from "./modules/customers/pages/CustomerEditPage";
+import CustomerDetailPage from "./modules/customers/pages/CustomerDetailPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -45,6 +51,12 @@ const App = () => (
               <Route path="/roles" element={<ProtectedPage><RolesPage /></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
               <Route path="/audit-logs" element={<ProtectedPage><AuditLogsPage /></ProtectedPage>} />
+
+              {/* CRM */}
+              <Route path="/customers" element={<ProtectedPage><CustomersListPage /></ProtectedPage>} />
+              <Route path="/customers/new" element={<ProtectedPage><CustomerCreatePage /></ProtectedPage>} />
+              <Route path="/customers/:id" element={<ProtectedPage><CustomerDetailPage /></ProtectedPage>} />
+              <Route path="/customers/:id/edit" element={<ProtectedPage><CustomerEditPage /></ProtectedPage>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -6,6 +6,9 @@ import {
 
 const routeLabels: Record<string, string> = {
   dashboard: "Dashboard",
+  customers: "Clientes",
+  new: "Novo",
+  edit: "Editar",
   users: "Usuários",
   roles: "Perfis de Acesso",
   settings: "Configurações",
