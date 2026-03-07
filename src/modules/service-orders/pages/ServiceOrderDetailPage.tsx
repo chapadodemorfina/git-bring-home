@@ -8,6 +8,7 @@ import SignatureCapture from "../components/SignatureCapture";
 import AttachmentUpload from "../components/AttachmentUpload";
 import IntakeReceipt from "../components/IntakeReceipt";
 import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuotePanel";
+import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -174,6 +175,8 @@ export default function ServiceOrderDetailPage() {
           {/* Diagnosis & Quote */}
           <DiagnosticQuotePanel serviceOrderId={order.id} />
 
+          {/* Repair, Tests & Warranty */}
+          <RepairTestWarrantyPanel serviceOrderId={order.id} orderStatus={order.status} />
           {/* Attachments */}
           <AttachmentUpload orderId={order.id} />
 
