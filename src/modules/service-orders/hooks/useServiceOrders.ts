@@ -309,10 +309,7 @@ export function useDeleteAttachment() {
   });
 }
 
-export function getAttachmentUrl(path: string) {
-  const { data } = supabase.storage.from("service-order-attachments").getPublicUrl(path);
-  return data.publicUrl;
-}
+export { useSignedUrl as useAttachmentUrl } from "@/hooks/useSignedUrl";
 
 // Terms
 export function useActiveTerms() {
