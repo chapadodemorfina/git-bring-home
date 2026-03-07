@@ -1,191 +1,65 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, subMonths, format, differenceInHours } from "date-fns";
+
+const db = supabase as any;
 
 export interface DateRange {
   from: Date;
   to: Date;
 }
 
+export interface DashboardSummary {
+  total_orders: number;
+  open_orders: number;
+  orders_by_status: Record<string, number>;
+  total_revenue: number;
+  total_expenses: number;
+  total_commissions: number;
+  quotes_total: number;
+  quotes_approved: number;
+  warranties_total: number;
+  warranties_voided: number;
+  avg_turnaround_hours: number | null;
+  sla_overdue_count: number;
+  device_types: Record<string, number>;
+  top_defects: { cause: string; count: number }[];
+  technician_orders: { technician_id: string; name: string; count: number }[];
+  collection_point_orders: { cp_id: string; name: string; count: number }[];
+  monthly_trend: { month: string; orders: number; revenue: number; expenses: number; profit: number }[];
+}
+
 export function useDashboardData(dateRange: DateRange) {
   const from = dateRange.from.toISOString();
   const to = dateRange.to.toISOString();
 
-  const serviceOrders = useQuery({
-    queryKey: ["dashboard-service-orders", from, to],
+  return useQuery<DashboardSummary>({
+    queryKey: ["dashboard-summary", from, to],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_orders")
-        .select("id, status, priority, created_at, updated_at, assigned_technician_id, collection_point_id, intake_channel, device_id")
-        .gte("created_at", from)
-        .lte("created_at", to);
+      const { data, error } = await db.rpc("dashboard_summary", {
+        _from: from,
+        _to: to,
+      });
       if (error) throw error;
-      return data || [];
+      return data as DashboardSummary;
     },
   });
-
-  const completedOrders = useQuery({
-    queryKey: ["dashboard-completed-orders", from, to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_order_status_history")
-        .select("service_order_id, created_at, from_status, to_status")
-        .in("to_status", ["delivered", "ready_for_pickup"])
-        .gte("created_at", from)
-        .lte("created_at", to);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const quotes = useQuery({
-    queryKey: ["dashboard-quotes", from, to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("repair_quotes")
-        .select("id, status, total_amount, created_at")
-        .gte("created_at", from)
-        .lte("created_at", to);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const warranties = useQuery({
-    queryKey: ["dashboard-warranties", from, to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("warranties")
-        .select("id, is_void, start_date, end_date, service_order_id, created_at")
-        .gte("created_at", from)
-        .lte("created_at", to);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const devices = useQuery({
-    queryKey: ["dashboard-devices", from, to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("devices")
-        .select("id, device_type, brand, model, reported_issue, created_at")
-        .gte("created_at", from)
-        .lte("created_at", to);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const partsUsed = useQuery({
-    queryKey: ["dashboard-parts-used", from, to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("repair_parts_used")
-        .select("id, product_id, quantity, total_cost, total_price, created_at")
-        .gte("created_at", from)
-        .lte("created_at", to);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const financialEntries = useQuery({
-    queryKey: ["dashboard-financial", from, to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("financial_entries")
-        .select("id, entry_type, amount, paid_amount, status, category, created_at, collection_point_id")
-        .gte("created_at", from)
-        .lte("created_at", to);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const collectionPoints = useQuery({
-    queryKey: ["dashboard-collection-points"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("collection_points")
-        .select("id, name, is_active");
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const diagnostics = useQuery({
-    queryKey: ["dashboard-diagnostics", from, to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("diagnostics")
-        .select("id, probable_cause, repair_complexity, created_at")
-        .gte("created_at", from)
-        .lte("created_at", to);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const profiles = useQuery({
-    queryKey: ["dashboard-profiles"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("is_active", true);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const isLoading = serviceOrders.isLoading || quotes.isLoading || financialEntries.isLoading || 
-    devices.isLoading || partsUsed.isLoading || warranties.isLoading || completedOrders.isLoading ||
-    collectionPoints.isLoading || diagnostics.isLoading || profiles.isLoading;
-
-  return {
-    serviceOrders: serviceOrders.data || [],
-    completedOrders: completedOrders.data || [],
-    quotes: quotes.data || [],
-    warranties: warranties.data || [],
-    devices: devices.data || [],
-    partsUsed: partsUsed.data || [],
-    financialEntries: financialEntries.data || [],
-    collectionPoints: collectionPoints.data || [],
-    diagnostics: diagnostics.data || [],
-    profiles: profiles.data || [],
-    isLoading,
-  };
 }
 
+// Keep for backward compatibility
 export function useMonthlyTrend() {
-  return useQuery({
+  return useQuery<{ month: string; orders: number; revenue: number; expenses: number; profit: number }[]>({
     queryKey: ["dashboard-monthly-trend"],
     queryFn: async () => {
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const date = subMonths(new Date(), i);
-        const start = startOfMonth(date).toISOString();
-        const end = endOfMonth(date).toISOString();
-
-        const [ordersRes, revenueRes, expenseRes] = await Promise.all([
-          supabase.from("service_orders").select("id", { count: "exact", head: true }).gte("created_at", start).lte("created_at", end),
-          supabase.from("financial_entries").select("amount").eq("entry_type", "revenue").gte("created_at", start).lte("created_at", end),
-          supabase.from("financial_entries").select("amount").eq("entry_type", "expense").gte("created_at", start).lte("created_at", end),
-        ]);
-
-        const revenue = (revenueRes.data || []).reduce((sum, e) => sum + Number(e.amount), 0);
-        const expenses = (expenseRes.data || []).reduce((sum, e) => sum + Number(e.amount), 0);
-
-        months.push({
-          month: format(date, "MMM"),
-          orders: ordersRes.count || 0,
-          revenue,
-          expenses,
-          profit: revenue - expenses,
-        });
-      }
-      return months;
+      // Monthly trend is now included in dashboard_summary, but this hook
+      // can be used independently. We call the summary with a wide range.
+      const from = new Date(Date.now() - 180 * 86400000).toISOString();
+      const to = new Date().toISOString();
+      const { data, error } = await db.rpc("dashboard_summary", {
+        _from: from,
+        _to: to,
+      });
+      if (error) throw error;
+      return (data as DashboardSummary).monthly_trend || [];
     },
   });
 }

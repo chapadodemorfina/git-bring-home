@@ -1,5 +1,5 @@
 import { useFinanceSummary } from "../hooks/useFinance";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, DollarSign, AlertTriangle, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
@@ -17,21 +17,21 @@ export default function FinanceDashboard() {
   const cards = [
     {
       title: "Receita Total",
-      value: summary.totalRevenue,
+      value: summary.total_revenue,
       icon: TrendingUp,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-950",
     },
     {
       title: "Despesas Totais",
-      value: summary.totalExpenses,
+      value: summary.total_expenses,
       icon: TrendingDown,
       color: "text-red-600 dark:text-red-400",
       bgColor: "bg-red-50 dark:bg-red-950",
     },
     {
       title: "Comissões",
-      value: summary.totalCommissions,
+      value: summary.total_commissions,
       icon: ArrowDownRight,
       color: "text-purple-600 dark:text-purple-400",
       bgColor: "bg-purple-50 dark:bg-purple-950",
@@ -45,14 +45,14 @@ export default function FinanceDashboard() {
     },
     {
       title: "A Receber (Pendente)",
-      value: summary.pendingReceivables,
+      value: summary.pending_receivables,
       icon: ArrowUpRight,
       color: "text-amber-600 dark:text-amber-400",
       bgColor: "bg-amber-50 dark:bg-amber-950",
     },
     {
       title: "A Pagar (Pendente)",
-      value: summary.pendingPayables,
+      value: summary.pending_payables,
       icon: ArrowDownRight,
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-orange-950",
@@ -81,12 +81,12 @@ export default function FinanceDashboard() {
         ))}
       </div>
 
-      {summary.overdueCount > 0 && (
+      {summary.overdue_count > 0 && (
         <Card className="border-destructive">
           <CardContent className="pt-6 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-destructive" />
             <p className="text-sm font-medium">
-              {summary.overdueCount} lançamento(s) vencido(s). Verifique os pendentes.
+              {summary.overdue_count} lançamento(s) vencido(s). Verifique os pendentes.
             </p>
           </CardContent>
         </Card>

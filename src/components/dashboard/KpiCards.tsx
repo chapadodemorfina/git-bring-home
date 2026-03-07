@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ClipboardList, DollarSign, Clock, CheckCircle, AlertTriangle, TrendingUp, Wrench, Shield } from "lucide-react";
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
   totalExpenses: number;
   profit: number;
   warrantyReturnRate: number | null;
+  slaOverdueCount?: number;
 }
 
 const fmt = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -23,20 +24,20 @@ export function KpiCards(props: Props) {
     { title: "Despesas", value: fmt(props.totalExpenses), sub: "No período", icon: AlertTriangle, color: "text-chart-4" },
     { title: "Lucro", value: fmt(props.profit), sub: "Receita - Despesas", icon: TrendingUp, color: props.profit >= 0 ? "text-chart-2" : "text-chart-4" },
     { title: "Retorno em Garantia", value: props.warrantyReturnRate != null ? `${props.warrantyReturnRate}%` : "—", sub: "Taxa de retorno", icon: Shield, color: "text-chart-5" },
-    { title: "OS em Reparo", value: String(props.openOrders), sub: "Aguardando conclusão", icon: Wrench, color: "text-chart-1" },
+    { title: "SLA Excedido", value: props.slaOverdueCount != null ? String(props.slaOverdueCount) : "—", sub: "OS fora do prazo", icon: Wrench, color: (props.slaOverdueCount || 0) > 0 ? "text-destructive" : "text-chart-1" },
   ];
 
   return (
     <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-      {cards.map((c) => (
-        <Card key={c.title}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{c.title}</CardTitle>
-            <c.icon className={`h-4 w-4 ${c.color}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{c.value}</div>
-            <p className="text-xs text-muted-foreground mt-1">{c.sub}</p>
+      {cards.map((card) => (
+        <Card key={card.title}>
+          <CardContent className="pt-4 pb-3 px-4">
+            <div className="flex items-center gap-2 mb-1">
+              <card.icon className={`h-4 w-4 ${card.color}`} />
+              <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+            </div>
+            <p className="text-xl font-bold">{card.value}</p>
+            <p className="text-xs text-muted-foreground">{card.sub}</p>
           </CardContent>
         </Card>
       ))}

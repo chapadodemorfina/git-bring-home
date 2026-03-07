@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { differenceInHours } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardData, useMonthlyTrend, DateRange } from "@/hooks/useDashboardData";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
@@ -19,44 +18,19 @@ export default function Dashboard() {
     to: new Date(),
   });
 
-  const data = useDashboardData(dateRange);
-  const trend = useMonthlyTrend();
-
-  // Compute KPIs
-  const openStatuses = ["received", "triage", "awaiting_diagnosis", "in_repair", "awaiting_parts", "in_testing", "awaiting_quote", "awaiting_customer_approval"];
-  const openOrders = data.serviceOrders.filter((o) => openStatuses.includes(o.status)).length;
-
-  // Avg turnaround from status history
-  let avgTurnaround: number | null = null;
-  if (data.completedOrders.length > 0) {
-    // Simple avg: difference between order created_at and completion event
-    const orderCreatedMap: Record<string, string> = {};
-    data.serviceOrders.forEach((o) => { orderCreatedMap[o.id] = o.created_at; });
-    const hours = data.completedOrders
-      .filter((e) => orderCreatedMap[e.service_order_id])
-      .map((e) => differenceInHours(new Date(e.created_at), new Date(orderCreatedMap[e.service_order_id])));
-    if (hours.length > 0) avgTurnaround = Math.round(hours.reduce((a, b) => a + b, 0) / hours.length);
-  }
+  const { data: summary, isLoading } = useDashboardData(dateRange);
 
   // Quote approval rate
-  let quoteApprovalRate: number | null = null;
-  if (data.quotes.length > 0) {
-    const approved = data.quotes.filter((q) => q.status === "approved").length;
-    quoteApprovalRate = Math.round((approved / data.quotes.length) * 100);
-  }
+  const quoteApprovalRate = summary && summary.quotes_total > 0
+    ? Math.round((summary.quotes_approved / summary.quotes_total) * 100)
+    : null;
 
-  // Financial
-  const totalRevenue = data.financialEntries.filter((f) => f.entry_type === "revenue").reduce((s, f) => s + Number(f.amount), 0);
-  const totalExpenses = data.financialEntries.filter((f) => f.entry_type === "expense").reduce((s, f) => s + Number(f.amount), 0);
+  // Warranty return rate
+  const warrantyReturnRate = summary && summary.warranties_total > 0
+    ? Math.round((summary.warranties_voided / summary.warranties_total) * 100)
+    : null;
 
-  // Warranty return
-  let warrantyReturnRate: number | null = null;
-  if (data.warranties.length > 0) {
-    const voided = data.warranties.filter((w) => w.is_void).length;
-    warrantyReturnRate = Math.round((voided / data.warranties.length) * 100);
-  }
-
-  if (data.isLoading) {
+  if (isLoading || !summary) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
@@ -70,6 +44,13 @@ export default function Dashboard() {
     );
   }
 
+  // Transform RPC data for chart components
+  const statusChartData = Object.entries(summary.orders_by_status).map(([status, count]) => ({ status, count }));
+  const deviceTypesData = Object.entries(summary.device_types).map(([device_type]) => ({ device_type }));
+  const techData = summary.technician_orders || [];
+  const defectsData = (summary.top_defects || []).map(d => ({ probable_cause: d.cause }));
+  const cpData = (summary.collection_point_orders || []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -81,33 +62,30 @@ export default function Dashboard() {
       </div>
 
       <KpiCards
-        totalOrders={data.serviceOrders.length}
-        openOrders={openOrders}
-        avgTurnaroundHours={avgTurnaround}
+        totalOrders={summary.total_orders}
+        openOrders={summary.open_orders}
+        avgTurnaroundHours={summary.avg_turnaround_hours ? Math.round(summary.avg_turnaround_hours) : null}
         quoteApprovalRate={quoteApprovalRate}
-        totalRevenue={totalRevenue}
-        totalExpenses={totalExpenses}
-        profit={totalRevenue - totalExpenses}
+        totalRevenue={Number(summary.total_revenue)}
+        totalExpenses={Number(summary.total_expenses)}
+        profit={Number(summary.total_revenue) - Number(summary.total_expenses)}
         warrantyReturnRate={warrantyReturnRate}
+        slaOverdueCount={summary.sla_overdue_count}
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <OrdersByStatusChart data={data.serviceOrders} />
-        {trend.data && <RevenueTrendChart data={trend.data} />}
+        <OrdersByStatusChart data={statusChartData} />
+        {summary.monthly_trend && <RevenueTrendChart data={summary.monthly_trend} />}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <TechnicianProductivityChart orders={data.serviceOrders} profiles={data.profiles} />
-        <DeviceTypesChart data={data.devices} />
+        <TechnicianProductivityChart data={techData} />
+        <DeviceTypesChart data={deviceTypesData} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <CommonDefectsChart diagnostics={data.diagnostics} />
-        <PartsConsumptionChart data={data.partsUsed} />
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-1">
-        <CollectionPointsChart orders={data.serviceOrders} financials={data.financialEntries} collectionPoints={data.collectionPoints} />
+        <CommonDefectsChart data={summary.top_defects || []} />
+        <CollectionPointsChart data={cpData} />
       </div>
     </div>
   );

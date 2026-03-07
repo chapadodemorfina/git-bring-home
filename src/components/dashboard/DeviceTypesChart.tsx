@@ -20,31 +20,43 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 interface Props {
-  data: Array<{ device_type: string }>;
+  data: Array<{ device_type: string; count?: number }>;
 }
 
 export function DeviceTypesChart({ data }: Props) {
-  const counts: Record<string, number> = {};
-  data.forEach((d) => { counts[d.device_type] = (counts[d.device_type] || 0) + 1; });
+  let chartData: Array<{ name: string; value: number }>;
 
-  const chartData = Object.entries(counts)
-    .map(([type, value]) => ({ name: TYPE_LABELS[type] || type, value }))
-    .sort((a, b) => b.value - a.value);
+  if (data.length > 0 && "count" in data[0]) {
+    chartData = data.map(d => ({
+      name: TYPE_LABELS[d.device_type] || d.device_type,
+      value: Number(d.count) || 1,
+    }));
+  } else {
+    const counts: Record<string, number> = {};
+    data.forEach((d) => { counts[d.device_type] = (counts[d.device_type] || 0) + 1; });
+    chartData = Object.entries(counts).map(([type, count]) => ({
+      name: TYPE_LABELS[type] || type,
+      value: count,
+    }));
+  }
 
-  const config = Object.fromEntries(chartData.map((d, i) => [d.name, { label: d.name, color: COLORS[i % COLORS.length] }]));
+  if (chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-base">Tipos de Dispositivo</CardTitle></CardHeader>
+        <CardContent><p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p></CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Tipos de Dispositivos</CardTitle>
-      </CardHeader>
+      <CardHeader><CardTitle className="text-base">Tipos de Dispositivo</CardTitle></CardHeader>
       <CardContent>
-        <ChartContainer config={config} className="h-[300px] w-full">
+        <ChartContainer config={Object.fromEntries(chartData.map((d, i) => [d.name, { label: d.name, color: COLORS[i % COLORS.length] }]))} className="h-64 w-full">
           <PieChart>
-            <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-              {chartData.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
+            <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} label>
+              {chartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
             </Pie>
             <ChartTooltip content={<ChartTooltipContent />} />
           </PieChart>

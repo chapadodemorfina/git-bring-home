@@ -3,50 +3,37 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface Props {
-  orders: Array<{ assigned_technician_id: string | null; status: string }>;
-  profiles: Array<{ id: string; full_name: string }>;
+  data: Array<{ technician_id: string; name: string; count: number }>;
 }
 
-export function TechnicianProductivityChart({ orders, profiles }: Props) {
-  const techMap: Record<string, { total: number; completed: number }> = {};
+export function TechnicianProductivityChart({ data }: Props) {
+  const chartData = data.map(t => ({
+    name: t.name || t.technician_id.slice(0, 8),
+    total: t.count,
+  })).sort((a, b) => b.total - a.total).slice(0, 10);
 
-  orders.forEach((o) => {
-    if (!o.assigned_technician_id) return;
-    if (!techMap[o.assigned_technician_id]) techMap[o.assigned_technician_id] = { total: 0, completed: 0 };
-    techMap[o.assigned_technician_id].total++;
-    if (o.status === "delivered" || o.status === "completed") techMap[o.assigned_technician_id].completed++;
-  });
-
-  const profileMap = Object.fromEntries(profiles.map((p) => [p.id, p.full_name]));
-
-  const chartData = Object.entries(techMap)
-    .map(([id, counts]) => ({
-      name: profileMap[id]?.split(" ")[0] || id.slice(0, 8),
-      total: counts.total,
-      completed: counts.completed,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10);
-
-  const config = {
-    total: { label: "Total OS", color: "hsl(var(--chart-1))" },
-    completed: { label: "Concluídas", color: "hsl(var(--chart-2))" },
-  };
+  if (chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-base">Produtividade Técnicos</CardTitle></CardHeader>
+        <CardContent><p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p></CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Produtividade por Técnico</CardTitle>
-      </CardHeader>
+      <CardHeader><CardTitle className="text-base">Produtividade Técnicos</CardTitle></CardHeader>
       <CardContent>
-        <ChartContainer config={config} className="h-[300px] w-full">
-          <BarChart data={chartData}>
+        <ChartContainer config={{
+          total: { label: "Total OS", color: "hsl(var(--chart-2))" },
+        }} className="h-64 w-full">
+          <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
+            <XAxis type="number" allowDecimals={false} />
+            <YAxis dataKey="name" type="category" width={100} fontSize={11} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="completed" fill="var(--color-completed)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="total" fill="var(--color-total)" radius={4} />
           </BarChart>
         </ChartContainer>
       </CardContent>

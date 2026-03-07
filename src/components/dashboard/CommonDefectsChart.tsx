@@ -3,44 +3,39 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface Props {
-  diagnostics: Array<{ probable_cause: string | null }>;
+  data: Array<{ cause: string; count: number }>;
 }
 
-export function CommonDefectsChart({ diagnostics }: Props) {
-  const counts: Record<string, number> = {};
-  diagnostics.forEach((d) => {
-    const cause = d.probable_cause?.trim();
-    if (!cause) return;
-    const key = cause.length > 30 ? cause.slice(0, 30) + "…" : cause;
-    counts[key] = (counts[key] || 0) + 1;
-  });
-
-  const chartData = Object.entries(counts)
-    .map(([defect, count]) => ({ defect, count }))
-    .sort((a, b) => b.count - a.count)
+export function CommonDefectsChart({ data }: Props) {
+  const chartData = data
+    .map(d => ({
+      defect: d.cause.length > 30 ? d.cause.slice(0, 30) + "…" : d.cause,
+      count: d.count,
+    }))
     .slice(0, 8);
 
-  const config = { count: { label: "Ocorrências", color: "hsl(var(--chart-5))" } };
+  if (chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-base">Defeitos Comuns</CardTitle></CardHeader>
+        <CardContent><p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p></CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Defeitos Mais Comuns</CardTitle>
-      </CardHeader>
+      <CardHeader><CardTitle className="text-base">Defeitos Comuns</CardTitle></CardHeader>
       <CardContent>
-        {chartData.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">Nenhum diagnóstico no período</p>
-        ) : (
-          <ChartContainer config={config} className="h-[300px] w-full">
-            <BarChart data={chartData} layout="vertical" margin={{ left: 120 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" />
-              <YAxis type="category" dataKey="defect" width={110} tick={{ fontSize: 11 }} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="count" fill="var(--color-count)" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ChartContainer>
-        )}
+        <ChartContainer config={{ count: { label: "Ocorrências", color: "hsl(var(--chart-4))" } }} className="h-64 w-full">
+          <BarChart data={chartData} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis type="number" allowDecimals={false} />
+            <YAxis dataKey="defect" type="category" width={120} fontSize={11} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="count" fill="var(--color-count)" radius={4} />
+          </BarChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

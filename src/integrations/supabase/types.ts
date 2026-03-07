@@ -1526,6 +1526,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sla_configs: {
+        Row: {
+          created_at: string
+          id: string
+          priority: string
+          status: string
+          target_hours: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          priority: string
+          status: string
+          target_hours: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          priority?: string
+          status?: string
+          target_hours?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stock_movements: {
         Row: {
           created_at: string
@@ -1796,6 +1823,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_reject_quote: {
+        Args: {
+          _charge_analysis_fee?: boolean
+          _decided_by_name?: string
+          _decided_by_role?: string
+          _decision: string
+          _quote_id: string
+          _reason?: string
+        }
+        Returns: Json
+      }
+      consume_part: {
+        Args: {
+          _notes?: string
+          _product_id: string
+          _quantity: number
+          _service_order_id: string
+        }
+        Returns: Json
+      }
+      create_warranty_return: {
+        Args: { _reason: string; _warranty_id: string }
+        Returns: Json
+      }
+      dashboard_summary: { Args: { _from: string; _to: string }; Returns: Json }
+      expire_stale_quotes: { Args: never; Returns: number }
+      finance_summary: { Args: never; Returns: Json }
       get_user_collection_points: {
         Args: { _user_id: string }
         Returns: string[]
@@ -1804,12 +1858,46 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      get_work_queues: {
+        Args: {
+          _collection_point_only?: boolean
+          _page?: number
+          _page_size?: number
+          _priority?: string
+          _queue?: string
+          _technician_id?: string
+        }
+        Returns: Json
+      }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      is_cp_operator_for_cp: { Args: { _cp_id: string }; Returns: boolean }
+      is_cp_operator_for_so: { Args: { _so_id: string }; Returns: boolean }
+      is_customer_for_so: { Args: { _so_id: string }; Returns: boolean }
+      is_technician_for_so: { Args: { _so_id: string }; Returns: boolean }
+      mark_overdue_entries: { Args: never; Returns: number }
+      register_payment: {
+        Args: {
+          _amount: number
+          _financial_entry_id: string
+          _notes?: string
+          _payment_date?: string
+          _payment_method?: string
+          _reference?: string
+        }
+        Returns: Json
       }
     }
     Enums: {

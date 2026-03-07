@@ -137,7 +137,7 @@ export function useDeleteFinancialEntry() {
   });
 }
 
-// ── Payments ──
+// ── Payments (ATOMIC via RPC) ──
 
 export function usePayments(entryId: string | undefined) {
   return useQuery({
@@ -161,27 +161,16 @@ export function useCreatePayment() {
 
   return useMutation({
     mutationFn: async ({ entryId, data }: { entryId: string; data: PaymentFormData }) => {
-      const payload: any = {
-        financial_entry_id: entryId,
-        amount: data.amount,
-        payment_method: data.payment_method,
-        payment_date: data.payment_date || new Date().toISOString(),
-        reference: data.reference || null,
-        notes: data.notes || null,
-      };
-
-      const { data: payment, error } = await db.from("payments").insert(payload).select().single();
+      const { data: result, error } = await db.rpc("register_payment", {
+        _financial_entry_id: entryId,
+        _amount: data.amount,
+        _payment_method: data.payment_method,
+        _payment_date: data.payment_date || new Date().toISOString(),
+        _reference: data.reference || null,
+        _notes: data.notes || null,
+      });
       if (error) throw error;
-
-      // Update paid_amount and status on the entry
-      const { data: entry } = await db.from("financial_entries").select("amount, paid_amount").eq("id", entryId).single();
-      if (entry) {
-        const newPaid = Number(entry.paid_amount) + data.amount;
-        const newStatus = newPaid >= Number(entry.amount) ? "paid" : "partial";
-        await db.from("financial_entries").update({ paid_amount: newPaid, status: newStatus }).eq("id", entryId);
-      }
-
-      return payment as Payment;
+      return result;
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["payments", vars.entryId] });
@@ -196,52 +185,22 @@ export function useCreatePayment() {
   });
 }
 
-// ── Dashboard Summary ──
+// ── Dashboard Summary (via RPC) ──
 
 export function useFinanceSummary() {
   return useQuery({
     queryKey: ["finance-summary"],
     queryFn: async () => {
-      const { data, error } = await db
-        .from("financial_entries")
-        .select("entry_type, status, amount, paid_amount");
+      const { data, error } = await db.rpc("finance_summary");
       if (error) throw error;
-
-      const entries = data as { entry_type: string; status: string; amount: number; paid_amount: number }[];
-
-      let totalRevenue = 0;
-      let totalExpenses = 0;
-      let totalCommissions = 0;
-      let pendingReceivables = 0;
-      let pendingPayables = 0;
-      let overdueCount = 0;
-
-      for (const e of entries) {
-        const amt = Number(e.amount);
-        const paid = Number(e.paid_amount);
-
-        if (e.entry_type === "revenue") {
-          totalRevenue += amt;
-          if (e.status === "pending" || e.status === "partial") pendingReceivables += (amt - paid);
-          if (e.status === "overdue") { pendingReceivables += (amt - paid); overdueCount++; }
-        } else if (e.entry_type === "expense") {
-          totalExpenses += amt;
-          if (e.status === "pending" || e.status === "partial") pendingPayables += (amt - paid);
-          if (e.status === "overdue") { pendingPayables += (amt - paid); overdueCount++; }
-        } else if (e.entry_type === "commission") {
-          totalCommissions += amt;
-          if (e.status === "pending" || e.status === "partial") pendingPayables += (amt - paid);
-        }
-      }
-
-      return {
-        totalRevenue,
-        totalExpenses,
-        totalCommissions,
-        profit: totalRevenue - totalExpenses - totalCommissions,
-        pendingReceivables,
-        pendingPayables,
-        overdueCount,
+      return data as {
+        total_revenue: number;
+        total_expenses: number;
+        total_commissions: number;
+        pending_receivables: number;
+        pending_payables: number;
+        overdue_count: number;
+        profit: number;
       };
     },
   });

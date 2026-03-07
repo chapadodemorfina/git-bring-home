@@ -176,7 +176,6 @@ export function useAddQuoteItem() {
       });
       if (error) throw error;
 
-      // Recalculate quote total
       await recalculateQuoteTotal(quoteId);
       return quoteId;
     },
@@ -231,7 +230,7 @@ async function recalculateQuoteTotal(quoteId: string) {
   await db.from("repair_quotes").update({ total_amount: total }).eq("id", quoteId);
 }
 
-// ─── Approvals ─────────────────────────────────────────────────
+// ─── Approvals (ATOMIC via RPC) ──────────────────────────────
 export function useQuoteApprovals(quoteId: string | undefined) {
   return useQuery({
     queryKey: ["quote-approvals", quoteId],
@@ -257,46 +256,16 @@ export function useRecordApproval() {
       quoteId: string; serviceOrderId: string; decision: "approved" | "rejected";
       decidedByName?: string; reason?: string; chargeAnalysisFee?: boolean;
     }) => {
-      // Record approval
-      const { error: appErr } = await db.from("quote_approvals").insert({
-        quote_id: quoteId,
-        decision,
-        decided_by_name: decidedByName || null,
-        reason: reason || null,
-        charge_analysis_fee: chargeAnalysisFee || false,
+      const { data, error } = await db.rpc("approve_reject_quote", {
+        _quote_id: quoteId,
+        _decision: decision,
+        _decided_by_name: decidedByName || null,
+        _decided_by_role: "admin",
+        _reason: reason || null,
+        _charge_analysis_fee: chargeAnalysisFee || false,
       });
-      if (appErr) throw appErr;
-
-      // Update quote status
-      const { error: quoteErr } = await db.from("repair_quotes").update({ status: decision }).eq("id", quoteId);
-      if (quoteErr) throw quoteErr;
-
-      // Update service order status based on decision
-      if (decision === "approved") {
-        // Move to awaiting_parts or in_repair
-        const { error: soErr } = await db.from("service_orders").update({ status: "in_repair" }).eq("id", serviceOrderId);
-        if (soErr) throw soErr;
-        await db.from("service_order_status_history").insert({
-          service_order_id: serviceOrderId,
-          from_status: "awaiting_customer_approval",
-          to_status: "in_repair",
-          notes: "Orçamento aprovado pelo cliente",
-        });
-      } else {
-        const newStatus = chargeAnalysisFee ? "ready_for_pickup" : "cancelled";
-        const { error: soErr } = await db.from("service_orders").update({ status: newStatus }).eq("id", serviceOrderId);
-        if (soErr) throw soErr;
-        await db.from("service_order_status_history").insert({
-          service_order_id: serviceOrderId,
-          from_status: "awaiting_customer_approval",
-          to_status: newStatus,
-          notes: chargeAnalysisFee
-            ? "Orçamento rejeitado — taxa de análise cobrada"
-            : "Orçamento rejeitado pelo cliente",
-        });
-      }
-
-      return { quoteId, serviceOrderId };
+      if (error) throw error;
+      return { quoteId, serviceOrderId, result: data };
     },
     onSuccess: ({ quoteId, serviceOrderId }) => {
       qc.invalidateQueries({ queryKey: ["quote-approvals", quoteId] });
@@ -304,6 +273,7 @@ export function useRecordApproval() {
       qc.invalidateQueries({ queryKey: ["quotes", serviceOrderId] });
       qc.invalidateQueries({ queryKey: ["service-order", serviceOrderId] });
       qc.invalidateQueries({ queryKey: ["so-status-history", serviceOrderId] });
+      qc.invalidateQueries({ queryKey: ["financial-entries"] });
       toast({ title: "Decisão registrada!" });
     },
     onError: (error: Error) => {

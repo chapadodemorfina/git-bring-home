@@ -50,7 +50,6 @@ export function useCreateProduct() {
       };
       const { data, error } = await sb.from("products").insert(payload).select().single();
       if (error) throw error;
-      // create initial stock movement if quantity > 0
       if (values.quantity > 0) {
         await sb.from("stock_movements").insert({
           product_id: data.id,
@@ -173,15 +172,12 @@ export function useAddStockEntry() {
   return useMutation({
     mutationFn: async (values: StockEntryFormData) => {
       const { data: { user } } = await supabase.auth.getUser();
-      // get current quantity
       const { data: product, error: pErr } = await sb.from("products").select("quantity").eq("id", values.product_id).single();
       if (pErr) throw pErr;
       const prev = product.quantity;
       const newQty = prev + values.quantity;
-      // update product quantity
       const { error: uErr } = await sb.from("products").update({ quantity: newQty }).eq("id", values.product_id);
       if (uErr) throw uErr;
-      // create movement
       const { error: mErr } = await sb.from("stock_movements").insert({
         product_id: values.product_id,
         movement_type: "entry",
@@ -203,46 +199,20 @@ export function useAddStockEntry() {
   });
 }
 
-// ── Consume part for service order ──
+// ── Consume part for service order (ATOMIC via RPC) ──
 export function useConsumePart() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
     mutationFn: async ({ serviceOrderId, values }: { serviceOrderId: string; values: ConsumePartFormData }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      // get product
-      const { data: product, error: pErr } = await sb.from("products").select("quantity, cost_price, sale_price").eq("id", values.product_id).single();
-      if (pErr) throw pErr;
-      if (product.quantity < values.quantity) throw new Error("Estoque insuficiente");
-      const prev = product.quantity;
-      const newQty = prev - values.quantity;
-      // update product
-      await sb.from("products").update({ quantity: newQty }).eq("id", values.product_id);
-      // stock movement
-      await sb.from("stock_movements").insert({
-        product_id: values.product_id,
-        movement_type: "consumed",
-        quantity: -values.quantity,
-        previous_quantity: prev,
-        new_quantity: newQty,
-        unit_cost: product.cost_price,
-        reference_type: "service_order",
-        reference_id: serviceOrderId,
-        notes: values.notes || null,
-        created_by: user?.id,
+      const { data, error } = await sb.rpc("consume_part", {
+        _service_order_id: serviceOrderId,
+        _product_id: values.product_id,
+        _quantity: values.quantity,
+        _notes: values.notes || null,
       });
-      // repair_parts_used
-      await sb.from("repair_parts_used").insert({
-        service_order_id: serviceOrderId,
-        product_id: values.product_id,
-        quantity: values.quantity,
-        unit_cost: product.cost_price,
-        unit_price: product.sale_price,
-        total_cost: product.cost_price * values.quantity,
-        total_price: product.sale_price * values.quantity,
-        notes: values.notes || null,
-        consumed_by: user?.id,
-      });
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["products"] });

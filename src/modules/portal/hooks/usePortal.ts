@@ -102,6 +102,7 @@ export function usePortalQuotes(serviceOrderId: string | undefined) {
   });
 }
 
+// ATOMIC approval via RPC — unified with admin approval
 export function usePortalApproveQuote() {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -110,34 +111,16 @@ export function usePortalApproveQuote() {
     mutationFn: async ({ quoteId, serviceOrderId, decision, reason }: {
       quoteId: string; serviceOrderId: string; decision: "approved" | "rejected"; reason?: string;
     }) => {
-      const { error: appErr } = await db.from("quote_approvals").insert({
-        quote_id: quoteId,
-        decision,
-        decided_by_role: "customer",
-        reason: reason || null,
+      const { data, error } = await db.rpc("approve_reject_quote", {
+        _quote_id: quoteId,
+        _decision: decision,
+        _decided_by_name: null,
+        _decided_by_role: "customer",
+        _reason: reason || null,
+        _charge_analysis_fee: false,
       });
-      if (appErr) throw appErr;
-
-      const { error: qErr } = await db.from("repair_quotes").update({ status: decision }).eq("id", quoteId);
-      if (qErr) throw qErr;
-
-      if (decision === "approved") {
-        await db.from("service_orders").update({ status: "in_repair" }).eq("id", serviceOrderId);
-        await db.from("service_order_status_history").insert({
-          service_order_id: serviceOrderId,
-          from_status: "awaiting_customer_approval",
-          to_status: "in_repair",
-          notes: "Orçamento aprovado pelo cliente (portal)",
-        });
-      } else {
-        await db.from("service_orders").update({ status: "cancelled" }).eq("id", serviceOrderId);
-        await db.from("service_order_status_history").insert({
-          service_order_id: serviceOrderId,
-          from_status: "awaiting_customer_approval",
-          to_status: "cancelled",
-          notes: reason ? `Orçamento rejeitado: ${reason}` : "Orçamento rejeitado pelo cliente (portal)",
-        });
-      }
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["portal-quotes"] });
@@ -157,7 +140,6 @@ export function usePortalWarranties(customerId: string | undefined) {
     queryKey: ["portal-warranties", customerId],
     enabled: !!customerId,
     queryFn: async () => {
-      // Get all SO ids for the customer first
       const { data: orders } = await db
         .from("service_orders")
         .select("id, order_number")
