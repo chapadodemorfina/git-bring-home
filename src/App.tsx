@@ -74,6 +74,9 @@ import PortalQuotesPage from "./modules/portal/pages/PortalQuotesPage";
 import PortalWarrantiesPage from "./modules/portal/pages/PortalWarrantiesPage";
 import PortalLogisticsPage from "./modules/portal/pages/PortalLogisticsPage";
 
+// Public Tracking
+import PublicTrackingPage from "./modules/tracking/pages/PublicTrackingPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -158,6 +161,9 @@ const App = () => (
                 <Route path="warranties" element={<PortalWarrantiesPage />} />
                 <Route path="logistics" element={<PortalLogisticsPage />} />
               </Route>
+
+              {/* Public Tracking (no auth) */}
+              <Route path="/track/:token" element={<PublicTrackingPage />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

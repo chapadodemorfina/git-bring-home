@@ -1557,6 +1557,56 @@ export type Database = {
           },
         ]
       }
+      service_order_public_links: {
+        Row: {
+          access_count: number
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          last_access_at: string | null
+          metadata: Json | null
+          public_token: string
+          revoked_at: string | null
+          service_order_id: string
+          status: Database["public"]["Enums"]["public_link_status"]
+        }
+        Insert: {
+          access_count?: number
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          last_access_at?: string | null
+          metadata?: Json | null
+          public_token: string
+          revoked_at?: string | null
+          service_order_id: string
+          status?: Database["public"]["Enums"]["public_link_status"]
+        }
+        Update: {
+          access_count?: number
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          last_access_at?: string | null
+          metadata?: Json | null
+          public_token?: string
+          revoked_at?: string | null
+          service_order_id?: string
+          status?: Database["public"]["Enums"]["public_link_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_public_links_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_order_signatures: {
         Row: {
           created_at: string
@@ -2346,6 +2396,10 @@ export type Database = {
       dashboard_summary: { Args: { _from: string; _to: string }; Returns: Json }
       expire_stale_quotes: { Args: never; Returns: number }
       finance_summary: { Args: never; Returns: Json }
+      generate_public_tracking_token: {
+        Args: { _service_order_id: string }
+        Returns: Json
+      }
       get_user_collection_points: {
         Args: { _user_id: string }
         Returns: string[]
@@ -2385,6 +2439,11 @@ export type Database = {
       is_technician_for_so: { Args: { _so_id: string }; Returns: boolean }
       mark_overdue_entries: { Args: never; Returns: number }
       process_notification_events: { Args: never; Returns: Json }
+      public_approve_reject_quote: {
+        Args: { _decision: string; _quote_id: string; _token: string }
+        Returns: Json
+      }
+      public_track_order: { Args: { _token: string }; Returns: Json }
       register_payment: {
         Args: {
           _amount: number
@@ -2492,6 +2551,7 @@ export type Database = {
         | "boleto"
         | "check"
         | "other"
+      public_link_status: "active" | "revoked" | "expired"
       quote_item_type: "labor" | "part"
       quote_status: "draft" | "sent" | "approved" | "rejected" | "expired"
       repair_complexity: "simple" | "moderate" | "complex" | "specialized"
@@ -2747,6 +2807,7 @@ export const Constants = {
         "check",
         "other",
       ],
+      public_link_status: ["active", "revoked", "expired"],
       quote_item_type: ["labor", "part"],
       quote_status: ["draft", "sent", "approved", "rejected", "expired"],
       repair_complexity: ["simple", "moderate", "complex", "specialized"],

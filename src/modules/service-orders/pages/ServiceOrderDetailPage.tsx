@@ -9,6 +9,7 @@ import AttachmentUpload from "../components/AttachmentUpload";
 import IntakeReceipt from "../components/IntakeReceipt";
 import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuotePanel";
 import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
+import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -192,6 +193,8 @@ export default function ServiceOrderDetailPage() {
               <StatusTimeline orderId={order.id} />
             </CardContent>
           </Card>
+
+          <PublicLinkManager serviceOrderId={order.id} orderNumber={order.order_number} />
         </div>
       </div>
 
