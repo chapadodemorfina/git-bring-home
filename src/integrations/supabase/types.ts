@@ -366,6 +366,237 @@ export type Database = {
         }
         Relationships: []
       }
+      service_order_attachments: {
+        Row: {
+          caption: string | null
+          created_at: string
+          file_name: string
+          file_type: string | null
+          id: string
+          service_order_id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          id?: string
+          service_order_id: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          id?: string
+          service_order_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_attachments_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_order_signatures: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          service_order_id: string
+          signature_data: string
+          signer_name: string
+          signer_role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          service_order_id: string
+          signature_data: string
+          signer_name: string
+          signer_role?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          service_order_id?: string
+          signature_data?: string
+          signer_name?: string
+          signer_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_signatures_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["service_order_status"]
+            | null
+          id: string
+          notes: string | null
+          service_order_id: string
+          to_status: Database["public"]["Enums"]["service_order_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["service_order_status"]
+            | null
+          id?: string
+          notes?: string | null
+          service_order_id: string
+          to_status: Database["public"]["Enums"]["service_order_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["service_order_status"]
+            | null
+          id?: string
+          notes?: string | null
+          service_order_id?: string
+          to_status?: Database["public"]["Enums"]["service_order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_status_history_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_order_terms: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      service_orders: {
+        Row: {
+          accessories_received: string | null
+          assigned_technician_id: string | null
+          collection_point_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          device_id: string | null
+          expected_deadline: string | null
+          id: string
+          intake_channel: Database["public"]["Enums"]["intake_channel"]
+          intake_notes: string | null
+          internal_notes: string | null
+          order_number: string
+          physical_condition: string | null
+          priority: Database["public"]["Enums"]["service_order_priority"]
+          reported_issue: string | null
+          status: Database["public"]["Enums"]["service_order_status"]
+          updated_at: string
+        }
+        Insert: {
+          accessories_received?: string | null
+          assigned_technician_id?: string | null
+          collection_point_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          device_id?: string | null
+          expected_deadline?: string | null
+          id?: string
+          intake_channel?: Database["public"]["Enums"]["intake_channel"]
+          intake_notes?: string | null
+          internal_notes?: string | null
+          order_number?: string
+          physical_condition?: string | null
+          priority?: Database["public"]["Enums"]["service_order_priority"]
+          reported_issue?: string | null
+          status?: Database["public"]["Enums"]["service_order_status"]
+          updated_at?: string
+        }
+        Update: {
+          accessories_received?: string | null
+          assigned_technician_id?: string | null
+          collection_point_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          device_id?: string | null
+          expected_deadline?: string | null
+          id?: string
+          intake_channel?: Database["public"]["Enums"]["intake_channel"]
+          intake_notes?: string | null
+          internal_notes?: string | null
+          order_number?: string
+          physical_condition?: string | null
+          priority?: Database["public"]["Enums"]["service_order_priority"]
+          reported_issue?: string | null
+          status?: Database["public"]["Enums"]["service_order_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           description: string | null
@@ -453,6 +684,27 @@ export type Database = {
         | "electronic_module"
         | "motherboard"
         | "other"
+      intake_channel:
+        | "front_desk"
+        | "collection_point"
+        | "whatsapp"
+        | "phone"
+        | "email"
+        | "website"
+      service_order_priority: "low" | "normal" | "high" | "urgent"
+      service_order_status:
+        | "received"
+        | "triage"
+        | "awaiting_diagnosis"
+        | "awaiting_quote"
+        | "awaiting_customer_approval"
+        | "awaiting_parts"
+        | "in_repair"
+        | "in_testing"
+        | "ready_for_pickup"
+        | "delivered"
+        | "cancelled"
+        | "warranty_return"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -602,6 +854,29 @@ export const Constants = {
         "electronic_module",
         "motherboard",
         "other",
+      ],
+      intake_channel: [
+        "front_desk",
+        "collection_point",
+        "whatsapp",
+        "phone",
+        "email",
+        "website",
+      ],
+      service_order_priority: ["low", "normal", "high", "urgent"],
+      service_order_status: [
+        "received",
+        "triage",
+        "awaiting_diagnosis",
+        "awaiting_quote",
+        "awaiting_customer_approval",
+        "awaiting_parts",
+        "in_repair",
+        "in_testing",
+        "ready_for_pickup",
+        "delivered",
+        "cancelled",
+        "warranty_return",
       ],
     },
   },
