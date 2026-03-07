@@ -62,6 +62,15 @@ import FinanceCreatePage from "./modules/finance/pages/FinanceCreatePage";
 import FinanceDetailPage from "./modules/finance/pages/FinanceDetailPage";
 import FinanceEditPage from "./modules/finance/pages/FinanceEditPage";
 
+// Customer Portal
+import PortalLayout from "./modules/portal/components/PortalLayout";
+import PortalLoginPage from "./modules/portal/pages/PortalLoginPage";
+import PortalOrdersPage from "./modules/portal/pages/PortalOrdersPage";
+import PortalOrderDetailPage from "./modules/portal/pages/PortalOrderDetailPage";
+import PortalQuotesPage from "./modules/portal/pages/PortalQuotesPage";
+import PortalWarrantiesPage from "./modules/portal/pages/PortalWarrantiesPage";
+import PortalLogisticsPage from "./modules/portal/pages/PortalLogisticsPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -133,6 +142,16 @@ const App = () => (
               <Route path="/finance/new" element={<ProtectedPage><FinanceCreatePage /></ProtectedPage>} />
               <Route path="/finance/:id" element={<ProtectedPage><FinanceDetailPage /></ProtectedPage>} />
               <Route path="/finance/:id/edit" element={<ProtectedPage><FinanceEditPage /></ProtectedPage>} />
+
+              {/* Customer Portal */}
+              <Route path="/portal/login" element={<PortalLoginPage />} />
+              <Route path="/portal" element={<PortalLayout />}>
+                <Route index element={<PortalOrdersPage />} />
+                <Route path="order/:id" element={<PortalOrderDetailPage />} />
+                <Route path="quotes" element={<PortalQuotesPage />} />
+                <Route path="warranties" element={<PortalWarrantiesPage />} />
+                <Route path="logistics" element={<PortalLogisticsPage />} />
+              </Route>
 
               <Route path="*" element={<NotFound />} />
             </Routes>
