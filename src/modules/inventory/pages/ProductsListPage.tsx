@@ -58,8 +58,9 @@ export default function ProductsListPage() {
               <TableHead>Fornecedor</TableHead>
               <TableHead className="text-right">Custo</TableHead>
               <TableHead className="text-right">Venda</TableHead>
-              <TableHead className="text-right">Estoque</TableHead>
-              <TableHead className="text-right">Mínimo</TableHead>
+                <TableHead className="text-right">Estoque</TableHead>
+                <TableHead className="text-right">Reserv.</TableHead>
+                <TableHead className="text-right">Dispon.</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -74,11 +75,12 @@ export default function ProductsListPage() {
                 <TableCell className="text-right">
                   <Badge variant={p.quantity <= p.minimum_quantity ? "destructive" : "secondary"}>{p.quantity}</Badge>
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground">{p.minimum_quantity}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{(p as any).reserved_quantity || 0}</TableCell>
+                <TableCell className="text-right font-medium">{p.quantity - ((p as any).reserved_quantity || 0)}</TableCell>
               </TableRow>
             ))}
             {!filtered?.length && (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum produto encontrado</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Nenhum produto encontrado</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

@@ -218,6 +218,7 @@ export function useConsumePart() {
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["stock_movements"] });
       qc.invalidateQueries({ queryKey: ["repair_parts_used"] });
+      qc.invalidateQueries({ queryKey: ["part_reservations"] });
       toast({ title: "Peça consumida com sucesso" });
     },
     onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
@@ -243,6 +244,123 @@ export function useLowStockProducts() {
       const { data, error } = await sb.from("products").select("*, suppliers(id, name)").eq("is_active", true).order("name");
       if (error) throw error;
       return (data as Product[]).filter(p => p.quantity <= p.minimum_quantity);
+    },
+  });
+}
+
+// ── Part Reservations ──
+export interface PartReservation {
+  id: string;
+  product_id: string;
+  service_order_id: string;
+  diagnosis_id: string | null;
+  quantity: number;
+  status: string;
+  reserved_by: string | null;
+  created_at: string;
+  updated_at: string;
+  products?: { name: string; sku: string } | null;
+}
+
+export function usePartReservations(serviceOrderId: string | undefined) {
+  return useQuery<PartReservation[]>({
+    queryKey: ["part_reservations", serviceOrderId],
+    enabled: !!serviceOrderId,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("part_reservations")
+        .select("*, products(name, sku)")
+        .eq("service_order_id", serviceOrderId!)
+        .eq("status", "reserved")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useReservePart() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ productId, serviceOrderId, diagnosisId, quantity }: {
+      productId: string; serviceOrderId: string; diagnosisId?: string; quantity: number;
+    }) => {
+      const { data, error } = await sb.rpc("reserve_part", {
+        _product_id: productId,
+        _service_order_id: serviceOrderId,
+        _diagnosis_id: diagnosisId || null,
+        _quantity: quantity,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["part_reservations"] });
+      toast({ title: "Peça reservada!" });
+    },
+    onError: (e: any) => toast({ title: "Erro ao reservar", description: e.message, variant: "destructive" }),
+  });
+}
+
+export function useReleaseReservation() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (reservationId: string) => {
+      const { data, error } = await sb.rpc("release_reservation", { _reservation_id: reservationId });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["part_reservations"] });
+      toast({ title: "Reserva liberada!" });
+    },
+    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+}
+
+// ── Stock Adjustment (Manager) ──
+export function useAdjustStock() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ productId, newQuantity, reason }: {
+      productId: string; newQuantity: number; reason: string;
+    }) => {
+      const { data, error } = await sb.rpc("adjust_stock", {
+        _product_id: productId,
+        _new_quantity: newQuantity,
+        _reason: reason,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["stock_movements"] });
+      toast({ title: "Estoque ajustado!" });
+    },
+    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+}
+
+// ── Product Usage History ──
+export function useProductUsageHistory(productId: string | undefined) {
+  return useQuery<RepairPartUsed[]>({
+    queryKey: ["product_usage", productId],
+    enabled: !!productId,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("repair_parts_used")
+        .select("*, products(name, sku)")
+        .eq("product_id", productId!)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data;
     },
   });
 }

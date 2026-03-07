@@ -10,6 +10,7 @@ import { TechnicianProductivityChart } from "@/components/dashboard/TechnicianPr
 import { PartsConsumptionChart } from "@/components/dashboard/PartsConsumptionChart";
 import { CollectionPointsChart } from "@/components/dashboard/CollectionPointsChart";
 import { CommonDefectsChart } from "@/components/dashboard/CommonDefectsChart";
+import LowStockAlert from "@/modules/inventory/components/LowStockAlert";
 
 export default function Dashboard() {
   const [preset, setPreset] = useState("30d");
@@ -60,6 +61,8 @@ export default function Dashboard() {
         </div>
         <DashboardFilters dateRange={dateRange} onDateRangeChange={setDateRange} preset={preset} onPresetChange={setPreset} />
       </div>
+
+      <LowStockAlert />
 
       <KpiCards
         totalOrders={summary.total_orders}
