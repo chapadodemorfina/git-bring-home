@@ -135,6 +135,11 @@ export default function PublicTrackingPage() {
                 <span className="font-medium">Problema:</span> {data.reported_issue}
               </p>
             )}
+            {data.collection_point_name && (
+              <p className="text-sm text-muted-foreground mt-1">
+                <span className="font-medium">Recebido via:</span> {data.collection_point_name}
+              </p>
+            )}
           </CardContent>
         </Card>
 
