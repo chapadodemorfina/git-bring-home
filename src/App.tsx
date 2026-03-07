@@ -24,6 +24,12 @@ import CustomerCreatePage from "./modules/customers/pages/CustomerCreatePage";
 import CustomerEditPage from "./modules/customers/pages/CustomerEditPage";
 import CustomerDetailPage from "./modules/customers/pages/CustomerDetailPage";
 
+// Devices Module
+import DevicesListPage from "./modules/devices/pages/DevicesListPage";
+import DeviceCreatePage from "./modules/devices/pages/DeviceCreatePage";
+import DeviceEditPage from "./modules/devices/pages/DeviceEditPage";
+import DeviceDetailPage from "./modules/devices/pages/DeviceDetailPage";
+
 const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
@@ -57,6 +63,12 @@ const App = () => (
               <Route path="/customers/new" element={<ProtectedPage><CustomerCreatePage /></ProtectedPage>} />
               <Route path="/customers/:id" element={<ProtectedPage><CustomerDetailPage /></ProtectedPage>} />
               <Route path="/customers/:id/edit" element={<ProtectedPage><CustomerEditPage /></ProtectedPage>} />
+
+              {/* Devices */}
+              <Route path="/devices" element={<ProtectedPage><DevicesListPage /></ProtectedPage>} />
+              <Route path="/devices/new" element={<ProtectedPage><DeviceCreatePage /></ProtectedPage>} />
+              <Route path="/devices/:id" element={<ProtectedPage><DeviceDetailPage /></ProtectedPage>} />
+              <Route path="/devices/:id/edit" element={<ProtectedPage><DeviceEditPage /></ProtectedPage>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
