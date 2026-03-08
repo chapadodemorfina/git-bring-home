@@ -17,7 +17,7 @@ export default function LogisticsCreatePage() {
     navigate(`/logistics/${result.id}`);
   };
 
-  const soOptions = serviceOrders?.map((so) => ({
+  const soOptions = serviceOrders?.items?.map((so) => ({
     id: so.id,
     order_number: so.order_number,
     customer_name: so.customer_name,

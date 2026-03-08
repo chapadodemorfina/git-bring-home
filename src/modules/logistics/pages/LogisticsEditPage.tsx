@@ -22,7 +22,7 @@ export default function LogisticsEditPage() {
   if (isLoading) return <Skeleton className="h-96 w-full" />;
   if (!item) return <p className="text-center py-12 text-muted-foreground">Não encontrado.</p>;
 
-  const soOptions = serviceOrders?.map((so) => ({
+  const soOptions = serviceOrders?.items?.map((so) => ({
     id: so.id,
     order_number: so.order_number,
     customer_name: so.customer_name,
