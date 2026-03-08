@@ -68,6 +68,14 @@ Deno.serve(async (req) => {
     const { error: mvErr } = await supabase.rpc("refresh_materialized_views");
     if (mvErr) console.error("refresh_materialized_views error:", mvErr);
 
+    // 8. Run consistency checks
+    const { data: consistencyResult, error: ccErr } = await supabase.rpc("run_consistency_checks");
+    if (ccErr) console.error("run_consistency_checks error:", ccErr);
+
+    // 9. Detect stale devices (5+ days without update)
+    const { data: staleDevices, error: sdErr } = await supabase.rpc("detect_stale_devices", { days_threshold: 5 });
+    if (sdErr) console.error("detect_stale_devices error:", sdErr);
+
     const result = {
       success: true,
       expired_quotes: expiredCount ?? 0,
@@ -77,6 +85,8 @@ Deno.serve(async (req) => {
       expired_wa_states: expiredStates ?? 0,
       archived_wa_conversations: archivedConvs ?? 0,
       materialized_views_refreshed: !mvErr,
+      consistency_checks: consistencyResult ?? null,
+      stale_devices_count: staleDevices?.length ?? 0,
       ran_at: new Date().toISOString(),
     };
 
