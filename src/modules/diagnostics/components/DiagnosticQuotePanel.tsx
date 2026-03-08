@@ -14,9 +14,12 @@ import { Stethoscope, FileText, Plus, Zap } from "lucide-react";
 interface Props {
   serviceOrderId: string;
   deviceType?: string | null;
+  deviceBrand?: string | null;
+  deviceModel?: string | null;
+  reportedIssue?: string | null;
 }
 
-export default function DiagnosticQuotePanel({ serviceOrderId, deviceType }: Props) {
+export default function DiagnosticQuotePanel({ serviceOrderId, deviceType, deviceBrand, deviceModel, reportedIssue }: Props) {
   const { data: diagnostic, isLoading: diagLoading } = useDiagnostic(serviceOrderId);
   const { data: quotes, isLoading: quotesLoading } = useQuotes(serviceOrderId);
   const createQuote = useCreateQuote();
@@ -68,7 +71,7 @@ export default function DiagnosticQuotePanel({ serviceOrderId, deviceType }: Pro
         {diagLoading ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : (
-          <DiagnosisForm serviceOrderId={serviceOrderId} existing={diagnostic} deviceType={deviceType} />
+          <DiagnosisForm serviceOrderId={serviceOrderId} existing={diagnostic} deviceType={deviceType} deviceBrand={deviceBrand} deviceModel={deviceModel} reportedIssue={reportedIssue} />
         )}
       </TabsContent>
 
