@@ -502,6 +502,51 @@ export type Database = {
           },
         ]
       }
+      device_location_tracking: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          id: string
+          location: string
+          moved_by: string | null
+          notes: string | null
+          service_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          location?: string
+          moved_by?: string | null
+          notes?: string | null
+          service_order_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          location?: string
+          moved_by?: string | null
+          notes?: string | null
+          service_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_location_tracking_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_location_tracking_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_photos: {
         Row: {
           caption: string | null
@@ -2775,6 +2820,18 @@ export type Database = {
         Returns: Json
       }
       dashboard_summary: { Args: { _from: string; _to: string }; Returns: Json }
+      detect_stale_devices: {
+        Args: { days_threshold?: number }
+        Returns: {
+          customer_name: string
+          days_stale: number
+          device_label: string
+          last_update: string
+          order_number: string
+          service_order_id: string
+          status: string
+        }[]
+      }
       detect_suspicious_activity: { Args: { _days?: number }; Returns: Json }
       expire_stale_quotes: { Args: never; Returns: number }
       finance_summary: { Args: never; Returns: Json }
@@ -2852,6 +2909,7 @@ export type Database = {
         }
         Returns: Json
       }
+      run_consistency_checks: { Args: never; Returns: Json }
       void_warranty: {
         Args: { _reason: string; _warranty_id: string }
         Returns: Json
