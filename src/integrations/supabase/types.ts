@@ -2258,39 +2258,55 @@ export type Database = {
           coverage_description: string | null
           created_at: string
           created_by: string | null
+          customer_id: string | null
           end_date: string
           id: string
           is_void: boolean
           service_order_id: string
           start_date: string
           terms: string | null
+          void_reason: string | null
           warranty_number: string
+          warranty_type: string
         }
         Insert: {
           coverage_description?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           end_date?: string
           id?: string
           is_void?: boolean
           service_order_id: string
           start_date?: string
           terms?: string | null
+          void_reason?: string | null
           warranty_number?: string
+          warranty_type?: string
         }
         Update: {
           coverage_description?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           end_date?: string
           id?: string
           is_void?: boolean
           service_order_id?: string
           start_date?: string
           terms?: string | null
+          void_reason?: string | null
           warranty_number?: string
+          warranty_type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "warranties_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "warranties_service_order_id_fkey"
             columns: ["service_order_id"]
@@ -2307,7 +2323,9 @@ export type Database = {
           id: string
           new_service_order_id: string | null
           original_service_order_id: string
+          outcome: string | null
           reason: string
+          return_cause: string | null
           status: string
           updated_at: string
           warranty_id: string
@@ -2318,7 +2336,9 @@ export type Database = {
           id?: string
           new_service_order_id?: string | null
           original_service_order_id: string
+          outcome?: string | null
           reason: string
+          return_cause?: string | null
           status?: string
           updated_at?: string
           warranty_id: string
@@ -2329,7 +2349,9 @@ export type Database = {
           id?: string
           new_service_order_id?: string | null
           original_service_order_id?: string
+          outcome?: string | null
           reason?: string
+          return_cause?: string | null
           status?: string
           updated_at?: string
           warranty_id?: string
@@ -2711,6 +2733,10 @@ export type Database = {
         }
         Returns: Json
       }
+      void_warranty: {
+        Args: { _reason: string; _warranty_id: string }
+        Returns: Json
+      }
       wa_archive_stale_conversations: { Args: never; Returns: number }
       wa_expire_pending_states: { Args: never; Returns: number }
       wa_get_customer_balance: { Args: { _customer_id: string }; Returns: Json }
@@ -2735,6 +2761,10 @@ export type Database = {
       wa_lookup_customer: { Args: { _phone: string }; Returns: Json }
       wa_lookup_customer_by_document: {
         Args: { _document: string }
+        Returns: Json
+      }
+      warranty_analytics: {
+        Args: { _from?: string; _to?: string }
         Returns: Json
       }
     }
