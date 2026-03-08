@@ -1,18 +1,26 @@
 import { useState } from "react";
 import { useWarranty, useCreateWarranty, useWarrantyReturns, useCreateWarrantyReturn } from "../hooks/useRepair";
 import { useRepairTests } from "../hooks/useRepair";
-import { WarrantyReturnFormData, warrantyReturnSchema } from "../types";
+import { useVoidWarranty } from "../hooks/useWarrantyAnalytics";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Shield, ShieldCheck, ShieldX, RotateCcw, ExternalLink } from "lucide-react";
+import { Shield, ShieldCheck, ShieldX, RotateCcw, ExternalLink, Ban } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+
+const returnCauses = [
+  { value: "same_issue", label: "Mesmo defeito" },
+  { value: "different_issue", label: "Defeito diferente" },
+  { value: "misuse", label: "Mau uso" },
+  { value: "water_damage", label: "Dano por líquido" },
+  { value: "physical_damage", label: "Dano físico" },
+];
 
 interface Props {
   serviceOrderId: string;
@@ -25,8 +33,12 @@ export default function WarrantyCard({ serviceOrderId, orderStatus }: Props) {
   const createWarranty = useCreateWarranty();
   const { data: returns } = useWarrantyReturns(warranty?.id);
   const createReturn = useCreateWarrantyReturn();
+  const voidWarranty = useVoidWarranty();
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnReason, setReturnReason] = useState("");
+  const [returnCause, setReturnCause] = useState("");
+  const [voidOpen, setVoidOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState("");
 
   const canGenerate = orderStatus === "delivered" && !warranty;
   const allTestsPassed = tests?.length ? tests.every((t) => t.passed === true) : false;
@@ -47,6 +59,14 @@ export default function WarrantyCard({ serviceOrderId, orderStatus }: Props) {
     });
     setReturnOpen(false);
     setReturnReason("");
+    setReturnCause("");
+  };
+
+  const handleVoid = async () => {
+    if (!warranty || !voidReason.trim()) return;
+    await voidWarranty.mutateAsync({ warrantyId: warranty.id, reason: voidReason.trim() });
+    setVoidOpen(false);
+    setVoidReason("");
   };
 
   if (isLoading) return null;
@@ -72,7 +92,7 @@ export default function WarrantyCard({ serviceOrderId, orderStatus }: Props) {
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {orderStatus !== "delivered" ? "A garantia será gerada após a entrega." : "Nenhuma garantia registrada."}
+                {orderStatus !== "delivered" ? "A garantia será gerada automaticamente após a entrega." : "Nenhuma garantia registrada."}
               </p>
             )}
           </div>
@@ -85,7 +105,7 @@ export default function WarrantyCard({ serviceOrderId, orderStatus }: Props) {
               ) : isActive ? (
                 <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Ativa</Badge>
               ) : (
-                <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Expirada</Badge>
+                <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Expirada</Badge>
               )}
             </div>
 
@@ -114,11 +134,25 @@ export default function WarrantyCard({ serviceOrderId, orderStatus }: Props) {
               </div>
             )}
 
-            {isActive && (
-              <Button variant="outline" size="sm" onClick={() => setReturnOpen(true)}>
-                <RotateCcw className="mr-1 h-4 w-4" /> Registrar Retorno
-              </Button>
+            {(warranty as any).void_reason && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Motivo Anulação</p>
+                <p className="text-xs bg-destructive/10 text-destructive p-2 rounded">{(warranty as any).void_reason}</p>
+              </div>
             )}
+
+            <div className="flex gap-2">
+              {isActive && (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => setReturnOpen(true)}>
+                    <RotateCcw className="mr-1 h-4 w-4" /> Registrar Retorno
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setVoidOpen(true)}>
+                    <Ban className="mr-1 h-4 w-4" /> Anular
+                  </Button>
+                </>
+              )}
+            </div>
 
             {/* Return history */}
             {returns && returns.length > 0 && (
@@ -148,6 +182,15 @@ export default function WarrantyCard({ serviceOrderId, orderStatus }: Props) {
             <DialogHeader><DialogTitle>Retorno de Garantia</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div>
+                <Label>Causa do Retorno</Label>
+                <Select value={returnCause} onValueChange={setReturnCause}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a causa" /></SelectTrigger>
+                  <SelectContent>
+                    {returnCauses.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label>Motivo do Retorno</Label>
                 <Textarea value={returnReason} onChange={(e) => setReturnReason(e.target.value)} rows={3}
                   placeholder="Descreva o problema que motivou o retorno..." />
@@ -158,6 +201,27 @@ export default function WarrantyCard({ serviceOrderId, orderStatus }: Props) {
               <Button variant="outline" onClick={() => setReturnOpen(false)}>Cancelar</Button>
               <Button onClick={handleReturn} disabled={!returnReason.trim() || createReturn.isPending}>
                 Registrar Retorno
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Void Dialog */}
+        <Dialog open={voidOpen} onOpenChange={setVoidOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Anular Garantia</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Motivo da Anulação</Label>
+                <Textarea value={voidReason} onChange={(e) => setVoidReason(e.target.value)} rows={3}
+                  placeholder="Descreva o motivo para anular esta garantia..." />
+              </div>
+              <p className="text-xs text-destructive">Esta ação não pode ser desfeita.</p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setVoidOpen(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleVoid} disabled={!voidReason.trim() || voidWarranty.isPending}>
+                Anular Garantia
               </Button>
             </DialogFooter>
           </DialogContent>
