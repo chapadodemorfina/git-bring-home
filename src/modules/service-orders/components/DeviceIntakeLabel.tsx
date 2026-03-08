@@ -11,10 +11,11 @@ interface Props {
   intakeDate: string;
   trackingUrl: string | null;
   collectionPointName?: string | null;
+  companyName?: string;
 }
 
 const DeviceIntakeLabel = forwardRef<HTMLDivElement, Props>(
-  ({ orderNumber, deviceDescription, reportedIssue, customerName, intakeDate, trackingUrl, collectionPointName }, ref) => {
+  ({ orderNumber, deviceDescription, reportedIssue, customerName, intakeDate, trackingUrl, collectionPointName, companyName = "Assistência Técnica" }, ref) => {
     const truncate = (text: string | null, max: number) => {
       if (!text) return "—";
       return text.length > max ? text.slice(0, max) + "…" : text;
@@ -80,7 +81,7 @@ const DeviceIntakeLabel = forwardRef<HTMLDivElement, Props>(
           {/* Company + Order */}
           <div>
             <div style={{ fontSize: "7px", fontWeight: "bold", letterSpacing: "0.5px", marginBottom: "1px" }}>
-              i9 Solution
+              {companyName}
               {collectionPointName && (
                 <span style={{ fontWeight: "normal", marginLeft: "4px" }}>
                   · {truncate(collectionPointName, 20)}

@@ -3,6 +3,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { ServiceOrder, statusLabels, priorityLabels, channelLabels } from "../types";
 import { deviceTypeLabels } from "@/modules/devices/types";
 import { useActiveTerms, useOrderSignatures } from "../hooks/useServiceOrders";
+import { useCompanyName } from "@/hooks/useCompanyName";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -14,13 +15,14 @@ interface Props {
 const IntakeReceipt = forwardRef<HTMLDivElement, Props>(({ order, trackingUrl }, ref) => {
   const { data: terms } = useActiveTerms();
   const { data: signatures } = useOrderSignatures(order.id);
+  const companyName = useCompanyName("Assistência Técnica");
   const activeTerm = terms?.[0];
 
   return (
     <div ref={ref} className="bg-white text-black p-8 max-w-[800px] mx-auto text-sm print:p-4" style={{ fontFamily: "Arial, sans-serif" }}>
       {/* Header */}
       <div className="text-center border-b-2 border-black pb-4 mb-4">
-        <h1 className="text-xl font-bold">i9 Solution</h1>
+        <h1 className="text-xl font-bold">{companyName}</h1>
         <p className="text-xs">Assistência Técnica Especializada</p>
       </div>
 
