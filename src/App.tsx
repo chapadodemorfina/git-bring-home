@@ -148,6 +148,7 @@ const App = () => (
               <Route path="/collection-points/new" element={<ProtectedPage><CollectionPointCreatePage /></ProtectedPage>} />
               <Route path="/collection-points/:id" element={<ProtectedPage><CollectionPointDetailPage /></ProtectedPage>} />
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><CollectionPointEditPage /></ProtectedPage>} />
+              <Route path="/collection-points/commissions" element={<ProtectedPage><CommissionManagementPage /></ProtectedPage>} />
 
               {/* Logistics */}
               <Route path="/logistics" element={<ProtectedPage><LogisticsListPage /></ProtectedPage>} />
@@ -169,6 +170,13 @@ const App = () => (
                 <Route path="quotes" element={<PortalQuotesPage />} />
                 <Route path="warranties" element={<PortalWarrantiesPage />} />
                 <Route path="logistics" element={<PortalLogisticsPage />} />
+              </Route>
+
+              {/* Partner Portal */}
+              <Route path="/partner" element={<PartnerPortalLayout />}>
+                <Route index element={<PartnerDashboardPage />} />
+                <Route path="orders" element={<PartnerOrdersPage />} />
+                <Route path="commissions" element={<PartnerCommissionsPage />} />
               </Route>
 
               {/* Public Tracking (no auth) */}
