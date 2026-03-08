@@ -2782,6 +2782,10 @@ export type Database = {
         Args: { _service_order_id: string }
         Returns: Json
       }
+      get_cached_dashboard_kpis: { Args: never; Returns: Json }
+      get_cached_inventory_usage: { Args: never; Returns: Json }
+      get_cached_partner_performance: { Args: never; Returns: Json }
+      get_cached_technician_performance: { Args: never; Returns: Json }
       get_user_collection_points: {
         Args: { _user_id: string }
         Returns: string[]
