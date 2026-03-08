@@ -215,6 +215,13 @@ export default function ServiceOrderDetailPage() {
             orderNumber={order.order_number}
             trackingUrl={trackingUrl}
           />
+
+          {/* Customer Communication */}
+          <CustomerCommunicationPanel
+            serviceOrderId={order.id}
+            customerPhone={order.customer_phone}
+            customerName={order.customer_name || "Cliente"}
+          />
         </div>
       </div>
 
