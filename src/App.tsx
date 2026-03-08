@@ -173,11 +173,13 @@ const App = () => (
               {/* Customer Portal */}
               <Route path="/portal/login" element={<PortalLoginPage />} />
               <Route path="/portal" element={<PortalLayout />}>
-                <Route index element={<PortalOrdersPage />} />
+                <Route index element={<PortalDashboardPage />} />
+                <Route path="orders" element={<PortalOrdersPage />} />
                 <Route path="order/:id" element={<PortalOrderDetailPage />} />
                 <Route path="quotes" element={<PortalQuotesPage />} />
                 <Route path="warranties" element={<PortalWarrantiesPage />} />
                 <Route path="logistics" element={<PortalLogisticsPage />} />
+                <Route path="support" element={<PortalSupportPage />} />
               </Route>
 
               {/* Partner Portal */}
