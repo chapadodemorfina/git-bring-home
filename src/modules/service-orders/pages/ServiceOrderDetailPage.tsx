@@ -207,6 +207,8 @@ export default function ServiceOrderDetailPage() {
             </CardContent>
           </Card>
 
+          <DeviceLocationPanel serviceOrderId={order.id} deviceId={order.device_id} />
+
           <PublicLinkManager serviceOrderId={order.id} orderNumber={order.order_number} />
 
           {/* WhatsApp intake message */}
