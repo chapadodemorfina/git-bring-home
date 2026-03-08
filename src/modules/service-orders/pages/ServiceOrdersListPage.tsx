@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TablePagination from "@/components/ui/table-pagination";
 import { Plus, Search, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -15,7 +16,11 @@ import { ptBR } from "date-fns/locale";
 export default function ServiceOrdersListPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const { data: orders, isLoading } = useServiceOrders(search, filterStatus);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useServiceOrders(search, filterStatus, page);
+
+  const orders = data?.items || [];
+  const total = data?.total || 0;
 
   return (
     <div className="space-y-6">
@@ -34,9 +39,9 @@ export default function ServiceOrdersListPage() {
           <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por número, problema..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              <Input placeholder="Buscar por número, problema..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
             </div>
-            <Select value={filterStatus || "all"} onValueChange={(v) => setFilterStatus(v === "all" ? null : v)}>
+            <Select value={filterStatus || "all"} onValueChange={(v) => { setFilterStatus(v === "all" ? null : v); setPage(1); }}>
               <SelectTrigger className="w-[220px]"><SelectValue placeholder="Todos os status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
@@ -50,7 +55,7 @@ export default function ServiceOrdersListPage() {
         <CardContent>
           {isLoading ? (
             <p className="text-center py-8 text-muted-foreground">Carregando...</p>
-          ) : !orders?.length ? (
+          ) : !orders.length ? (
             <div className="text-center py-12">
               <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
               <p className="text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
@@ -81,6 +86,7 @@ export default function ServiceOrdersListPage() {
                   ))}
                 </TableBody>
               </Table>
+              <TablePagination page={page} pageSize={data?.pageSize || 50} total={total} onPageChange={setPage} />
             </div>
           )}
         </CardContent>

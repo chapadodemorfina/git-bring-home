@@ -9,33 +9,46 @@ import { useToast } from "@/hooks/use-toast";
 
 const db = supabase as any;
 
-export function useServiceOrders(search?: string, filterStatus?: string | null) {
+const PAGE_SIZE = 50;
+
+export function useServiceOrders(search?: string, filterStatus?: string | null, page: number = 1) {
   return useQuery({
-    queryKey: ["service-orders", search, filterStatus],
+    queryKey: ["service-orders", search, filterStatus, page],
     queryFn: async () => {
+      let countQuery = db
+        .from("service_orders")
+        .select("id", { count: "exact", head: true });
+
       let query = db
         .from("service_orders")
         .select("*, customers!inner(full_name), devices(brand, model)")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
       if (search) {
-        query = query.or(
-          `order_number.ilike.%${search}%,reported_issue.ilike.%${search}%`
-        );
+        const filter = `order_number.ilike.%${search}%,reported_issue.ilike.%${search}%`;
+        query = query.or(filter);
+        countQuery = countQuery.or(filter);
       }
       if (filterStatus) {
         query = query.eq("status", filterStatus);
+        countQuery = countQuery.eq("status", filterStatus);
       }
 
-      const { data, error } = await query;
+      const [{ data, error }, { count }] = await Promise.all([query, countQuery]);
       if (error) throw error;
-      return (data as any[]).map((d) => ({
-        ...d,
-        customer_name: d.customers?.full_name,
-        device_label: d.devices ? `${d.devices.brand || ""} ${d.devices.model || ""}`.trim() : null,
-        customers: undefined,
-        devices: undefined,
-      })) as ServiceOrder[];
+      return {
+        items: (data as any[]).map((d) => ({
+          ...d,
+          customer_name: d.customers?.full_name,
+          device_label: d.devices ? `${d.devices.brand || ""} ${d.devices.model || ""}`.trim() : null,
+          customers: undefined,
+          devices: undefined,
+        })) as ServiceOrder[],
+        total: count || 0,
+        page,
+        pageSize: PAGE_SIZE,
+      };
     },
   });
 }

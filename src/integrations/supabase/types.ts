@@ -123,6 +123,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "collection_point_commissions_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "mv_partner_performance"
+            referencedColumns: ["collection_point_id"]
+          },
+          {
             foreignKeyName: "collection_point_commissions_service_order_id_fkey"
             columns: ["service_order_id"]
             isOneToOne: false
@@ -160,6 +167,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "collection_points"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_point_users_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "mv_partner_performance"
+            referencedColumns: ["collection_point_id"]
           },
         ]
       }
@@ -288,6 +302,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "collection_points"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_transfers_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "mv_partner_performance"
+            referencedColumns: ["collection_point_id"]
           },
           {
             foreignKeyName: "collection_transfers_service_order_id_fkey"
@@ -665,6 +686,13 @@ export type Database = {
             foreignKeyName: "diagnosis_parts_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "diagnosis_parts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -853,6 +881,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "collection_points"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_entries_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "mv_partner_performance"
+            referencedColumns: ["collection_point_id"]
           },
           {
             foreignKeyName: "financial_entries_customer_id_fkey"
@@ -1178,6 +1213,13 @@ export type Database = {
             foreignKeyName: "part_reservations_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "part_reservations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -1323,6 +1365,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "collection_points"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickups_deliveries_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "mv_partner_performance"
+            referencedColumns: ["collection_point_id"]
           },
           {
             foreignKeyName: "pickups_deliveries_service_order_id_fkey"
@@ -1560,6 +1609,13 @@ export type Database = {
           unit_price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "repair_parts_used_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
           {
             foreignKeyName: "repair_parts_used_product_id_fkey"
             columns: ["product_id"]
@@ -2141,6 +2197,13 @@ export type Database = {
             foreignKeyName: "stock_movements_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -2630,7 +2693,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_dashboard_kpis: {
+        Row: {
+          delivered_orders: number | null
+          month_revenue: number | null
+          open_orders: number | null
+          today_received: number | null
+          today_revenue: number | null
+          total_orders: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
+      mv_inventory_usage: {
+        Row: {
+          cost_price: number | null
+          current_stock: number | null
+          minimum_quantity: number | null
+          orders_used_in: number | null
+          product_id: string | null
+          product_name: string | null
+          sale_price: number | null
+          sku: string | null
+          total_consumed: number | null
+          total_cost_consumed: number | null
+        }
+        Relationships: []
+      }
+      mv_partner_performance: {
+        Row: {
+          approved_quotes: number | null
+          collection_point_id: string | null
+          collection_point_name: string | null
+          total_commissions: number | null
+          total_orders: number | null
+          total_quotes: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
+      mv_technician_performance: {
+        Row: {
+          avg_hours_to_complete: number | null
+          delivered_orders: number | null
+          distinct_parts_used: number | null
+          technician_id: string | null
+          technician_name: string | null
+          total_orders: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       adjust_stock: {
@@ -2669,6 +2782,10 @@ export type Database = {
         Args: { _service_order_id: string }
         Returns: Json
       }
+      get_cached_dashboard_kpis: { Args: never; Returns: Json }
+      get_cached_inventory_usage: { Args: never; Returns: Json }
+      get_cached_partner_performance: { Args: never; Returns: Json }
+      get_cached_technician_performance: { Args: never; Returns: Json }
       get_user_collection_points: {
         Args: { _user_id: string }
         Returns: string[]
@@ -2713,6 +2830,7 @@ export type Database = {
         Returns: Json
       }
       public_track_order: { Args: { _token: string }; Returns: Json }
+      refresh_materialized_views: { Args: never; Returns: undefined }
       register_payment: {
         Args: {
           _amount: number

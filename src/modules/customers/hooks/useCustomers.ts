@@ -6,25 +6,30 @@ import { useToast } from "@/hooks/use-toast";
 // Helper to work around generated types not including new tables
 const db = supabase as any;
 
-export function useCustomers(search?: string, filterActive?: boolean | null) {
+const PAGE_SIZE = 50;
+
+export function useCustomers(search?: string, filterActive?: boolean | null, page: number = 1) {
   return useQuery({
-    queryKey: ["customers", search, filterActive],
+    queryKey: ["customers", search, filterActive, page],
     queryFn: async () => {
-      let query = db.from("customers").select("*").order("created_at", { ascending: false });
+      let countQuery = db.from("customers").select("id", { count: "exact", head: true });
+      let query = db.from("customers").select("*").order("created_at", { ascending: false })
+        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
       if (search) {
-        query = query.or(
-          `full_name.ilike.%${search}%,document.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`
-        );
+        const filter = `full_name.ilike.%${search}%,document.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`;
+        query = query.or(filter);
+        countQuery = countQuery.or(filter);
       }
 
       if (filterActive !== null && filterActive !== undefined) {
         query = query.eq("is_active", filterActive);
+        countQuery = countQuery.eq("is_active", filterActive);
       }
 
-      const { data, error } = await query;
+      const [{ data, error }, { count }] = await Promise.all([query, countQuery]);
       if (error) throw error;
-      return data as Customer[];
+      return { items: data as Customer[], total: count || 0, page, pageSize: PAGE_SIZE };
     },
   });
 }
