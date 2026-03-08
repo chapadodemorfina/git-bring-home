@@ -18,6 +18,7 @@ const mainItems = [
   { title: "Filas de Trabalho", url: "/queues", icon: ListChecks },
   { title: "Estoque & Peças", url: "/inventory", icon: Package },
   { title: "Pontos de Coleta", url: "/collection-points", icon: MapPin },
+  { title: "Comissões", url: "/collection-points/commissions", icon: DollarSign },
   { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
   { title: "Usuários", url: "/users", icon: Users },

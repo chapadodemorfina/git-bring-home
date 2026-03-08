@@ -53,6 +53,13 @@ import CollectionPointsListPage from "./modules/collection-points/pages/Collecti
 import CollectionPointCreatePage from "./modules/collection-points/pages/CollectionPointCreatePage";
 import CollectionPointDetailPage from "./modules/collection-points/pages/CollectionPointDetailPage";
 import CollectionPointEditPage from "./modules/collection-points/pages/CollectionPointEditPage";
+import CommissionManagementPage from "./modules/collection-points/pages/CommissionManagementPage";
+
+// Partner Portal
+import PartnerPortalLayout from "./modules/collection-points/pages/PartnerPortalLayout";
+import PartnerDashboardPage from "./modules/collection-points/pages/PartnerDashboardPage";
+import PartnerOrdersPage from "./modules/collection-points/pages/PartnerOrdersPage";
+import PartnerCommissionsPage from "./modules/collection-points/pages/PartnerCommissionsPage";
 
 // Logistics Module
 import LogisticsListPage from "./modules/logistics/pages/LogisticsListPage";
@@ -141,6 +148,7 @@ const App = () => (
               <Route path="/collection-points/new" element={<ProtectedPage><CollectionPointCreatePage /></ProtectedPage>} />
               <Route path="/collection-points/:id" element={<ProtectedPage><CollectionPointDetailPage /></ProtectedPage>} />
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><CollectionPointEditPage /></ProtectedPage>} />
+              <Route path="/collection-points/commissions" element={<ProtectedPage><CommissionManagementPage /></ProtectedPage>} />
 
               {/* Logistics */}
               <Route path="/logistics" element={<ProtectedPage><LogisticsListPage /></ProtectedPage>} />
@@ -162,6 +170,13 @@ const App = () => (
                 <Route path="quotes" element={<PortalQuotesPage />} />
                 <Route path="warranties" element={<PortalWarrantiesPage />} />
                 <Route path="logistics" element={<PortalLogisticsPage />} />
+              </Route>
+
+              {/* Partner Portal */}
+              <Route path="/partner" element={<PartnerPortalLayout />}>
+                <Route index element={<PartnerDashboardPage />} />
+                <Route path="orders" element={<PartnerOrdersPage />} />
+                <Route path="commissions" element={<PartnerCommissionsPage />} />
               </Route>
 
               {/* Public Tracking (no auth) */}
