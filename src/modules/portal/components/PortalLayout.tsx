@@ -43,7 +43,7 @@ export default function PortalLayout() {
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           <Link to="/portal" className="flex items-center gap-2">
             <Home className="h-5 w-5 text-primary" />
-            <span className="text-lg font-bold">i9 Solution</span>
+            <span className="text-lg font-bold">Portal do Cliente</span>
             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full hidden sm:inline">Portal do Cliente</span>
           </Link>
           <div className="flex items-center gap-2">

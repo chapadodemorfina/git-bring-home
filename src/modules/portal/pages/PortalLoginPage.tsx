@@ -90,7 +90,7 @@ export default function PortalLoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Portal do Cliente</CardTitle>
-          <CardDescription>i9 Solution — Acompanhe seus serviços</CardDescription>
+          <CardDescription>Acompanhe seus serviços</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={authMode} onValueChange={(v) => { setAuthMode(v as any); setOtpSent(false); }}>

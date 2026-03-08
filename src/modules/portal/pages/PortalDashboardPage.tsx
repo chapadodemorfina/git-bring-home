@@ -53,7 +53,7 @@ export default function PortalDashboardPage() {
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold">Olá, {customer?.full_name}!</h1>
-        <p className="text-muted-foreground">Bem-vindo ao Portal do Cliente i9 Solution</p>
+        <p className="text-muted-foreground">Bem-vindo ao Portal do Cliente</p>
       </div>
 
       {/* KPI Cards */}

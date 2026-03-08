@@ -12,6 +12,7 @@ import { PartsConsumptionChart } from "@/components/dashboard/PartsConsumptionCh
 import { CollectionPointsChart } from "@/components/dashboard/CollectionPointsChart";
 import { CommonDefectsChart } from "@/components/dashboard/CommonDefectsChart";
 import LowStockAlert from "@/modules/inventory/components/LowStockAlert";
+import { useCompanyName } from "@/hooks/useCompanyName";
 
 export default function Dashboard() {
   const [preset, setPreset] = useState("30d");
@@ -21,6 +22,7 @@ export default function Dashboard() {
   });
 
   const { data: summary, isLoading } = useDashboardData(dateRange);
+  const companyName = useCompanyName();
 
   const quoteApprovalRate = summary && summary.quotes_total > 0
     ? Math.round((summary.quotes_approved / summary.quotes_total) * 100)
@@ -53,7 +55,7 @@ export default function Dashboard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard Executivo</h1>
-          <p className="text-muted-foreground">Inteligência operacional — i9 Solution</p>
+          {companyName && <p className="text-muted-foreground">Inteligência operacional — {companyName}</p>}
         </div>
         <DashboardFilters dateRange={dateRange} onDateRangeChange={setDateRange} preset={preset} onPresetChange={setPreset} />
       </div>
