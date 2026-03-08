@@ -12,6 +12,7 @@ import WhatsAppIntakeMessage from "../components/WhatsAppIntakeMessage";
 import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuotePanel";
 import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
+import CustomerCommunicationPanel from "../components/CustomerCommunicationPanel";
 import { useServiceOrderPublicLinks } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -213,6 +214,13 @@ export default function ServiceOrderDetailPage() {
             customerPhone={order.customer_phone}
             orderNumber={order.order_number}
             trackingUrl={trackingUrl}
+          />
+
+          {/* Customer Communication */}
+          <CustomerCommunicationPanel
+            serviceOrderId={order.id}
+            customerPhone={order.customer_phone}
+            customerName={order.customer_name || "Cliente"}
           />
         </div>
       </div>
