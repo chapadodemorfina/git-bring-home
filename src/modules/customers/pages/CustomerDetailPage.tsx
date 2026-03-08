@@ -3,6 +3,7 @@ import { useCustomer, useCustomerAddresses, useCustomerContacts } from "../hooks
 import { AddressSection } from "../components/AddressSection";
 import { ContactSection } from "../components/ContactSection";
 import { CustomerTimeline } from "../components/CustomerTimeline";
+import CustomerWarrantyHistory from "@/modules/repair/components/CustomerWarrantyHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,6 +94,7 @@ export default function CustomerDetailPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           <CustomerTimeline customerId={customer.id} />
+          <CustomerWarrantyHistory customerId={customer.id} />
         </div>
       </div>
     </div>

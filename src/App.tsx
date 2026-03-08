@@ -82,6 +82,9 @@ import PortalQuotesPage from "./modules/portal/pages/PortalQuotesPage";
 import PortalWarrantiesPage from "./modules/portal/pages/PortalWarrantiesPage";
 import PortalLogisticsPage from "./modules/portal/pages/PortalLogisticsPage";
 
+// Warranties
+import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
+
 // Public Tracking
 import PublicTrackingPage from "./modules/tracking/pages/PublicTrackingPage";
 
@@ -149,6 +152,9 @@ const App = () => (
               <Route path="/collection-points/:id" element={<ProtectedPage><CollectionPointDetailPage /></ProtectedPage>} />
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><CollectionPointEditPage /></ProtectedPage>} />
               <Route path="/collection-points/commissions" element={<ProtectedPage><CommissionManagementPage /></ProtectedPage>} />
+
+              {/* Warranties */}
+              <Route path="/warranties" element={<ProtectedPage><WarrantiesPage /></ProtectedPage>} />
 
               {/* Logistics */}
               <Route path="/logistics" element={<ProtectedPage><LogisticsListPage /></ProtectedPage>} />
