@@ -2662,6 +2662,7 @@ export type Database = {
         Returns: Json
       }
       dashboard_summary: { Args: { _from: string; _to: string }; Returns: Json }
+      detect_suspicious_activity: { Args: { _days?: number }; Returns: Json }
       expire_stale_quotes: { Args: never; Returns: number }
       finance_summary: { Args: never; Returns: Json }
       generate_public_tracking_token: {
