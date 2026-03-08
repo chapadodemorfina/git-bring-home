@@ -64,6 +64,10 @@ Deno.serve(async (req) => {
     const { data: archivedConvs, error: waErr } = await supabase.rpc("wa_archive_stale_conversations");
     if (waErr) console.error("wa_archive_stale_conversations error:", waErr);
 
+    // 7. Refresh materialized views for dashboard performance
+    const { error: mvErr } = await supabase.rpc("refresh_materialized_views");
+    if (mvErr) console.error("refresh_materialized_views error:", mvErr);
+
     const result = {
       success: true,
       expired_quotes: expiredCount ?? 0,
@@ -72,6 +76,7 @@ Deno.serve(async (req) => {
       notification_delivery: notifResult,
       expired_wa_states: expiredStates ?? 0,
       archived_wa_conversations: archivedConvs ?? 0,
+      materialized_views_refreshed: !mvErr,
       ran_at: new Date().toISOString(),
     };
 
