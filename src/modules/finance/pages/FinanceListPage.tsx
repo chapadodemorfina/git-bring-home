@@ -45,14 +45,21 @@ export default function FinanceListPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
-            <Tabs value={tab} onValueChange={setTab}>
-              <TabsList>
-                <TabsTrigger value="all">Todos</TabsTrigger>
-                <TabsTrigger value="revenue">Receitas</TabsTrigger>
-                <TabsTrigger value="expense">Despesas</TabsTrigger>
-                <TabsTrigger value="commission">Comissões</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-col md:flex-row gap-3 items-start md:items-center flex-1">
+              <Tabs value={tab} onValueChange={setTab}>
+                <TabsList>
+                  <TabsTrigger value="all">Todos</TabsTrigger>
+                  <TabsTrigger value="revenue">Receitas</TabsTrigger>
+                  <TabsTrigger value="expense">Despesas</TabsTrigger>
+                  <TabsTrigger value="commission">Comissões</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar por descrição, categoria, cliente, fornecedor..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              </div>
+            </div>
 
             <Select value={filterStatus || "all"} onValueChange={(v) => setFilterStatus(v === "all" ? null : v)}>
               <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar status" /></SelectTrigger>

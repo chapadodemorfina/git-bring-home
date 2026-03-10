@@ -15,11 +15,7 @@ export default function ProductsListPage() {
   const [showEntry, setShowEntry] = useState(false);
   const { data: products, isLoading } = useProducts(search);
 
-  const filtered = products?.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.sku.toLowerCase().includes(search.toLowerCase()) ||
-    (p.brand || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products;
 
   return (
     <div className="space-y-4">
