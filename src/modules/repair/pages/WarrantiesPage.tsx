@@ -77,6 +77,12 @@ export default function WarrantiesPage() {
 
         <TabsContent value="list" className="mt-4">
           <Card>
+            <CardHeader className="pb-3">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar por nº garantia, OS, cliente, dispositivo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              </div>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
