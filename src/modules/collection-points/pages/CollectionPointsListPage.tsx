@@ -40,7 +40,7 @@ export default function CollectionPointsListPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered?.map(p => (
+            {points?.map(p => (
               <TableRow key={p.id} className="cursor-pointer" onClick={() => navigate(`/collection-points/${p.id}`)}>
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>{p.responsible_person || "—"}</TableCell>
