@@ -9,20 +9,22 @@ import FinanceDashboard from "../components/FinanceDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, DollarSign } from "lucide-react";
+import { Plus, DollarSign, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function FinanceListPage() {
   const [tab, setTab] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const entryType = tab === "all" ? null : (tab as FinancialEntryType);
-  const { data: entries, isLoading } = useFinancialEntries(entryType, filterStatus as FinancialEntryStatus | null);
+  const { data: entries, isLoading } = useFinancialEntries(entryType, filterStatus as FinancialEntryStatus | null, search);
 
   return (
     <div className="space-y-6">
