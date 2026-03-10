@@ -98,7 +98,7 @@ export default function WarrantiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {warranties?.map((w) => (
+                  {filteredWarranties?.map((w) => (
                     <TableRow key={w.id}>
                       <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
                       <TableCell>
