@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSuppliers, useCreateSupplier } from "../hooks/useInventory";
 import SupplierForm from "../components/SupplierForm";
 
 export default function SuppliersPage() {
-  const { data: suppliers, isLoading } = useSuppliers();
+  const [search, setSearch] = useState("");
+  const { data: suppliers, isLoading } = useSuppliers(search);
   const create = useCreateSupplier();
   const [showForm, setShowForm] = useState(false);
 
@@ -16,6 +18,11 @@ export default function SuppliersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Fornecedores</h1>
         <Button onClick={() => setShowForm(true)}><Plus className="h-4 w-4 mr-1" /> Novo Fornecedor</Button>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input className="pl-9" placeholder="Buscar por nome, contato, email, telefone, CNPJ..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {isLoading ? <p className="text-muted-foreground">Carregando...</p> : (

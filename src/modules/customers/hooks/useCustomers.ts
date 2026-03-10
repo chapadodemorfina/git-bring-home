@@ -17,7 +17,7 @@ export function useCustomers(search?: string, filterActive?: boolean | null, pag
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
       if (search) {
-        const filter = `full_name.ilike.%${search}%,document.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`;
+        const filter = `full_name.ilike.%${search}%,document.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%,whatsapp.ilike.%${search}%,notes.ilike.%${search}%`;
         query = query.or(filter);
         countQuery = countQuery.or(filter);
       }

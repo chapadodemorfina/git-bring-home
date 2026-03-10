@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useWarrantyAnalytics, useAllWarranties, useVoidWarranty } from "../hooks/useWarrantyAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, ShieldCheck, ShieldX, AlertTriangle, RotateCcw, BarChart3 } from "lucide-react";
+import { Shield, ShieldCheck, ShieldX, AlertTriangle, RotateCcw, BarChart3, Search } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
@@ -21,6 +22,7 @@ export default function WarrantiesPage() {
   const [voidOpen, setVoidOpen] = useState(false);
   const [selectedWarrantyId, setSelectedWarrantyId] = useState<string | null>(null);
   const [voidReason, setVoidReason] = useState("");
+  const [search, setSearch] = useState("");
 
   const handleVoid = async () => {
     if (!selectedWarrantyId || !voidReason.trim()) return;
@@ -35,6 +37,16 @@ export default function WarrantiesPage() {
     if (isPast(new Date(w.end_date))) return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Expirada</Badge>;
     return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Ativa</Badge>;
   };
+  const filteredWarranties = useMemo(() => {
+    if (!warranties || !search) return warranties;
+    const lower = search.toLowerCase();
+    return warranties.filter((w: any) =>
+      w.warranty_number?.toLowerCase().includes(lower) ||
+      w.service_orders?.order_number?.toLowerCase().includes(lower) ||
+      w.service_orders?.customers?.full_name?.toLowerCase().includes(lower) ||
+      `${w.service_orders?.devices?.brand || ""} ${w.service_orders?.devices?.model || ""}`.toLowerCase().includes(lower)
+    );
+  }, [warranties, search]);
 
   if (isLoading || analyticsLoading) return <div className="space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)}</div>;
 
@@ -65,6 +77,12 @@ export default function WarrantiesPage() {
 
         <TabsContent value="list" className="mt-4">
           <Card>
+            <CardHeader className="pb-3">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar por nº garantia, OS, cliente, dispositivo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              </div>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
@@ -80,7 +98,7 @@ export default function WarrantiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {warranties?.map((w) => (
+                  {filteredWarranties?.map((w) => (
                     <TableRow key={w.id}>
                       <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
                       <TableCell>

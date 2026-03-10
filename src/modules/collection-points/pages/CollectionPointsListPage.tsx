@@ -10,14 +10,8 @@ import { commissionTypeLabels } from "../types";
 
 export default function CollectionPointsListPage() {
   const navigate = useNavigate();
-  const { data: points, isLoading } = useCollectionPoints();
   const [search, setSearch] = useState("");
-
-  const filtered = points?.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.city || "").toLowerCase().includes(search.toLowerCase()) ||
-    (p.responsible_person || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: points, isLoading } = useCollectionPoints(search);
 
   return (
     <div className="space-y-4">
@@ -30,7 +24,7 @@ export default function CollectionPointsListPage() {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar por nome, cidade ou responsável..." value={search} onChange={e => setSearch(e.target.value)} />
+        <Input className="pl-9" placeholder="Buscar por nome, responsável, cidade, telefone, email..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {isLoading ? <p className="text-muted-foreground">Carregando...</p> : (
@@ -46,7 +40,7 @@ export default function CollectionPointsListPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered?.map(p => (
+            {points?.map(p => (
               <TableRow key={p.id} className="cursor-pointer" onClick={() => navigate(`/collection-points/${p.id}`)}>
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>{p.responsible_person || "—"}</TableCell>
@@ -60,7 +54,7 @@ export default function CollectionPointsListPage() {
                 </TableCell>
               </TableRow>
             ))}
-            {!filtered?.length && (
+            {!points?.length && (
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum ponto de coleta encontrado</TableCell></TableRow>
             )}
           </TableBody>

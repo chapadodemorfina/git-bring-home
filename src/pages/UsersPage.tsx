@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Search } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -16,6 +17,7 @@ interface UserProfile {
 export default function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -25,6 +27,15 @@ export default function UsersPage() {
     };
     fetchUsers();
   }, []);
+
+  const filtered = users.filter(u => {
+    if (!search) return true;
+    const lower = search.toLowerCase();
+    return (
+      u.full_name?.toLowerCase().includes(lower) ||
+      u.email?.toLowerCase().includes(lower)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -36,6 +47,10 @@ export default function UsersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Lista de Usuários</CardTitle>
+          <div className="relative max-w-sm pt-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 mt-1 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar por nome ou email..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -51,10 +66,10 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.length === 0 ? (
+                {filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Nenhum usuário encontrado</TableCell></TableRow>
                 ) : (
-                  users.map((u) => (
+                  filtered.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                       <TableCell>{u.email}</TableCell>

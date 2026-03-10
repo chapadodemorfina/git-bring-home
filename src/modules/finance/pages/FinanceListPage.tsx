@@ -9,20 +9,22 @@ import FinanceDashboard from "../components/FinanceDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, DollarSign } from "lucide-react";
+import { Plus, DollarSign, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function FinanceListPage() {
   const [tab, setTab] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const entryType = tab === "all" ? null : (tab as FinancialEntryType);
-  const { data: entries, isLoading } = useFinancialEntries(entryType, filterStatus as FinancialEntryStatus | null);
+  const { data: entries, isLoading } = useFinancialEntries(entryType, filterStatus as FinancialEntryStatus | null, search);
 
   return (
     <div className="space-y-6">
@@ -43,14 +45,21 @@ export default function FinanceListPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
-            <Tabs value={tab} onValueChange={setTab}>
-              <TabsList>
-                <TabsTrigger value="all">Todos</TabsTrigger>
-                <TabsTrigger value="revenue">Receitas</TabsTrigger>
-                <TabsTrigger value="expense">Despesas</TabsTrigger>
-                <TabsTrigger value="commission">Comissões</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-col md:flex-row gap-3 items-start md:items-center flex-1">
+              <Tabs value={tab} onValueChange={setTab}>
+                <TabsList>
+                  <TabsTrigger value="all">Todos</TabsTrigger>
+                  <TabsTrigger value="revenue">Receitas</TabsTrigger>
+                  <TabsTrigger value="expense">Despesas</TabsTrigger>
+                  <TabsTrigger value="commission">Comissões</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar por descrição, categoria, cliente, fornecedor..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              </div>
+            </div>
 
             <Select value={filterStatus || "all"} onValueChange={(v) => setFilterStatus(v === "all" ? null : v)}>
               <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar status" /></SelectTrigger>

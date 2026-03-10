@@ -14,16 +14,35 @@ export function usePickupsDeliveries(search?: string, filterStatus?: string | nu
         .select("*, service_orders!inner(order_number, customers!inner(full_name))")
         .order("created_at", { ascending: false });
 
+      if (search) {
+        query = query.or(
+          `driver_name.ilike.%${search}%,contact_name.ilike.%${search}%,notes.ilike.%${search}%,address_street.ilike.%${search}%,address_city.ilike.%${search}%,contact_phone.ilike.%${search}%`
+        );
+      }
       if (filterStatus) query = query.eq("status", filterStatus);
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data as any[]).map((d) => ({
+      let results = (data as any[]).map((d) => ({
         ...d,
         order_number: d.service_orders?.order_number,
         customer_name: d.service_orders?.customers?.full_name,
         service_orders: undefined,
       })) as PickupDelivery[];
+
+      // Client-side filter for joined fields (order_number, customer_name)
+      if (search) {
+        const lower = search.toLowerCase();
+        results = results.filter(r =>
+          r.order_number?.toLowerCase().includes(lower) ||
+          r.customer_name?.toLowerCase().includes(lower) ||
+          r.driver_name?.toLowerCase().includes(lower) ||
+          r.contact_name?.toLowerCase().includes(lower) ||
+          r.notes?.toLowerCase().includes(lower)
+        );
+      }
+
+      return results;
     },
   });
 }

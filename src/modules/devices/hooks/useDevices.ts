@@ -13,7 +13,7 @@ export function useDevices(search?: string, filterType?: string | null) {
 
       if (search) {
         query = query.or(
-          `brand.ilike.%${search}%,model.ilike.%${search}%,serial_number.ilike.%${search}%,imei.ilike.%${search}%`
+          `brand.ilike.%${search}%,model.ilike.%${search}%,serial_number.ilike.%${search}%,imei.ilike.%${search}%,color.ilike.%${search}%,reported_issue.ilike.%${search}%`
         );
       }
 

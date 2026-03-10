@@ -13,9 +13,10 @@ const db = supabase as any;
 export function useFinancialEntries(
   entryType?: FinancialEntryType | null,
   status?: FinancialEntryStatus | null,
+  search?: string,
 ) {
   return useQuery({
-    queryKey: ["financial-entries", entryType, status],
+    queryKey: ["financial-entries", entryType, status, search],
     queryFn: async () => {
       let query = db
         .from("financial_entries")
@@ -24,10 +25,15 @@ export function useFinancialEntries(
 
       if (entryType) query = query.eq("entry_type", entryType);
       if (status) query = query.eq("status", status);
+      if (search) {
+        query = query.or(
+          `description.ilike.%${search}%,category.ilike.%${search}%,notes.ilike.%${search}%`
+        );
+      }
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data as any[]).map((d) => ({
+      let results = (data as any[]).map((d) => ({
         ...d,
         customer_name: d.customers?.full_name,
         supplier_name: d.suppliers?.name,
@@ -36,6 +42,20 @@ export function useFinancialEntries(
         suppliers: undefined,
         service_orders: undefined,
       })) as FinancialEntry[];
+
+      // Client-side filter for joined fields
+      if (search) {
+        const lower = search.toLowerCase();
+        results = results.filter(r =>
+          r.description?.toLowerCase().includes(lower) ||
+          r.category?.toLowerCase().includes(lower) ||
+          (r as any).customer_name?.toLowerCase().includes(lower) ||
+          (r as any).supplier_name?.toLowerCase().includes(lower) ||
+          (r as any).order_number?.toLowerCase().includes(lower)
+        );
+      }
+
+      return results;
     },
   });
 }

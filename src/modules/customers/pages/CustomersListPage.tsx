@@ -41,7 +41,7 @@ export default function CustomersListPage() {
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por nome, telefone, CPF/CNPJ..." value={search}
+              <Input placeholder="Buscar por nome, telefone, CPF/CNPJ, email, WhatsApp..." value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
             </div>
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>

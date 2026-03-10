@@ -9,11 +9,17 @@ import type {
 const sb = supabase as any;
 
 // ── Products ──
-export function useProducts() {
+export function useProducts(search?: string) {
   return useQuery<Product[]>({
-    queryKey: ["products"],
+    queryKey: ["products", search],
     queryFn: async () => {
-      const { data, error } = await sb.from("products").select("*, suppliers(id, name)").order("name");
+      let query = sb.from("products").select("*, suppliers(id, name)").order("name");
+      if (search) {
+        query = query.or(
+          `name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%,compatible_devices.ilike.%${search}%,location.ilike.%${search}%`
+        );
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -92,11 +98,17 @@ export function useUpdateProduct() {
 }
 
 // ── Suppliers ──
-export function useSuppliers() {
+export function useSuppliers(search?: string) {
   return useQuery<Supplier[]>({
-    queryKey: ["suppliers"],
+    queryKey: ["suppliers", search],
     queryFn: async () => {
-      const { data, error } = await sb.from("suppliers").select("*").order("name");
+      let query = sb.from("suppliers").select("*").order("name");
+      if (search) {
+        query = query.or(
+          `name.ilike.%${search}%,contact_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,document.ilike.%${search}%`
+        );
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },

@@ -26,7 +26,7 @@ export function useServiceOrders(search?: string, filterStatus?: string | null, 
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
       if (search) {
-        const filter = `order_number.ilike.%${search}%,reported_issue.ilike.%${search}%`;
+        const filter = `order_number.ilike.%${search}%,reported_issue.ilike.%${search}%,intake_notes.ilike.%${search}%,internal_notes.ilike.%${search}%`;
         query = query.or(filter);
         countQuery = countQuery.or(filter);
       }

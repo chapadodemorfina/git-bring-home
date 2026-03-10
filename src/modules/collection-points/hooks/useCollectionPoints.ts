@@ -9,11 +9,17 @@ import type {
 const sb = supabase as any;
 
 // ── Collection Points ──
-export function useCollectionPoints() {
+export function useCollectionPoints(search?: string) {
   return useQuery<CollectionPoint[]>({
-    queryKey: ["collection_points"],
+    queryKey: ["collection_points", search],
     queryFn: async () => {
-      const { data, error } = await sb.from("collection_points").select("*").order("name");
+      let query = sb.from("collection_points").select("*").order("name");
+      if (search) {
+        query = query.or(
+          `name.ilike.%${search}%,responsible_person.ilike.%${search}%,city.ilike.%${search}%,phone.ilike.%${search}%,whatsapp.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`
+        );
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
