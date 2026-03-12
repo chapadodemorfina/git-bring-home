@@ -55,7 +55,7 @@ export default function SuppliersPage() {
           </TableHeader>
           <TableBody>
             {suppliers?.map(s => (
-              <TableRow key={s.id} className={!s.is_active ? "opacity-60" : ""}>
+              <TableRow key={s.id} className={`cursor-pointer ${!s.is_active ? "opacity-60" : ""}`} onClick={() => navigate(`/inventory/suppliers/${s.id}`)}>
                 <TableCell className="font-medium">{s.name}</TableCell>
                 <TableCell>{s.contact_name || "—"}</TableCell>
                 <TableCell>{s.email || "—"}</TableCell>
