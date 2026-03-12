@@ -967,44 +967,80 @@ export type Database = {
       inventory_scrap: {
         Row: {
           brand: string | null
+          color: string | null
           condition: string | null
           created_at: string
           created_by: string | null
+          customer_id: string | null
           device_type: string
+          estimated_recovery_value: number | null
           id: string
+          imei_serial: string | null
           location: string | null
           model: string | null
           notes: string | null
           salvageable_parts: string | null
+          scrap_category: Database["public"]["Enums"]["scrap_category"] | null
+          service_order_id: string | null
+          status: Database["public"]["Enums"]["scrap_status"] | null
           updated_at: string
         }
         Insert: {
           brand?: string | null
+          color?: string | null
           condition?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           device_type: string
+          estimated_recovery_value?: number | null
           id?: string
+          imei_serial?: string | null
           location?: string | null
           model?: string | null
           notes?: string | null
           salvageable_parts?: string | null
+          scrap_category?: Database["public"]["Enums"]["scrap_category"] | null
+          service_order_id?: string | null
+          status?: Database["public"]["Enums"]["scrap_status"] | null
           updated_at?: string
         }
         Update: {
           brand?: string | null
+          color?: string | null
           condition?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           device_type?: string
+          estimated_recovery_value?: number | null
           id?: string
+          imei_serial?: string | null
           location?: string | null
           model?: string | null
           notes?: string | null
           salvageable_parts?: string | null
+          scrap_category?: Database["public"]["Enums"]["scrap_category"] | null
+          service_order_id?: string | null
+          status?: Database["public"]["Enums"]["scrap_status"] | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventory_scrap_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_scrap_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_events: {
         Row: {
@@ -1901,6 +1937,62 @@ export type Database = {
           },
         ]
       }
+      scrap_carcass_details: {
+        Row: {
+          aesthetic_state: string | null
+          back_cover_ok: boolean | null
+          buttons_ok: boolean | null
+          color: string | null
+          created_at: string | null
+          frame_ok: boolean | null
+          id: string
+          lenses_ok: boolean | null
+          missing_details: string | null
+          purpose: string | null
+          scrap_id: string
+          sim_tray_ok: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          aesthetic_state?: string | null
+          back_cover_ok?: boolean | null
+          buttons_ok?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          frame_ok?: boolean | null
+          id?: string
+          lenses_ok?: boolean | null
+          missing_details?: string | null
+          purpose?: string | null
+          scrap_id: string
+          sim_tray_ok?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          aesthetic_state?: string | null
+          back_cover_ok?: boolean | null
+          buttons_ok?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          frame_ok?: boolean | null
+          id?: string
+          lenses_ok?: boolean | null
+          missing_details?: string | null
+          purpose?: string | null
+          scrap_id?: string
+          sim_tray_ok?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrap_carcass_details_scrap_id_fkey"
+            columns: ["scrap_id"]
+            isOneToOne: true
+            referencedRelation: "inventory_scrap"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrap_disassembly: {
         Row: {
           created_at: string
@@ -1995,6 +2087,77 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scrap_triage: {
+        Row: {
+          battery_usable: boolean | null
+          board_responsive: boolean | null
+          buttons_flex_usable: boolean | null
+          camera_usable: boolean | null
+          carcass_usable: boolean | null
+          charge_module_usable: boolean | null
+          connectors_usable: boolean | null
+          created_at: string | null
+          destination: string | null
+          estimated_value: number | null
+          id: string
+          notes: string | null
+          recovery_potential: string | null
+          scrap_id: string
+          screen_usable: boolean | null
+          speaker_mic_usable: boolean | null
+          still_powers_on: boolean | null
+          triaged_by: string | null
+        }
+        Insert: {
+          battery_usable?: boolean | null
+          board_responsive?: boolean | null
+          buttons_flex_usable?: boolean | null
+          camera_usable?: boolean | null
+          carcass_usable?: boolean | null
+          charge_module_usable?: boolean | null
+          connectors_usable?: boolean | null
+          created_at?: string | null
+          destination?: string | null
+          estimated_value?: number | null
+          id?: string
+          notes?: string | null
+          recovery_potential?: string | null
+          scrap_id: string
+          screen_usable?: boolean | null
+          speaker_mic_usable?: boolean | null
+          still_powers_on?: boolean | null
+          triaged_by?: string | null
+        }
+        Update: {
+          battery_usable?: boolean | null
+          board_responsive?: boolean | null
+          buttons_flex_usable?: boolean | null
+          camera_usable?: boolean | null
+          carcass_usable?: boolean | null
+          charge_module_usable?: boolean | null
+          connectors_usable?: boolean | null
+          created_at?: string | null
+          destination?: string | null
+          estimated_value?: number | null
+          id?: string
+          notes?: string | null
+          recovery_potential?: string | null
+          scrap_id?: string
+          screen_usable?: boolean | null
+          speaker_mic_usable?: boolean | null
+          still_powers_on?: boolean | null
+          triaged_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrap_triage_scrap_id_fkey"
+            columns: ["scrap_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_scrap"
             referencedColumns: ["id"]
           },
         ]
@@ -3053,6 +3216,7 @@ export type Database = {
         Returns: Json
       }
       run_consistency_checks: { Args: never; Returns: Json }
+      scrap_dashboard_summary: { Args: never; Returns: Json }
       void_warranty: {
         Args: { _reason: string; _warranty_id: string }
         Returns: Json
@@ -3164,6 +3328,21 @@ export type Database = {
       quote_status: "draft" | "sent" | "approved" | "rejected" | "expired"
       repair_complexity: "simple" | "moderate" | "complex" | "specialized"
       repair_viability: "repairable" | "not_repairable" | "uncertain"
+      scrap_category:
+        | "aparelho_completo"
+        | "placa"
+        | "carcaca"
+        | "tela_quebrada"
+        | "lote_pecas"
+        | "acessorio"
+      scrap_status:
+        | "aguardando_triagem"
+        | "triada"
+        | "desmontada"
+        | "pecas_recuperadas"
+        | "descartada"
+        | "vendida"
+        | "usada_internamente"
       service_order_priority: "low" | "normal" | "high" | "urgent"
       service_order_status:
         | "received"
@@ -3424,6 +3603,23 @@ export const Constants = {
       quote_status: ["draft", "sent", "approved", "rejected", "expired"],
       repair_complexity: ["simple", "moderate", "complex", "specialized"],
       repair_viability: ["repairable", "not_repairable", "uncertain"],
+      scrap_category: [
+        "aparelho_completo",
+        "placa",
+        "carcaca",
+        "tela_quebrada",
+        "lote_pecas",
+        "acessorio",
+      ],
+      scrap_status: [
+        "aguardando_triagem",
+        "triada",
+        "desmontada",
+        "pecas_recuperadas",
+        "descartada",
+        "vendida",
+        "usada_internamente",
+      ],
       service_order_priority: ["low", "normal", "high", "urgent"],
       service_order_status: [
         "received",
