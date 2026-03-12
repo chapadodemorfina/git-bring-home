@@ -46,6 +46,8 @@ import ProductCreatePage from "./modules/inventory/pages/ProductCreatePage";
 import ProductDetailPage from "./modules/inventory/pages/ProductDetailPage";
 import ProductEditPage from "./modules/inventory/pages/ProductEditPage";
 import SuppliersPage from "./modules/inventory/pages/SuppliersPage";
+import SupplierDetailPage from "./modules/inventory/pages/SupplierDetailPage";
+import SupplierEditPage from "./modules/inventory/pages/SupplierEditPage";
 import StockMovementsPage from "./modules/inventory/pages/StockMovementsPage";
 import ScrapDisassemblyPage from "./modules/inventory/pages/ScrapDisassemblyPage";
 
