@@ -47,6 +47,7 @@ import ProductDetailPage from "./modules/inventory/pages/ProductDetailPage";
 import ProductEditPage from "./modules/inventory/pages/ProductEditPage";
 import SuppliersPage from "./modules/inventory/pages/SuppliersPage";
 import StockMovementsPage from "./modules/inventory/pages/StockMovementsPage";
+import ScrapDisassemblyPage from "./modules/inventory/pages/ScrapDisassemblyPage";
 
 // Collection Points Module
 import CollectionPointsListPage from "./modules/collection-points/pages/CollectionPointsListPage";
