@@ -211,9 +211,19 @@ export function useFinanceSummary() {
   return useQuery({
     queryKey: ["finance-summary"],
     queryFn: async () => {
+      const defaultFinanceSummary = {
+        total_revenue: 0,
+        total_expenses: 0,
+        total_commissions: 0,
+        pending_receivables: 0,
+        pending_payables: 0,
+        overdue_count: 0,
+        profit: 0,
+      };
       const { data, error } = await db.rpc("finance_summary");
       if (error) throw error;
-      return data as {
+      if (!data) return defaultFinanceSummary;
+      return { ...defaultFinanceSummary, ...data } as {
         total_revenue: number;
         total_expenses: number;
         total_commissions: number;

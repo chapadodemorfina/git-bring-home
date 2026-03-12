@@ -26,6 +26,19 @@ export interface WarrantyAnalytics {
   }[];
 }
 
+const defaultAnalytics: WarrantyAnalytics = {
+  total_warranties: 0,
+  active_warranties: 0,
+  expired_warranties: 0,
+  voided_warranties: 0,
+  total_returns: 0,
+  return_rate: 0,
+  returns_by_cause: [],
+  returns_by_outcome: [],
+  top_returning_devices: [],
+  recent_returns: [],
+};
+
 export function useWarrantyAnalytics(from?: string, to?: string) {
   return useQuery({
     queryKey: ["warranty-analytics", from, to],
@@ -35,7 +48,15 @@ export function useWarrantyAnalytics(from?: string, to?: string) {
       if (to) params._to = to;
       const { data, error } = await db.rpc("warranty_analytics", params);
       if (error) throw error;
-      return data as WarrantyAnalytics;
+      if (!data) return defaultAnalytics;
+      return {
+        ...defaultAnalytics,
+        ...data,
+        returns_by_cause: data.returns_by_cause || [],
+        returns_by_outcome: data.returns_by_outcome || [],
+        top_returning_devices: data.top_returning_devices || [],
+        recent_returns: data.recent_returns || [],
+      } as WarrantyAnalytics;
     },
   });
 }
@@ -50,7 +71,7 @@ export function useAllWarranties() {
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
-      return data as any[];
+      return (data || []) as any[];
     },
   });
 }
@@ -91,7 +112,7 @@ export function useCustomerWarranties(customerId: string | undefined) {
         .eq("customer_id", customerId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as any[];
+      return (data || []) as any[];
     },
   });
 }

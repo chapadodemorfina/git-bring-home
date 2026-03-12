@@ -13,6 +13,8 @@ import { CollectionPointsChart } from "@/components/dashboard/CollectionPointsCh
 import { CommonDefectsChart } from "@/components/dashboard/CommonDefectsChart";
 import LowStockAlert from "@/modules/inventory/components/LowStockAlert";
 import { useCompanyName } from "@/hooks/useCompanyName";
+import { AlertTriangle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Dashboard() {
   const [preset, setPreset] = useState("30d");
@@ -21,16 +23,19 @@ export default function Dashboard() {
     to: new Date(),
   });
 
-  const { data: summary, isLoading } = useDashboardData(dateRange);
+  const { data: summary, isLoading, error } = useDashboardData(dateRange);
   const companyName = useCompanyName();
 
-  const quoteApprovalRate = summary && summary.quotes_total > 0
-    ? Math.round((summary.quotes_approved / summary.quotes_total) * 100)
-    : null;
-
-  const warrantyReturnRate = summary && summary.warranties_total > 0
-    ? Math.round((summary.warranties_voided / summary.warranties_total) * 100)
-    : null;
+  if (error) {
+    return (
+      <Card className="border-destructive">
+        <CardContent className="pt-6 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+          <p className="text-sm font-medium">Erro ao carregar dashboard: {(error as Error).message}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading || !summary) {
     return (
@@ -46,7 +51,15 @@ export default function Dashboard() {
     );
   }
 
-  const statusChartData = Object.entries(summary.orders_by_status).map(([status, count]) => ({ status, count }));
+  const quoteApprovalRate = summary.quotes_total > 0
+    ? Math.round((summary.quotes_approved / summary.quotes_total) * 100)
+    : null;
+
+  const warrantyReturnRate = summary.warranties_total > 0
+    ? Math.round((summary.warranties_voided / summary.warranties_total) * 100)
+    : null;
+
+  const statusChartData = Object.entries(summary.orders_by_status || {}).map(([status, count]) => ({ status, count }));
   const techData = summary.technician_orders || [];
   const cpData = summary.collection_point_orders || [];
 
@@ -67,35 +80,35 @@ export default function Dashboard() {
         openOrders={summary.open_orders}
         avgTurnaroundHours={summary.avg_turnaround_hours ? Math.round(summary.avg_turnaround_hours) : null}
         quoteApprovalRate={quoteApprovalRate}
-        totalRevenue={Number(summary.total_revenue)}
-        totalExpenses={Number(summary.total_expenses)}
-        profit={Number(summary.total_revenue) - Number(summary.total_expenses)}
+        totalRevenue={Number(summary.total_revenue) || 0}
+        totalExpenses={Number(summary.total_expenses) || 0}
+        profit={(Number(summary.total_revenue) || 0) - (Number(summary.total_expenses) || 0)}
         warrantyReturnRate={warrantyReturnRate}
         slaOverdueCount={summary.sla_overdue_count}
         todayReceived={summary.today_received}
         todayDelivered={summary.today_delivered}
-        todayRevenue={Number(summary.today_revenue)}
+        todayRevenue={Number(summary.today_revenue) || 0}
         todayQuotes={summary.today_quotes}
         avgDiagnosisHours={summary.avg_diagnosis_hours}
         avgTicketValue={summary.avg_ticket_value ? Number(summary.avg_ticket_value) : null}
-        totalCommissions={Number(summary.total_commissions)}
-        stockValue={Number(summary.stock_value)}
+        totalCommissions={Number(summary.total_commissions) || 0}
+        stockValue={Number(summary.stock_value) || 0}
         lowStockCount={summary.low_stock_count}
       />
 
       {/* Pipeline */}
-      {summary.pipeline && <PipelineView data={summary.pipeline} />}
+      <PipelineView data={summary.pipeline || {}} />
 
       {/* Charts row 1 */}
       <div className="grid gap-4 lg:grid-cols-2">
         <OrdersByStatusChart data={statusChartData} />
-        {summary.monthly_trend && <RevenueTrendChart data={summary.monthly_trend} />}
+        <RevenueTrendChart data={summary.monthly_trend || []} />
       </div>
 
       {/* Charts row 2 */}
       <div className="grid gap-4 lg:grid-cols-2">
         <TechnicianProductivityChart data={techData} />
-        <DeviceTypesChart data={Object.entries(summary.device_types).map(([device_type, count]) => ({ device_type, count }))} />
+        <DeviceTypesChart data={Object.entries(summary.device_types || {}).map(([device_type, count]) => ({ device_type, count }))} />
       </div>
 
       {/* Charts row 3 */}

@@ -38,6 +38,15 @@ interface SuspiciousActivity {
   summary: { total_actions: number; creates: number; updates: number; deletes: number; tables_affected: number };
 }
 
+const defaultSuspicious: SuspiciousActivity = {
+  frequent_stock_adjustments: [],
+  quote_mods_after_approval: [],
+  deleted_service_orders: [],
+  large_financial_changes: [],
+  voided_warranties: [],
+  summary: { total_actions: 0, creates: 0, updates: 0, deletes: 0, tables_affected: 0 },
+};
+
 const actionColors: Record<string, string> = {
   create: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   update: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -69,7 +78,7 @@ function useAuditLogs(filters: { action: string; table_name: string; search: str
       if (filters.search) query = query.or(`record_id.ilike.%${filters.search}%,action.ilike.%${filters.search}%`);
       const { data, error } = await query;
       if (error) throw error;
-      return data as AuditLog[];
+      return (data || []) as AuditLog[];
     },
   });
 }
@@ -80,7 +89,17 @@ function useSuspiciousActivity(days: number) {
     queryFn: async () => {
       const { data, error } = await db.rpc("detect_suspicious_activity", { _days: days });
       if (error) throw error;
-      return data as SuspiciousActivity;
+      if (!data) return defaultSuspicious;
+      return {
+        ...defaultSuspicious,
+        ...data,
+        frequent_stock_adjustments: data.frequent_stock_adjustments || [],
+        quote_mods_after_approval: data.quote_mods_after_approval || [],
+        deleted_service_orders: data.deleted_service_orders || [],
+        large_financial_changes: data.large_financial_changes || [],
+        voided_warranties: data.voided_warranties || [],
+        summary: { ...defaultSuspicious.summary, ...(data.summary || {}) },
+      } as SuspiciousActivity;
     },
   });
 }
@@ -92,15 +111,16 @@ export default function AuditLogsPage() {
   const [detailLog, setDetailLog] = useState<AuditLog | null>(null);
 
   const { data: logs, isLoading } = useAuditLogs({ action, table_name: tableName, search });
-  const { data: suspicious, isLoading: suspiciousLoading } = useSuspiciousActivity(7);
+  const { data: rawSuspicious, isLoading: suspiciousLoading } = useSuspiciousActivity(7);
 
-  const alertCount = suspicious
-    ? (suspicious.frequent_stock_adjustments?.length || 0) +
-      (suspicious.quote_mods_after_approval?.length || 0) +
-      (suspicious.deleted_service_orders?.length || 0) +
-      (suspicious.large_financial_changes?.length || 0) +
-      (suspicious.voided_warranties?.length || 0)
-    : 0;
+  const suspicious = { ...defaultSuspicious, ...rawSuspicious, summary: { ...defaultSuspicious.summary, ...(rawSuspicious?.summary || {}) } };
+
+  const alertCount =
+    (suspicious.frequent_stock_adjustments?.length || 0) +
+    (suspicious.quote_mods_after_approval?.length || 0) +
+    (suspicious.deleted_service_orders?.length || 0) +
+    (suspicious.large_financial_changes?.length || 0) +
+    (suspicious.voided_warranties?.length || 0);
 
   return (
     <div className="space-y-6">
@@ -110,15 +130,13 @@ export default function AuditLogsPage() {
       </div>
 
       {/* Summary Cards */}
-      {suspicious?.summary && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Ações (7 dias)</p><p className="text-2xl font-bold">{suspicious.summary.total_actions}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Criações</p><p className="text-2xl font-bold text-green-600">{suspicious.summary.creates}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Atualizações</p><p className="text-2xl font-bold text-blue-600">{suspicious.summary.updates}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Exclusões</p><p className="text-2xl font-bold text-destructive">{suspicious.summary.deletes}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><AlertTriangle className="h-4 w-4 text-orange-500" /> Alertas</p><p className="text-2xl font-bold text-orange-600">{alertCount}</p></CardContent></Card>
-        </div>
-      )}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Ações (7 dias)</p><p className="text-2xl font-bold">{suspicious.summary.total_actions}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Criações</p><p className="text-2xl font-bold text-green-600">{suspicious.summary.creates}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Atualizações</p><p className="text-2xl font-bold text-blue-600">{suspicious.summary.updates}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Exclusões</p><p className="text-2xl font-bold text-destructive">{suspicious.summary.deletes}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><AlertTriangle className="h-4 w-4 text-orange-500" /> Alertas</p><p className="text-2xl font-bold text-orange-600">{alertCount}</p></CardContent></Card>
+      </div>
 
       <Tabs defaultValue="logs">
         <TabsList>
@@ -173,10 +191,10 @@ export default function AuditLogsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {!logs?.length ? (
+                    {!(logs || []).length ? (
                       <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum registro encontrado</TableCell></TableRow>
                     ) : (
-                      logs.map((l) => (
+                      (logs || []).map((l) => (
                         <TableRow key={l.id}>
                           <TableCell className="text-sm whitespace-nowrap">{format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
                           <TableCell><Badge className={actionColors[l.action] || ""}>{l.action}</Badge></TableCell>
@@ -206,23 +224,23 @@ export default function AuditLogsPage() {
           ) : (
             <>
               <AlertSection title="Ajustes de Estoque Frequentes" icon={<Activity className="h-5 w-5 text-orange-500" />}
-                items={suspicious?.frequent_stock_adjustments || []}
+                items={suspicious.frequent_stock_adjustments || []}
                 render={(item) => <span>{item.user_name} — <strong>{item.count}</strong> ajustes em 7 dias</span>}
               />
               <AlertSection title="Orçamentos Modificados Após Aprovação" icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
-                items={suspicious?.quote_mods_after_approval || []}
+                items={suspicious.quote_mods_after_approval || []}
                 render={(item) => <span>{item.user_name} modificou orçamento {item.record_id?.slice(0, 8)} em {format(new Date(item.created_at), "dd/MM HH:mm")}</span>}
               />
               <AlertSection title="Ordens de Serviço Excluídas" icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
-                items={suspicious?.deleted_service_orders || []}
+                items={suspicious.deleted_service_orders || []}
                 render={(item) => <span>{item.user_name} excluiu OS {item.old_data?.order_number || item.record_id?.slice(0, 8)} em {format(new Date(item.created_at), "dd/MM HH:mm")}</span>}
               />
               <AlertSection title="Alterações Financeiras Significativas (>R$500)" icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
-                items={suspicious?.large_financial_changes || []}
+                items={suspicious.large_financial_changes || []}
                 render={(item) => <span>{item.user_name}: R${item.old_amount} → R${item.new_amount}</span>}
               />
               <AlertSection title="Garantias Anuladas" icon={<Shield className="h-5 w-5 text-orange-500" />}
-                items={suspicious?.voided_warranties || []}
+                items={suspicious.voided_warranties || []}
                 render={(item) => <span>{item.user_name} anulou {item.warranty_number}: {item.reason}</span>}
               />
               {alertCount === 0 && (
