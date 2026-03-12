@@ -9,11 +9,12 @@ import type {
 const sb = supabase as any;
 
 // ── Products ──
-export function useProducts(search?: string) {
+export function useProducts(search?: string, showArchived = false) {
   return useQuery<Product[]>({
-    queryKey: ["products", search],
+    queryKey: ["products", search, showArchived],
     queryFn: async () => {
       let query = sb.from("products").select("*, suppliers(id, name)").order("name");
+      if (!showArchived) query = query.eq("is_active", true);
       if (search) {
         query = query.or(
           `name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%,compatible_devices.ilike.%${search}%,location.ilike.%${search}%`
