@@ -50,6 +50,10 @@ import SupplierDetailPage from "./modules/inventory/pages/SupplierDetailPage";
 import SupplierEditPage from "./modules/inventory/pages/SupplierEditPage";
 import StockMovementsPage from "./modules/inventory/pages/StockMovementsPage";
 import ScrapDisassemblyPage from "./modules/inventory/pages/ScrapDisassemblyPage";
+import ScrapListPage from "./modules/inventory/pages/ScrapListPage";
+import ScrapCreatePage from "./modules/inventory/pages/ScrapCreatePage";
+import ScrapDetailPage from "./modules/inventory/pages/ScrapDetailPage";
+import ScrapDashboardPage from "./modules/inventory/pages/ScrapDashboardPage";
 
 // Collection Points Module
 import CollectionPointsListPage from "./modules/collection-points/pages/CollectionPointsListPage";
@@ -159,7 +163,11 @@ const App = () => (
               <Route path="/inventory/suppliers/:id" element={<ProtectedPage><SupplierDetailPage /></ProtectedPage>} />
               <Route path="/inventory/suppliers/:id/edit" element={<ProtectedPage><SupplierEditPage /></ProtectedPage>} />
               <Route path="/inventory/movements" element={<ProtectedPage><StockMovementsPage /></ProtectedPage>} />
-              <Route path="/inventory/scrap" element={<ProtectedPage><ScrapDisassemblyPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap" element={<ProtectedPage><ScrapListPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/new" element={<ProtectedPage><ScrapCreatePage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/dashboard" element={<ProtectedPage><ScrapDashboardPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/disassembly" element={<ProtectedPage><ScrapDisassemblyPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/:id" element={<ProtectedPage><ScrapDetailPage /></ProtectedPage>} />
 
               {/* Collection Points */}
               <Route path="/collection-points" element={<ProtectedPage><CollectionPointsListPage /></ProtectedPage>} />

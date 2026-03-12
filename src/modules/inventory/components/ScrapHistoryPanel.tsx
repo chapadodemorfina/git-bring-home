@@ -8,10 +8,11 @@ import { useScrapDisassemblies, useAllRecoveredPartsForScrap } from "../hooks/us
 
 interface Props {
   scrapId: string;
-  onClose: () => void;
+  onClose?: () => void;
+  hideClose?: boolean;
 }
 
-export function ScrapHistoryPanel({ scrapId, onClose }: Props) {
+export function ScrapHistoryPanel({ scrapId, onClose, hideClose }: Props) {
   const { data: disassemblies = [] } = useScrapDisassemblies(scrapId);
   const { data: allParts = [] } = useAllRecoveredPartsForScrap(scrapId);
 
@@ -23,9 +24,11 @@ export function ScrapHistoryPanel({ scrapId, onClose }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg">Histórico de Desmontagem</CardTitle>
-        <Button size="icon" variant="ghost" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        {!hideClose && onClose && (
+          <Button size="icon" variant="ghost" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
