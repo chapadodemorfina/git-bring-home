@@ -30,6 +30,11 @@ export interface Supplier {
   whatsapp: string | null;
   document: string | null;
   address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  supplier_type: string | null;
+  lead_time_days: number | null;
   notes: string | null;
   is_active: boolean;
   created_by: string | null;
