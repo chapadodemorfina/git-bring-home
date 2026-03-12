@@ -144,16 +144,20 @@ export const consumePartSchema = z.object({
 export type ConsumePartFormData = z.infer<typeof consumePartSchema>;
 
 export const productCategories = [
-  "Tela / Display",
-  "Bateria",
-  "Conector / Porta",
-  "Placa-mãe",
-  "Memória RAM",
-  "Armazenamento",
-  "Cooler / Ventoinha",
-  "Fonte de Alimentação",
-  "Cabo / Flex",
-  "Carcaça / Gabinete",
-  "Teclado",
-  "Outro",
+  "PEÇAS CELULAR",
+  "PEÇAS NOTEBOOK",
+  "PEÇAS MONITOR",
+  "PEÇAS TV",
+  "COMPONENTES ELETRÔNICOS",
+  "FERRAMENTAS",
+  "ACESSÓRIOS",
+  "SUCATA",
+];
+
+export const supplierTypes = [
+  { value: "distribuidor_local", label: "Distribuidor Local" },
+  { value: "distribuidor_nacional", label: "Distribuidor Nacional" },
+  { value: "importador", label: "Importador" },
+  { value: "eletronica_componentes", label: "Eletrônica / Componentes" },
+  { value: "sucata", label: "Sucata" },
 ];
