@@ -129,6 +129,11 @@ export function useCreateSupplier() {
         whatsapp: values.whatsapp || null,
         document: values.document || null,
         address: values.address || null,
+        city: values.city || null,
+        state: values.state || null,
+        country: values.country || null,
+        supplier_type: values.supplier_type || null,
+        lead_time_days: values.lead_time_days ?? null,
         notes: values.notes || null,
         created_by: user?.id,
       };
