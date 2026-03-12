@@ -30,6 +30,11 @@ export interface Supplier {
   whatsapp: string | null;
   document: string | null;
   address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  supplier_type: string | null;
+  lead_time_days: number | null;
   notes: string | null;
   is_active: boolean;
   created_by: string | null;
@@ -116,6 +121,11 @@ export const supplierSchema = z.object({
   whatsapp: z.string().trim().max(20).optional().or(z.literal("")),
   document: z.string().trim().max(20).optional().or(z.literal("")),
   address: z.string().trim().max(500).optional().or(z.literal("")),
+  city: z.string().trim().max(100).optional().or(z.literal("")),
+  state: z.string().trim().max(50).optional().or(z.literal("")),
+  country: z.string().trim().max(100).optional().or(z.literal("")),
+  supplier_type: z.string().trim().max(50).optional().or(z.literal("")),
+  lead_time_days: z.coerce.number().int().min(0).optional(),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
 });
 
@@ -139,16 +149,20 @@ export const consumePartSchema = z.object({
 export type ConsumePartFormData = z.infer<typeof consumePartSchema>;
 
 export const productCategories = [
-  "Tela / Display",
-  "Bateria",
-  "Conector / Porta",
-  "Placa-mãe",
-  "Memória RAM",
-  "Armazenamento",
-  "Cooler / Ventoinha",
-  "Fonte de Alimentação",
-  "Cabo / Flex",
-  "Carcaça / Gabinete",
-  "Teclado",
-  "Outro",
+  "PEÇAS CELULAR",
+  "PEÇAS NOTEBOOK",
+  "PEÇAS MONITOR",
+  "PEÇAS TV",
+  "COMPONENTES ELETRÔNICOS",
+  "FERRAMENTAS",
+  "ACESSÓRIOS",
+  "SUCATA",
+];
+
+export const supplierTypes = [
+  { value: "distribuidor_local", label: "Distribuidor Local" },
+  { value: "distribuidor_nacional", label: "Distribuidor Nacional" },
+  { value: "importador", label: "Importador" },
+  { value: "eletronica_componentes", label: "Eletrônica / Componentes" },
+  { value: "sucata", label: "Sucata" },
 ];

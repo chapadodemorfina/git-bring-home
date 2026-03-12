@@ -1,0 +1,35 @@
+
+-- ============================================
+-- INVENTORY SCRAP - 30 records
+-- ============================================
+INSERT INTO inventory_scrap (device_type, brand, model, condition, salvageable_parts, location, notes) VALUES
+('smartphone', 'Samsung', 'Galaxy A10', 'Tela quebrada, placa OK', 'câmera traseira, alto-falante, conector carga, bateria', 'Caixa Sucata 1', 'Recebido de OS anterior'),
+('smartphone', 'Samsung', 'Galaxy A20', 'Placa morta, tela OK', 'tela LCD, botões laterais, bandeja SIM', 'Caixa Sucata 1', NULL),
+('smartphone', 'Samsung', 'Galaxy A51', 'Tela trincada, bateria inchada', 'câmera frontal, conector USB-C, flex power', 'Caixa Sucata 1', 'Descartar bateria'),
+('smartphone', 'Apple', 'iPhone XR', 'Face ID danificado', 'tela LCD, bateria, conector Lightning, alto-falante', 'Caixa Sucata 2', NULL),
+('smartphone', 'Apple', 'iPhone 11', 'Placa danificada por líquido', 'tela, câmera traseira, botão home, taptic engine', 'Caixa Sucata 2', 'Oxidação severa na placa'),
+('smartphone', 'Apple', 'iPhone 8', 'Não liga, sem reparo viável', 'tela, bateria, câmera, conector Lightning', 'Caixa Sucata 2', 'Modelo antigo'),
+('smartphone', 'Motorola', 'Moto G7', 'Tela quebrada e placa queimada', 'câmera, alto-falante, motor vibra', 'Caixa Sucata 1', NULL),
+('smartphone', 'Motorola', 'Moto G84', 'Curto na placa', 'tela AMOLED, bateria, conector USB-C', 'Caixa Sucata 1', 'Tela em bom estado'),
+('smartphone', 'Xiaomi', 'Redmi Note 9', 'Tela quebrada', 'bateria, câmera traseira, alto-falante', 'Caixa Sucata 1', NULL),
+('smartphone', 'Xiaomi', 'Poco X3', 'Não carrega, conector OK', 'tela, bateria, câmera', 'Caixa Sucata 1', 'Possível CI de carga'),
+('notebook', 'Dell', 'Inspiron 15 3501', 'Placa-mãe queimada', 'tela 15.6 LED, teclado ABNT2, dobradiças, carcaça', 'Prateleira Sucata NB', 'Raio queimou a placa'),
+('notebook', 'Dell', 'Vostro 3400', 'Tela quebrada, resto OK', 'RAM 8GB, SSD 256GB, teclado, bateria', 'Prateleira Sucata NB', 'Peças em bom estado'),
+('notebook', 'Lenovo', 'IdeaPad 330', 'Dobradiça quebrada, carcaça rachada', 'tela 15.6, teclado, RAM, HD 1TB', 'Prateleira Sucata NB', NULL),
+('notebook', 'Lenovo', 'ThinkPad T480', 'Não liga após queda', 'tela 14 IPS, teclado, RAM 16GB, SSD NVMe 512GB', 'Prateleira Sucata NB', 'Peças premium'),
+('notebook', 'HP', 'Pavilion 15', 'Superaquecimento crônico, GPU descolada', 'tela, RAM, HD, teclado, cooler', 'Prateleira Sucata NB', NULL),
+('notebook', 'Acer', 'Aspire 5', 'Teclado com líquido, placa oxidada', 'tela 15.6, SSD 240GB, carcaça base', 'Prateleira Sucata NB', 'Corrosão parcial'),
+('notebook', 'Samsung', 'Book E30', 'Bateria inchada, tela manchada', 'RAM 4GB, HD 500GB, teclado, cooler', 'Prateleira Sucata NB', 'Bateria descartada'),
+('notebook', 'Positivo', 'Motion Q232B', 'Não liga', 'tela 14, eMMC, carcaça', 'Prateleira Sucata NB', 'Modelo de entrada'),
+('monitor', 'LG', '24MK430', 'Placa fonte queimada', 'placa TCON, painel LCD, cabos internos', 'Prateleira Sucata MON', NULL),
+('monitor', 'Samsung', 'S24F350', 'Backlight falha', 'placa principal, placa TCON, cabos LVDS', 'Prateleira Sucata MON', 'LEDs queimados'),
+('monitor', 'AOC', 'E970S', 'Não liga', 'capacitores da fonte, placa TCON', 'Prateleira Sucata MON', 'Modelo 19"'),
+('monitor', 'Dell', 'P2419H', 'Tela trincada', 'placa principal, placa fonte, stand', 'Prateleira Sucata MON', 'Profissional IPS'),
+('tv', 'Samsung', 'UN32J4000', 'Tela quebrada', 'placa principal, placa fonte, kit LED', 'Prateleira Sucata TV', NULL),
+('tv', 'Samsung', 'UN43TU7000', 'Placa fonte queimada por raio', 'placa TCON, kit LED, alto-falantes', 'Prateleira Sucata TV', 'Dano por surto elétrico'),
+('tv', 'LG', '32LM625B', 'Backlight queimado', 'placa principal, placa fonte, placa TCON', 'Prateleira Sucata TV', NULL),
+('tv', 'LG', '43LM6300', 'Não liga, sem diagnóstico', 'kit LED, placa TCON, cabos flat', 'Prateleira Sucata TV', 'Investigar placa principal'),
+('tv', 'Philco', 'PH32E31D', 'Imagem escura', 'placa principal, alto-falantes, cabos', 'Prateleira Sucata TV', 'Backlight degradado'),
+('desktop', 'Montado', 'PC Genérico i3-10100', 'Fonte queimou placa', 'RAM DDR4 8GB, HD 1TB, gabinete', 'Prateleira Sucata DESK', NULL),
+('desktop', 'Dell', 'OptiPlex 3080', 'Placa-mãe defeituosa', 'RAM 8GB, SSD NVMe 256GB, fonte', 'Prateleira Sucata DESK', 'Corporativo'),
+('tablet', 'Samsung', 'Galaxy Tab A7', 'Tela quebrada, bateria inchada', 'câmera, alto-falante, conector USB-C', 'Caixa Sucata 1', 'Descartar bateria');

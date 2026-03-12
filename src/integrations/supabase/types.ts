@@ -964,6 +964,48 @@ export type Database = {
           },
         ]
       }
+      inventory_scrap: {
+        Row: {
+          brand: string | null
+          condition: string | null
+          created_at: string
+          created_by: string | null
+          device_type: string
+          id: string
+          location: string | null
+          model: string | null
+          notes: string | null
+          salvageable_parts: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          condition?: string | null
+          created_at?: string
+          created_by?: string | null
+          device_type: string
+          id?: string
+          location?: string | null
+          model?: string | null
+          notes?: string | null
+          salvageable_parts?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          condition?: string | null
+          created_at?: string
+          created_by?: string | null
+          device_type?: string
+          id?: string
+          location?: string | null
+          model?: string | null
+          notes?: string | null
+          salvageable_parts?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_events: {
         Row: {
           created_at: string
@@ -2230,46 +2272,61 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
+          city: string | null
           contact_name: string | null
+          country: string | null
           created_at: string
           created_by: string | null
           document: string | null
           email: string | null
           id: string
           is_active: boolean
+          lead_time_days: number | null
           name: string
           notes: string | null
           phone: string | null
+          state: string | null
+          supplier_type: string | null
           updated_at: string
           whatsapp: string | null
         }
         Insert: {
           address?: string | null
+          city?: string | null
           contact_name?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           document?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          lead_time_days?: number | null
           name: string
           notes?: string | null
           phone?: string | null
+          state?: string | null
+          supplier_type?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
         Update: {
           address?: string | null
+          city?: string | null
           contact_name?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           document?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
+          lead_time_days?: number | null
           name?: string
           notes?: string | null
           phone?: string | null
+          state?: string | null
+          supplier_type?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
