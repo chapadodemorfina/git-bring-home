@@ -8,7 +8,8 @@ import { useScrapDisassemblies, useAllRecoveredPartsForScrap } from "../hooks/us
 
 interface Props {
   scrapId: string;
-  onClose: () => void;
+  onClose?: () => void;
+  hideClose?: boolean;
 }
 
 export function ScrapHistoryPanel({ scrapId, onClose }: Props) {
