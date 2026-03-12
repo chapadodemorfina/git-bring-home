@@ -163,7 +163,11 @@ const App = () => (
               <Route path="/inventory/suppliers/:id" element={<ProtectedPage><SupplierDetailPage /></ProtectedPage>} />
               <Route path="/inventory/suppliers/:id/edit" element={<ProtectedPage><SupplierEditPage /></ProtectedPage>} />
               <Route path="/inventory/movements" element={<ProtectedPage><StockMovementsPage /></ProtectedPage>} />
-              <Route path="/inventory/scrap" element={<ProtectedPage><ScrapDisassemblyPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap" element={<ProtectedPage><ScrapListPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/new" element={<ProtectedPage><ScrapCreatePage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/dashboard" element={<ProtectedPage><ScrapDashboardPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/disassembly" element={<ProtectedPage><ScrapDisassemblyPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap/:id" element={<ProtectedPage><ScrapDetailPage /></ProtectedPage>} />
 
               {/* Collection Points */}
               <Route path="/collection-points" element={<ProtectedPage><CollectionPointsListPage /></ProtectedPage>} />
