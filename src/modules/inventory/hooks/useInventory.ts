@@ -9,11 +9,12 @@ import type {
 const sb = supabase as any;
 
 // ── Products ──
-export function useProducts(search?: string) {
+export function useProducts(search?: string, showArchived = false) {
   return useQuery<Product[]>({
-    queryKey: ["products", search],
+    queryKey: ["products", search, showArchived],
     queryFn: async () => {
       let query = sb.from("products").select("*, suppliers(id, name)").order("name");
+      if (!showArchived) query = query.eq("is_active", true);
       if (search) {
         query = query.or(
           `name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%,compatible_devices.ilike.%${search}%,location.ilike.%${search}%`
@@ -98,11 +99,12 @@ export function useUpdateProduct() {
 }
 
 // ── Suppliers ──
-export function useSuppliers(search?: string) {
+export function useSuppliers(search?: string, showArchived = false) {
   return useQuery<Supplier[]>({
-    queryKey: ["suppliers", search],
+    queryKey: ["suppliers", search, showArchived],
     queryFn: async () => {
       let query = sb.from("suppliers").select("*").order("name");
+      if (!showArchived) query = query.eq("is_active", true);
       if (search) {
         query = query.or(
           `name.ilike.%${search}%,contact_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,document.ilike.%${search}%`
@@ -366,6 +368,94 @@ export function useAdjustStock() {
       toast({ title: "Estoque ajustado!" });
     },
     onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+}
+
+// ── Archive / Delete ──
+export function useArchiveProduct() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ id, archive }: { id: string; archive: boolean }) => {
+      const { error } = await sb.from("products").update({ is_active: !archive }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { archive }) => {
+      qc.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: archive ? "Produto arquivado" : "Produto reativado" });
+    },
+    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+}
+
+export function useArchiveSupplier() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ id, archive }: { id: string; archive: boolean }) => {
+      const { error } = await sb.from("suppliers").update({ is_active: !archive }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { archive }) => {
+      qc.invalidateQueries({ queryKey: ["suppliers"] });
+      toast({ title: archive ? "Fornecedor arquivado" : "Fornecedor reativado" });
+    },
+    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+}
+
+export function useDeleteProduct() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data: check, error: cErr } = await sb.rpc("can_delete_product", { _product_id: id });
+      if (cErr) throw cErr;
+      const result = typeof check === "string" ? JSON.parse(check) : check;
+      if (!result.can_delete) {
+        const links = result.links;
+        const parts: string[] = [];
+        if (links.stock_movements > 0) parts.push(`${links.stock_movements} movimentações`);
+        if (links.repair_parts_used > 0) parts.push(`${links.repair_parts_used} peças usadas`);
+        if (links.part_reservations > 0) parts.push(`${links.part_reservations} reservas`);
+        if (links.diagnosis_parts > 0) parts.push(`${links.diagnosis_parts} diagnósticos`);
+        throw new Error(`Não é possível excluir. Existem vínculos: ${parts.join(", ")}. Arquive o produto.`);
+      }
+      const { error } = await sb.from("products").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: "Produto excluído permanentemente" });
+    },
+    onError: (e: any) => toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" }),
+  });
+}
+
+export function useDeleteSupplier() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data: check, error: cErr } = await sb.rpc("can_delete_supplier", { _supplier_id: id });
+      if (cErr) throw cErr;
+      const result = typeof check === "string" ? JSON.parse(check) : check;
+      if (!result.can_delete) {
+        const links = result.links;
+        const parts: string[] = [];
+        if (links.products > 0) parts.push(`${links.products} produtos`);
+        if (links.purchase_entries > 0) parts.push(`${links.purchase_entries} compras`);
+        if (links.financial_entries > 0) parts.push(`${links.financial_entries} lançamentos financeiros`);
+        throw new Error(`Não é possível excluir. Existem vínculos: ${parts.join(", ")}. Arquive o fornecedor.`);
+      }
+      const { error } = await sb.from("suppliers").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["suppliers"] });
+      toast({ title: "Fornecedor excluído permanentemente" });
+    },
+    onError: (e: any) => toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" }),
   });
 }
 

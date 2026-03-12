@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, PackagePlus, Wrench } from "lucide-react";
+import { Edit, PackagePlus, Wrench, Archive, Eye, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProduct } from "../hooks/useInventory";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useProduct, useArchiveProduct, useDeleteProduct } from "../hooks/useInventory";
 import StockMovementsTable from "../components/StockMovementsTable";
 import StockEntryDialog from "../components/StockEntryDialog";
 import StockAdjustDialog from "../components/StockAdjustDialog";
@@ -17,6 +18,8 @@ export default function ProductDetailPage() {
   const { data: product, isLoading } = useProduct(id);
   const [showEntry, setShowEntry] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
+  const archiveMut = useArchiveProduct();
+  const deleteMut = useDeleteProduct();
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!product) return <p className="text-destructive">Produto não encontrado.</p>;
@@ -30,10 +33,44 @@ export default function ProductDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{product.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">{product.name}</h1>
+            {!product.is_active && <Badge variant="outline">Arquivado</Badge>}
+          </div>
           <p className="text-muted-foreground font-mono text-sm">{product.sku}</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => archiveMut.mutate({ id: id!, archive: product.is_active })}
+            disabled={archiveMut.isPending}
+          >
+            {product.is_active ? <><Archive className="h-4 w-4 mr-1" /> Arquivar</> : <><Eye className="h-4 w-4 mr-1" /> Reativar</>}
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="icon" title="Excluir permanentemente">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir produto permanentemente?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não pode ser desfeita. O produto só será excluído se não possuir vínculos com movimentações, reparos ou reservas.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => deleteMut.mutate(id!, { onSuccess: () => navigate("/inventory") })}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button variant="outline" onClick={() => setShowAdjust(true)}>
             <Wrench className="h-4 w-4 mr-1" /> Ajustar
           </Button>
