@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Users, Shield, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine,
+  LayoutDashboard, Users, Shield, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
