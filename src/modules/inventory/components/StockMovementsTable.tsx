@@ -12,6 +12,7 @@ const movementColors: Record<StockMovementType, string> = {
   return: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   reserved: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   consumed: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  scrap_recovery: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
 };
 
 export default function StockMovementsTable({ productId }: { productId?: string }) {
