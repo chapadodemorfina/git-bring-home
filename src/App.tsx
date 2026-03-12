@@ -50,6 +50,10 @@ import SupplierDetailPage from "./modules/inventory/pages/SupplierDetailPage";
 import SupplierEditPage from "./modules/inventory/pages/SupplierEditPage";
 import StockMovementsPage from "./modules/inventory/pages/StockMovementsPage";
 import ScrapDisassemblyPage from "./modules/inventory/pages/ScrapDisassemblyPage";
+import ScrapListPage from "./modules/inventory/pages/ScrapListPage";
+import ScrapCreatePage from "./modules/inventory/pages/ScrapCreatePage";
+import ScrapDetailPage from "./modules/inventory/pages/ScrapDetailPage";
+import ScrapDashboardPage from "./modules/inventory/pages/ScrapDashboardPage";
 
 // Collection Points Module
 import CollectionPointsListPage from "./modules/collection-points/pages/CollectionPointsListPage";
