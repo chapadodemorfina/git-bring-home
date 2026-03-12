@@ -11,6 +11,7 @@ import { useSuppliers, useCreateSupplier, useArchiveSupplier } from "../hooks/us
 import SupplierForm from "../components/SupplierForm";
 
 export default function SuppliersPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const { data: suppliers, isLoading } = useSuppliers(search, showArchived);
