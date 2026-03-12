@@ -2836,6 +2836,8 @@ export type Database = {
         }
         Returns: Json
       }
+      can_delete_product: { Args: { _product_id: string }; Returns: Json }
+      can_delete_supplier: { Args: { _supplier_id: string }; Returns: Json }
       consume_part: {
         Args: {
           _notes?: string
