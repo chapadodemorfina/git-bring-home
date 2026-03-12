@@ -99,11 +99,12 @@ export function useUpdateProduct() {
 }
 
 // ── Suppliers ──
-export function useSuppliers(search?: string) {
+export function useSuppliers(search?: string, showArchived = false) {
   return useQuery<Supplier[]>({
-    queryKey: ["suppliers", search],
+    queryKey: ["suppliers", search, showArchived],
     queryFn: async () => {
       let query = sb.from("suppliers").select("*").order("name");
+      if (!showArchived) query = query.eq("is_active", true);
       if (search) {
         query = query.or(
           `name.ilike.%${search}%,contact_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,document.ilike.%${search}%`
