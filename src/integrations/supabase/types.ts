@@ -1901,6 +1901,104 @@ export type Database = {
           },
         ]
       }
+      scrap_disassembly: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          scrap_id: string
+          technician_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scrap_id: string
+          technician_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scrap_id?: string
+          technician_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrap_disassembly_scrap_id_fkey"
+            columns: ["scrap_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_scrap"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrap_disassembly_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "mv_technician_performance"
+            referencedColumns: ["technician_id"]
+          },
+          {
+            foreignKeyName: "scrap_disassembly_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scrap_parts_recovered: {
+        Row: {
+          added_to_stock: boolean
+          condition: string
+          created_at: string
+          disassembly_id: string
+          id: string
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          added_to_stock?: boolean
+          condition?: string
+          created_at?: string
+          disassembly_id: string
+          id?: string
+          product_id: string
+          quantity?: number
+        }
+        Update: {
+          added_to_stock?: boolean
+          condition?: string
+          created_at?: string
+          disassembly_id?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrap_parts_recovered_disassembly_id_fkey"
+            columns: ["disassembly_id"]
+            isOneToOne: false
+            referencedRelation: "scrap_disassembly"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrap_parts_recovered_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "scrap_parts_recovered_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_order_attachments: {
         Row: {
           caption: string | null
@@ -2928,6 +3026,10 @@ export type Database = {
         Returns: Json
       }
       public_track_order: { Args: { _token: string }; Returns: Json }
+      recover_scrap_part: {
+        Args: { _recovered_part_id: string }
+        Returns: Json
+      }
       refresh_materialized_views: { Args: never; Returns: undefined }
       register_payment: {
         Args: {
