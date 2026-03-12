@@ -70,7 +70,7 @@ export default function SuppliersPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => archiveMut.mutate({ id: s.id, archive: s.is_active })}
+                    onClick={(e) => { e.stopPropagation(); archiveMut.mutate({ id: s.id, archive: s.is_active }); }}
                     disabled={archiveMut.isPending}
                     title={s.is_active ? "Arquivar" : "Reativar"}
                   >
