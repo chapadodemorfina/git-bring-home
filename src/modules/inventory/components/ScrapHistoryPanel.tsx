@@ -12,7 +12,7 @@ interface Props {
   hideClose?: boolean;
 }
 
-export function ScrapHistoryPanel({ scrapId, onClose }: Props) {
+export function ScrapHistoryPanel({ scrapId, onClose, hideClose }: Props) {
   const { data: disassemblies = [] } = useScrapDisassemblies(scrapId);
   const { data: allParts = [] } = useAllRecoveredPartsForScrap(scrapId);
 
