@@ -155,6 +155,7 @@ const App = () => (
               <Route path="/inventory/products/:id/edit" element={<ProtectedPage><ProductEditPage /></ProtectedPage>} />
               <Route path="/inventory/suppliers" element={<ProtectedPage><SuppliersPage /></ProtectedPage>} />
               <Route path="/inventory/movements" element={<ProtectedPage><StockMovementsPage /></ProtectedPage>} />
+              <Route path="/inventory/scrap" element={<ProtectedPage><ScrapDisassemblyPage /></ProtectedPage>} />
 
               {/* Collection Points */}
               <Route path="/collection-points" element={<ProtectedPage><CollectionPointsListPage /></ProtectedPage>} />

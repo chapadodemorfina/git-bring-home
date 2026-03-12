@@ -18,6 +18,7 @@ const mainItems = [
   { title: "Escanear OS", url: "/service-orders/scan", icon: ScanLine },
   { title: "Filas de Trabalho", url: "/queues", icon: ListChecks },
   { title: "Estoque & Peças", url: "/inventory", icon: Package },
+  { title: "Sucata & Reaproveitamento", url: "/inventory/scrap", icon: Recycle },
   { title: "Pontos de Coleta", url: "/collection-points", icon: MapPin },
   { title: "Comissões", url: "/collection-points/commissions", icon: DollarSign },
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
