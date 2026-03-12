@@ -121,6 +121,11 @@ export const supplierSchema = z.object({
   whatsapp: z.string().trim().max(20).optional().or(z.literal("")),
   document: z.string().trim().max(20).optional().or(z.literal("")),
   address: z.string().trim().max(500).optional().or(z.literal("")),
+  city: z.string().trim().max(100).optional().or(z.literal("")),
+  state: z.string().trim().max(50).optional().or(z.literal("")),
+  country: z.string().trim().max(100).optional().or(z.literal("")),
+  supplier_type: z.string().trim().max(50).optional().or(z.literal("")),
+  lead_time_days: z.coerce.number().int().min(0).optional(),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
 });
 
