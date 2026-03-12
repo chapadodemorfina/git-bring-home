@@ -7,6 +7,15 @@ interface Props {
 }
 
 export function RevenueTrendChart({ data }: Props) {
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-base">Receita e Lucro Mensal</CardTitle></CardHeader>
+        <CardContent><p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p></CardContent>
+      </Card>
+    );
+  }
+
   const config = {
     revenue: { label: "Receita", color: "hsl(var(--chart-2))" },
     expenses: { label: "Despesas", color: "hsl(var(--chart-4))" },

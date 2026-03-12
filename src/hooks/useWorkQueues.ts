@@ -31,6 +31,8 @@ export interface WorkQueueResult {
 
 export type QueueType = "diagnosis" | "repair" | "testing" | "pickup" | null;
 
+const defaultResult: WorkQueueResult = { items: [], total: 0, page: 1, page_size: 50 };
+
 export function useWorkQueues(
   queue: QueueType = null,
   technicianId?: string | null,
@@ -51,7 +53,13 @@ export function useWorkQueues(
         _page_size: pageSize,
       });
       if (error) throw error;
-      return data as WorkQueueResult;
+      if (!data) return defaultResult;
+      return {
+        items: data.items || [],
+        total: data.total ?? 0,
+        page: data.page ?? page,
+        page_size: data.page_size ?? pageSize,
+      } as WorkQueueResult;
     },
   });
 }
@@ -66,7 +74,7 @@ export function useSlaConfigs() {
         .order("priority")
         .order("status");
       if (error) throw error;
-      return data as { id: string; priority: string; status: string; target_hours: number }[];
+      return (data || []) as { id: string; priority: string; status: string; target_hours: number }[];
     },
   });
 }

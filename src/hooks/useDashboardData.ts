@@ -27,7 +27,6 @@ export interface DashboardSummary {
   technician_orders: { technician_id: string; name: string; count: number }[];
   collection_point_orders: { cp_id: string; name: string; count: number; revenue: number; commissions: number }[];
   monthly_trend: { month: string; orders: number; revenue: number; expenses: number; profit: number }[];
-  // New BI metrics
   today_received: number;
   today_delivered: number;
   today_revenue: number;
@@ -39,6 +38,37 @@ export interface DashboardSummary {
   low_stock_count: number;
   pipeline: Record<string, number>;
 }
+
+const defaultSummary: DashboardSummary = {
+  total_orders: 0,
+  open_orders: 0,
+  orders_by_status: {},
+  total_revenue: 0,
+  total_expenses: 0,
+  total_commissions: 0,
+  quotes_total: 0,
+  quotes_approved: 0,
+  quotes_rejected: 0,
+  warranties_total: 0,
+  warranties_voided: 0,
+  avg_turnaround_hours: null,
+  sla_overdue_count: 0,
+  device_types: {},
+  top_defects: [],
+  technician_orders: [],
+  collection_point_orders: [],
+  monthly_trend: [],
+  today_received: 0,
+  today_delivered: 0,
+  today_revenue: 0,
+  today_quotes: 0,
+  avg_diagnosis_hours: null,
+  avg_ticket_value: null,
+  top_parts: [],
+  stock_value: 0,
+  low_stock_count: 0,
+  pipeline: {},
+};
 
 export function useDashboardData(dateRange: DateRange) {
   const from = dateRange.from.toISOString();
@@ -52,7 +82,19 @@ export function useDashboardData(dateRange: DateRange) {
         _to: to,
       });
       if (error) throw error;
-      return data as DashboardSummary;
+      if (!data) return defaultSummary;
+      return {
+        ...defaultSummary,
+        ...data,
+        orders_by_status: data.orders_by_status || {},
+        device_types: data.device_types || {},
+        pipeline: data.pipeline || {},
+        monthly_trend: data.monthly_trend || [],
+        top_defects: data.top_defects || [],
+        technician_orders: data.technician_orders || [],
+        collection_point_orders: data.collection_point_orders || [],
+        top_parts: data.top_parts || [],
+      } as DashboardSummary;
     },
   });
 }
@@ -65,7 +107,7 @@ export function useMonthlyTrend() {
       const to = new Date().toISOString();
       const { data, error } = await db.rpc("dashboard_summary", { _from: from, _to: to });
       if (error) throw error;
-      return (data as DashboardSummary).monthly_trend || [];
+      return (data as DashboardSummary)?.monthly_trend || [];
     },
   });
 }

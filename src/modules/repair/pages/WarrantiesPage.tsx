@@ -15,14 +15,29 @@ import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
 
+const defaultAnalytics = {
+  total_warranties: 0,
+  active_warranties: 0,
+  expired_warranties: 0,
+  voided_warranties: 0,
+  total_returns: 0,
+  return_rate: 0,
+  returns_by_cause: [],
+  returns_by_outcome: [],
+  top_returning_devices: [],
+  recent_returns: [],
+};
+
 export default function WarrantiesPage() {
-  const { data: analytics, isLoading: analyticsLoading } = useWarrantyAnalytics();
-  const { data: warranties, isLoading } = useAllWarranties();
+  const { data: rawAnalytics, isLoading: analyticsLoading, error: analyticsError } = useWarrantyAnalytics();
+  const { data: warranties, isLoading, error: warrantyError } = useAllWarranties();
   const voidWarranty = useVoidWarranty();
   const [voidOpen, setVoidOpen] = useState(false);
   const [selectedWarrantyId, setSelectedWarrantyId] = useState<string | null>(null);
   const [voidReason, setVoidReason] = useState("");
   const [search, setSearch] = useState("");
+
+  const analytics = { ...defaultAnalytics, ...rawAnalytics };
 
   const handleVoid = async () => {
     if (!selectedWarrantyId || !voidReason.trim()) return;
@@ -37,18 +52,31 @@ export default function WarrantiesPage() {
     if (isPast(new Date(w.end_date))) return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Expirada</Badge>;
     return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Ativa</Badge>;
   };
+
+  const safeWarranties = warranties || [];
   const filteredWarranties = useMemo(() => {
-    if (!warranties || !search) return warranties;
+    if (!search) return safeWarranties;
     const lower = search.toLowerCase();
-    return warranties.filter((w: any) =>
+    return safeWarranties.filter((w: any) =>
       w.warranty_number?.toLowerCase().includes(lower) ||
       w.service_orders?.order_number?.toLowerCase().includes(lower) ||
       w.service_orders?.customers?.full_name?.toLowerCase().includes(lower) ||
       `${w.service_orders?.devices?.brand || ""} ${w.service_orders?.devices?.model || ""}`.toLowerCase().includes(lower)
     );
-  }, [warranties, search]);
+  }, [safeWarranties, search]);
 
   if (isLoading || analyticsLoading) return <div className="space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)}</div>;
+
+  if (analyticsError || warrantyError) {
+    return (
+      <Card className="border-destructive">
+        <CardContent className="pt-6 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+          <p className="text-sm font-medium">Erro ao carregar dados de garantia</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -58,15 +86,13 @@ export default function WarrantiesPage() {
       </div>
 
       {/* KPI Cards */}
-      {analytics && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Total</p><p className="text-2xl font-bold">{analytics.total_warranties}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><ShieldCheck className="h-4 w-4 text-green-500" /> Ativas</p><p className="text-2xl font-bold text-green-600">{analytics.active_warranties}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><AlertTriangle className="h-4 w-4 text-amber-500" /> Expiradas</p><p className="text-2xl font-bold text-amber-600">{analytics.expired_warranties}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><ShieldX className="h-4 w-4 text-destructive" /> Anuladas</p><p className="text-2xl font-bold text-destructive">{analytics.voided_warranties}</p></CardContent></Card>
-          <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><RotateCcw className="h-4 w-4" /> Taxa Retorno</p><p className="text-2xl font-bold">{analytics.return_rate}%</p></CardContent></Card>
-        </div>
-      )}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Total</p><p className="text-2xl font-bold">{analytics.total_warranties}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><ShieldCheck className="h-4 w-4 text-green-500" /> Ativas</p><p className="text-2xl font-bold text-green-600">{analytics.active_warranties}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><AlertTriangle className="h-4 w-4 text-amber-500" /> Expiradas</p><p className="text-2xl font-bold text-amber-600">{analytics.expired_warranties}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><ShieldX className="h-4 w-4 text-destructive" /> Anuladas</p><p className="text-2xl font-bold text-destructive">{analytics.voided_warranties}</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground flex items-center gap-1"><RotateCcw className="h-4 w-4" /> Taxa Retorno</p><p className="text-2xl font-bold">{analytics.return_rate ?? 0}%</p></CardContent></Card>
+      </div>
 
       <Tabs defaultValue="list">
         <TabsList>
@@ -98,36 +124,44 @@ export default function WarrantiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredWarranties?.map((w) => (
-                    <TableRow key={w.id}>
-                      <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
-                      <TableCell>
-                        <Link to={`/service-orders/${w.service_order_id}`} className="text-primary hover:underline text-sm">
-                          {w.service_orders?.order_number}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-sm">{w.service_orders?.customers?.full_name || "—"}</TableCell>
-                      <TableCell className="text-sm">
-                        {w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {w.warranty_type === "parts_warranty" ? "Peças" : w.warranty_type === "manufacturer_warranty" ? "Fabricante" : "Reparo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {format(new Date(w.start_date), "dd/MM/yy", { locale: ptBR })} → {format(new Date(w.end_date), "dd/MM/yy", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(w)}</TableCell>
-                      <TableCell>
-                        {!w.is_void && !isPast(new Date(w.end_date)) && (
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { setSelectedWarrantyId(w.id); setVoidOpen(true); }}>
-                            Anular
-                          </Button>
-                        )}
+                  {filteredWarranties.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        Nenhuma garantia encontrada
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredWarranties.map((w: any) => (
+                      <TableRow key={w.id}>
+                        <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
+                        <TableCell>
+                          <Link to={`/service-orders/${w.service_order_id}`} className="text-primary hover:underline text-sm">
+                            {w.service_orders?.order_number}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm">{w.service_orders?.customers?.full_name || "—"}</TableCell>
+                        <TableCell className="text-sm">
+                          {w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {w.warranty_type === "parts_warranty" ? "Peças" : w.warranty_type === "manufacturer_warranty" ? "Fabricante" : "Reparo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {format(new Date(w.start_date), "dd/MM/yy", { locale: ptBR })} → {format(new Date(w.end_date), "dd/MM/yy", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(w)}</TableCell>
+                        <TableCell>
+                          {!w.is_void && !isPast(new Date(w.end_date)) && (
+                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { setSelectedWarrantyId(w.id); setVoidOpen(true); }}>
+                              Anular
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -151,7 +185,7 @@ export default function WarrantiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {analytics?.recent_returns?.map((r) => (
+                  {(analytics.recent_returns || []).map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="font-mono text-sm">{r.warranty_number}</TableCell>
                       <TableCell className="text-sm">{r.customer_name}</TableCell>
@@ -162,7 +196,7 @@ export default function WarrantiesPage() {
                       <TableCell className="text-sm">{format(new Date(r.created_at), "dd/MM/yy", { locale: ptBR })}</TableCell>
                     </TableRow>
                   ))}
-                  {(!analytics?.recent_returns?.length) && (
+                  {(!(analytics.recent_returns || []).length) && (
                     <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum retorno registrado</TableCell></TableRow>
                   )}
                 </TableBody>
@@ -173,12 +207,12 @@ export default function WarrantiesPage() {
 
         <TabsContent value="analytics" className="mt-4">
           <div className="grid gap-4 lg:grid-cols-2">
-            {analytics?.returns_by_cause && analytics.returns_by_cause.length > 0 && (
+            {(analytics.returns_by_cause || []).length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="text-base">Retornos por Causa</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {analytics.returns_by_cause.map((c, i) => (
+                    {(analytics.returns_by_cause || []).map((c: any, i: number) => (
                       <div key={i} className="flex justify-between items-center">
                         <span className="text-sm">{c.cause}</span>
                         <Badge variant="secondary">{c.count}</Badge>
@@ -188,12 +222,12 @@ export default function WarrantiesPage() {
                 </CardContent>
               </Card>
             )}
-            {analytics?.top_returning_devices && analytics.top_returning_devices.length > 0 && (
+            {(analytics.top_returning_devices || []).length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="text-base">Dispositivos com Mais Retornos</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {analytics.top_returning_devices.map((d, i) => (
+                    {(analytics.top_returning_devices || []).map((d: any, i: number) => (
                       <div key={i} className="flex justify-between items-center">
                         <span className="text-sm">{d.device}</span>
                         <Badge variant="secondary">{d.count}</Badge>
@@ -203,18 +237,26 @@ export default function WarrantiesPage() {
                 </CardContent>
               </Card>
             )}
-            {analytics?.returns_by_outcome && analytics.returns_by_outcome.length > 0 && (
+            {(analytics.returns_by_outcome || []).length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="text-base">Resultados dos Retornos</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {analytics.returns_by_outcome.map((o, i) => (
+                    {(analytics.returns_by_outcome || []).map((o: any, i: number) => (
                       <div key={i} className="flex justify-between items-center">
                         <span className="text-sm">{o.outcome}</span>
                         <Badge variant="secondary">{o.count}</Badge>
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+            {!(analytics.returns_by_cause || []).length && !(analytics.top_returning_devices || []).length && !(analytics.returns_by_outcome || []).length && (
+              <Card className="lg:col-span-2">
+                <CardContent className="py-12 text-center">
+                  <BarChart3 className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">Nenhum dado de garantia disponível ainda</p>
                 </CardContent>
               </Card>
             )}

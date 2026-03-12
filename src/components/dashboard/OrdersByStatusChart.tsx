@@ -21,18 +21,28 @@ interface Props {
 }
 
 export function OrdersByStatusChart({ data }: Props) {
-  // If data comes pre-aggregated (from RPC) use directly, otherwise aggregate
+  const safeData = data || [];
+
+  if (safeData.length === 0) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-base">OS por Status</CardTitle></CardHeader>
+        <CardContent><p className="text-sm text-muted-foreground text-center py-8">Sem dados no período</p></CardContent>
+      </Card>
+    );
+  }
+
   let chartData: Array<{ status: string; label: string; count: number }>;
 
-  if (data.length > 0 && "count" in data[0]) {
-    chartData = data.map(d => ({
+  if (safeData.length > 0 && "count" in safeData[0]) {
+    chartData = safeData.map(d => ({
       status: d.status,
       label: STATUS_LABELS[d.status] || d.status,
       count: Number(d.count) || 0,
     }));
   } else {
     const counts: Record<string, number> = {};
-    data.forEach((d) => { counts[d.status] = (counts[d.status] || 0) + 1; });
+    safeData.forEach((d) => { counts[d.status] = (counts[d.status] || 0) + 1; });
     chartData = Object.entries(counts).map(([status, count]) => ({
       status,
       label: STATUS_LABELS[status] || status,

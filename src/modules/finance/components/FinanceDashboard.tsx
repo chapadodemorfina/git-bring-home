@@ -3,8 +3,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, DollarSign, AlertTriangle, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
+const defaultSummary = {
+  total_revenue: 0,
+  total_expenses: 0,
+  total_commissions: 0,
+  pending_receivables: 0,
+  pending_payables: 0,
+  overdue_count: 0,
+  profit: 0,
+};
+
 export default function FinanceDashboard() {
-  const { data: summary, isLoading } = useFinanceSummary();
+  const { data: rawSummary, isLoading, error } = useFinanceSummary();
 
   if (isLoading) return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -12,7 +22,16 @@ export default function FinanceDashboard() {
     </div>
   );
 
-  if (!summary) return null;
+  if (error) return (
+    <Card className="border-destructive">
+      <CardContent className="pt-6 flex items-center gap-3">
+        <AlertTriangle className="h-5 w-5 text-destructive" />
+        <p className="text-sm font-medium">Erro ao carregar resumo financeiro</p>
+      </CardContent>
+    </Card>
+  );
+
+  const summary = { ...defaultSummary, ...rawSummary };
 
   const cards = [
     {
@@ -69,7 +88,7 @@ export default function FinanceDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground">{card.title}</p>
                   <p className={`text-2xl font-bold ${card.color}`}>
-                    R$ {Number(card.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    R$ {Number(card.value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className={`p-3 rounded-full ${card.bgColor}`}>
@@ -81,7 +100,7 @@ export default function FinanceDashboard() {
         ))}
       </div>
 
-      {summary.overdue_count > 0 && (
+      {(summary.overdue_count ?? 0) > 0 && (
         <Card className="border-destructive">
           <CardContent className="pt-6 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-destructive" />
