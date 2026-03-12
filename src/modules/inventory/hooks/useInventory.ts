@@ -99,6 +99,18 @@ export function useUpdateProduct() {
 }
 
 // ── Suppliers ──
+export function useSupplier(id: string | undefined) {
+  return useQuery<Supplier>({
+    queryKey: ["suppliers", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await sb.from("suppliers").select("*").eq("id", id).single();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useSuppliers(search?: string, showArchived = false) {
   return useQuery<Supplier[]>({
     queryKey: ["suppliers", search, showArchived],

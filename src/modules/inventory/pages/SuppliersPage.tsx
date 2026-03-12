@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Search, Archive, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { useSuppliers, useCreateSupplier, useArchiveSupplier } from "../hooks/us
 import SupplierForm from "../components/SupplierForm";
 
 export default function SuppliersPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const { data: suppliers, isLoading } = useSuppliers(search, showArchived);
@@ -53,7 +55,7 @@ export default function SuppliersPage() {
           </TableHeader>
           <TableBody>
             {suppliers?.map(s => (
-              <TableRow key={s.id} className={!s.is_active ? "opacity-60" : ""}>
+              <TableRow key={s.id} className={`cursor-pointer ${!s.is_active ? "opacity-60" : ""}`} onClick={() => navigate(`/inventory/suppliers/${s.id}`)}>
                 <TableCell className="font-medium">{s.name}</TableCell>
                 <TableCell>{s.contact_name || "—"}</TableCell>
                 <TableCell>{s.email || "—"}</TableCell>
@@ -68,7 +70,7 @@ export default function SuppliersPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => archiveMut.mutate({ id: s.id, archive: s.is_active })}
+                    onClick={(e) => { e.stopPropagation(); archiveMut.mutate({ id: s.id, archive: s.is_active }); }}
                     disabled={archiveMut.isPending}
                     title={s.is_active ? "Arquivar" : "Reativar"}
                   >
