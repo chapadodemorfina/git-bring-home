@@ -30,6 +30,16 @@ export function useUsersList() {
   });
 }
 
+export function useOrphanedAuthUsers() {
+  return useQuery<{ id: string; email: string; created_at: string }[]>({
+    queryKey: ["admin-users-orphaned"],
+    queryFn: async () => {
+      const data = await callAdminUsers("list_users");
+      return data.orphaned_auth_users || [];
+    },
+  });
+}
+
 export function useUserDetail(userId: string | undefined) {
   return useQuery<UserProfile>({
     queryKey: ["admin-users", userId],
@@ -113,16 +123,23 @@ export function useActivateUser() {
   });
 }
 
-export function useResetPasswordEmail() {
+export function useResetPasswordLink() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (email: string) => callAdminUsers("reset_password_email", { email }),
-    onSuccess: () => {
-      toast({ title: "Email de redefinição enviado" });
+    mutationFn: async (email: string) => {
+      const data = await callAdminUsers("reset_password_email", { email });
+      return data as { success: boolean; recovery_link: string | null; note: string };
+    },
+    onSuccess: (data) => {
+      if (data.recovery_link) {
+        toast({ title: "Link de recuperação gerado", description: "Copie o link e envie ao usuário." });
+      } else {
+        toast({ title: "Link gerado", description: "Mas não foi possível obter o link de recuperação." });
+      }
     },
     onError: (err: Error) => {
-      toast({ title: "Erro ao enviar email", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao gerar link", description: err.message, variant: "destructive" });
     },
   });
 }

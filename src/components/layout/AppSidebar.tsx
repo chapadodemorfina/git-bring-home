@@ -3,7 +3,7 @@
  * Desenvolvido por Alvo Sistemas e Gestão
  */
 import {
-  LayoutDashboard, Users, Shield, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle,
+  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -12,6 +12,7 @@ import {
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton,
   SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
 import logoI9 from "@/assets/logo-i9.png";
 
 const mainItems = [
@@ -28,6 +29,9 @@ const mainItems = [
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
   { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
+];
+
+const adminOnlyItems = [
   { title: "Gestão de Equipe", url: "/system/users", icon: Users },
 ];
 
@@ -42,6 +46,9 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { hasRole } = useAuth();
+
+  const isAdminOrManager = hasRole("admin") || hasRole("manager");
 
   const isActive = (url: string) =>
     location.pathname === url || location.pathname.startsWith(url + "/");
@@ -70,7 +77,10 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Principal</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderItems(mainItems)}</SidebarMenu>
+            <SidebarMenu>
+              {renderItems(mainItems)}
+              {isAdminOrManager && renderItems(adminOnlyItems)}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>

@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RoleGuard } from "@/components/RoleGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 import Login from "./pages/Login";
@@ -134,9 +135,9 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
 
               <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
-              <Route path="/system/users" element={<ProtectedPage><UsersListPage /></ProtectedPage>} />
-              <Route path="/system/users/new" element={<ProtectedPage><UserCreatePage /></ProtectedPage>} />
-              <Route path="/system/users/:id/edit" element={<ProtectedPage><UserEditPage /></ProtectedPage>} />
+              <Route path="/system/users" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UsersListPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/system/users/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/system/users/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
               <Route path="/audit-logs" element={<ProtectedPage><AuditLogsPage /></ProtectedPage>} />
               <Route path="/queues" element={<ProtectedPage><WorkQueuesPage /></ProtectedPage>} />
