@@ -16,9 +16,12 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
-import UsersPage from "./pages/UsersPage";
-import RolesPage from "./pages/RolesPage";
 import SettingsPage from "./pages/SettingsPage";
+
+// User Management Module
+import UsersListPage from "./modules/users/pages/UsersListPage";
+import UserCreatePage from "./modules/users/pages/UserCreatePage";
+import UserEditPage from "./modules/users/pages/UserEditPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import WorkQueuesPage from "./pages/WorkQueuesPage";
 import NotificationsPage from "./modules/notifications/pages/NotificationsPage";
