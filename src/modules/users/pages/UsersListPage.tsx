@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUsersList, useDeactivateUser, useActivateUser, useResetPasswordEmail, useResetPasswordManual } from "../hooks/useUsers";
+import { useUsersList, useDeactivateUser, useActivateUser, useResetPasswordLink, useResetPasswordManual } from "../hooks/useUsers";
 import { roleLabels, roleBadgeVariants, AppRole } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,21 +13,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Loader2, Search, Plus, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Mail } from "lucide-react";
+import { Loader2, Search, Plus, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Copy, Link2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UsersListPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { data: users, isLoading } = useUsersList();
   const deactivateMutation = useDeactivateUser();
   const activateMutation = useActivateUser();
-  const resetEmailMutation = useResetPasswordEmail();
+  const resetLinkMutation = useResetPasswordLink();
   const resetManualMutation = useResetPasswordManual();
 
   const [search, setSearch] = useState("");
   const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: string; email: string; name: string }>({
     open: false, userId: "", email: "", name: "",
   });
+  const [recoveryLink, setRecoveryLink] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; action: string; userId: string; name: string }>({
     open: false, action: "", userId: "", name: "",
@@ -57,6 +60,21 @@ export default function UsersListPage() {
     resetManualMutation.mutate({ user_id: resetDialog.userId, new_password: newPassword });
     setNewPassword("");
     setResetDialog({ open: false, userId: "", email: "", name: "" });
+    setRecoveryLink(null);
+  };
+
+  const handleGenerateLink = async () => {
+    const data = await resetLinkMutation.mutateAsync(resetDialog.email);
+    if (data.recovery_link) {
+      setRecoveryLink(data.recovery_link);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (recoveryLink) {
+      navigator.clipboard.writeText(recoveryLink);
+      toast({ title: "Link copiado para a área de transferência" });
+    }
   };
 
   return (
@@ -144,7 +162,11 @@ export default function UsersListPage() {
                               <Pencil className="mr-2 h-4 w-4" /> Editar
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setResetDialog({ open: true, userId: u.id, email: u.email, name: u.full_name })}>
+                            <DropdownMenuItem onClick={() => {
+                              setRecoveryLink(null);
+                              setNewPassword("");
+                              setResetDialog({ open: true, userId: u.id, email: u.email, name: u.full_name });
+                            }}>
                               <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -200,7 +222,13 @@ export default function UsersListPage() {
       </Dialog>
 
       {/* Reset Password Dialog */}
-      <Dialog open={resetDialog.open} onOpenChange={(open) => !open && setResetDialog({ open: false, userId: "", email: "", name: "" })}>
+      <Dialog open={resetDialog.open} onOpenChange={(open) => {
+        if (!open) {
+          setResetDialog({ open: false, userId: "", email: "", name: "" });
+          setRecoveryLink(null);
+          setNewPassword("");
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Redefinir Senha</DialogTitle>
@@ -209,18 +237,41 @@ export default function UsersListPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => {
-                resetEmailMutation.mutate(resetDialog.email);
-                setResetDialog({ open: false, userId: "", email: "", name: "" });
-              }}
-              disabled={resetEmailMutation.isPending}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Enviar email de redefinição para {resetDialog.email}
-            </Button>
+            {/* Generate recovery link */}
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleGenerateLink}
+                disabled={resetLinkMutation.isPending}
+              >
+                {resetLinkMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Link2 className="mr-2 h-4 w-4" />
+                )}
+                Gerar link de recuperação
+              </Button>
+
+              {recoveryLink && (
+                <div className="rounded-lg border bg-muted p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium">Link de recuperação gerado:</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={recoveryLink}
+                      readOnly
+                      className="text-xs font-mono bg-background"
+                    />
+                    <Button variant="outline" size="icon" onClick={handleCopyLink}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    ⚠️ Copie e envie este link manualmente ao usuário. Ele NÃO é enviado por email automaticamente.
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="border-t pt-4">
               <Label>Definir nova senha manualmente</Label>
@@ -235,7 +286,12 @@ export default function UsersListPage() {
                   onClick={handleResetManual}
                   disabled={newPassword.length < 6 || resetManualMutation.isPending}
                 >
-                  <KeyRound className="mr-2 h-4 w-4" /> Definir
+                  {resetManualMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="mr-2 h-4 w-4" />
+                  )}
+                  Definir
                 </Button>
               </div>
             </div>
