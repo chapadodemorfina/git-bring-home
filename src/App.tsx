@@ -16,9 +16,12 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
-import UsersPage from "./pages/UsersPage";
-import RolesPage from "./pages/RolesPage";
 import SettingsPage from "./pages/SettingsPage";
+
+// User Management Module
+import UsersListPage from "./modules/users/pages/UsersListPage";
+import UserCreatePage from "./modules/users/pages/UserCreatePage";
+import UserEditPage from "./modules/users/pages/UserEditPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import WorkQueuesPage from "./pages/WorkQueuesPage";
 import NotificationsPage from "./modules/notifications/pages/NotificationsPage";
@@ -131,8 +134,9 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
 
               <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
-              <Route path="/users" element={<ProtectedPage><UsersPage /></ProtectedPage>} />
-              <Route path="/roles" element={<ProtectedPage><RolesPage /></ProtectedPage>} />
+              <Route path="/system/users" element={<ProtectedPage><UsersListPage /></ProtectedPage>} />
+              <Route path="/system/users/new" element={<ProtectedPage><UserCreatePage /></ProtectedPage>} />
+              <Route path="/system/users/:id/edit" element={<ProtectedPage><UserEditPage /></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
               <Route path="/audit-logs" element={<ProtectedPage><AuditLogsPage /></ProtectedPage>} />
               <Route path="/queues" element={<ProtectedPage><WorkQueuesPage /></ProtectedPage>} />

@@ -5,6 +5,7 @@ import { ServiceOrderFormData, serviceOrderSchema, priorityLabels, channelLabels
 import { useCreateServiceOrder, useUpdateServiceOrder } from "../hooks/useServiceOrders";
 import { useDevicesByCustomer } from "@/modules/devices/hooks/useDevices";
 import { deviceTypeLabels } from "@/modules/devices/types";
+import { useTechniciansList } from "@/modules/users/hooks/useUsers";
 import { CustomerSearch } from "@/modules/devices/components/CustomerSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ export default function ServiceOrderForm({ initialData }: Props) {
 
   const customerId = form.watch("customer_id");
   const { data: customerDevices } = useDevicesByCustomer(customerId || undefined);
+  const { data: technicians } = useTechniciansList();
 
   const onSubmit = async (data: ServiceOrderFormData) => {
     if (isEdit) {
@@ -139,6 +141,23 @@ export default function ServiceOrderForm({ initialData }: Props) {
                 <FormControl>
                   <Input type="datetime-local" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="assigned_technician_id" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Técnico Responsável</FormLabel>
+                <Select value={field.value || ""} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Selecione um técnico (opcional)" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {(technicians || []).map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )} />

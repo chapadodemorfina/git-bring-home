@@ -28,8 +28,7 @@ const mainItems = [
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
   { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
-  { title: "Usuários", url: "/users", icon: Users },
-  { title: "Perfis de Acesso", url: "/roles", icon: Shield },
+  { title: "Gestão de Equipe", url: "/system/users", icon: Users },
 ];
 
 const systemItems = [
