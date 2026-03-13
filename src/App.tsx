@@ -134,8 +134,9 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
 
               <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
-              <Route path="/users" element={<ProtectedPage><UsersPage /></ProtectedPage>} />
-              <Route path="/roles" element={<ProtectedPage><RolesPage /></ProtectedPage>} />
+              <Route path="/system/users" element={<ProtectedPage><UsersListPage /></ProtectedPage>} />
+              <Route path="/system/users/new" element={<ProtectedPage><UserCreatePage /></ProtectedPage>} />
+              <Route path="/system/users/:id/edit" element={<ProtectedPage><UserEditPage /></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
               <Route path="/audit-logs" element={<ProtectedPage><AuditLogsPage /></ProtectedPage>} />
               <Route path="/queues" element={<ProtectedPage><WorkQueuesPage /></ProtectedPage>} />
