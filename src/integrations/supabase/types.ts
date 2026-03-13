@@ -3136,6 +3136,18 @@ export type Database = {
       get_cached_inventory_usage: { Args: never; Returns: Json }
       get_cached_partner_performance: { Args: never; Returns: Json }
       get_cached_technician_performance: { Args: never; Returns: Json }
+      get_cp_operator_customer_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
+      get_cp_operator_device_customer_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
+      get_customer_ids_for_email: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       get_diagnostic_suggestions: {
         Args: {
           _device_brand?: string
