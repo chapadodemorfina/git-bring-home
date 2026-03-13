@@ -5,6 +5,7 @@ import { ServiceOrderFormData, serviceOrderSchema, priorityLabels, channelLabels
 import { useCreateServiceOrder, useUpdateServiceOrder } from "../hooks/useServiceOrders";
 import { useDevicesByCustomer } from "@/modules/devices/hooks/useDevices";
 import { deviceTypeLabels } from "@/modules/devices/types";
+import { useTechniciansList } from "@/modules/users/hooks/useUsers";
 import { CustomerSearch } from "@/modules/devices/components/CustomerSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
