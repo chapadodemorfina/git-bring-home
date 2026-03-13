@@ -1,3 +1,7 @@
+/**
+ * Sistema de gestão técnica i9
+ * Desenvolvido por Alvo Sistemas e Gestão
+ */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { useCompanyName } from "@/hooks/useCompanyName";
+import logoI9 from "@/assets/logo-i9.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,7 +19,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const companyName = useCompanyName("Sistema");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +37,10 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">{companyName}</CardTitle>
+          <div className="flex justify-center mb-4">
+            <img src={logoI9} alt="i9 Solution" className="h-20 w-auto" />
+          </div>
+          <CardTitle className="text-2xl font-bold">i9 Solution</CardTitle>
           <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,6 +81,9 @@ export default function Login() {
               </Link>
             </div>
           </form>
+          <p className="text-center text-xs text-muted-foreground mt-6">
+            Desenvolvido por Alvo Sistemas e Gestão
+          </p>
         </CardContent>
       </Card>
     </div>
