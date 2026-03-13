@@ -144,6 +144,23 @@ export default function ServiceOrderForm({ initialData }: Props) {
                 <FormMessage />
               </FormItem>
             )} />
+
+            <FormField control={form.control} name="assigned_technician_id" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Técnico Responsável</FormLabel>
+                <Select value={field.value || ""} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Selecione um técnico (opcional)" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {(technicians || []).map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
           </CardContent>
         </Card>
 
