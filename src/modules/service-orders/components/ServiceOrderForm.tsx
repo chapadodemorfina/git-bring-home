@@ -46,6 +46,7 @@ export default function ServiceOrderForm({ initialData }: Props) {
 
   const customerId = form.watch("customer_id");
   const { data: customerDevices } = useDevicesByCustomer(customerId || undefined);
+  const { data: technicians } = useTechniciansList();
 
   const onSubmit = async (data: ServiceOrderFormData) => {
     if (isEdit) {
