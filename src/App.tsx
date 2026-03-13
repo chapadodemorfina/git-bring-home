@@ -1,3 +1,7 @@
+/**
+ * Sistema de gestão técnica i9
+ * Desenvolvido por Alvo Sistemas e Gestão
+ */
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
