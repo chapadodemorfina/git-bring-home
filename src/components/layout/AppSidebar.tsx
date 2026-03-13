@@ -1,3 +1,7 @@
+/**
+ * Sistema de gestão técnica i9
+ * Desenvolvido por Alvo Sistemas e Gestão
+ */
 import {
   LayoutDashboard, Users, Shield, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle,
 } from "lucide-react";
@@ -8,7 +12,7 @@ import {
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton,
   SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar";
-import { useCompanyName } from "@/hooks/useCompanyName";
+import logoI9 from "@/assets/logo-i9.png";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -39,7 +43,6 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const companyName = useCompanyName("Sistema");
 
   const isActive = (url: string) =>
     location.pathname === url || location.pathname.startsWith(url + "/");
@@ -59,11 +62,10 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
-        {!collapsed ? (
-          <span className="text-lg font-bold text-sidebar-foreground">{companyName}</span>
-        ) : (
-          <span className="text-lg font-bold text-sidebar-foreground">{companyName.slice(0, 2)}</span>
-        )}
+        <div className="flex items-center gap-2">
+          <img src={logoI9} alt="i9" className="h-8 w-8 object-contain" />
+          {!collapsed && <span className="text-lg font-bold text-sidebar-foreground">i9 Solution</span>}
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

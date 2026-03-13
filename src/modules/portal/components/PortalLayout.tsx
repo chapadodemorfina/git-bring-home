@@ -80,6 +80,10 @@ export default function PortalLayout() {
       <main className="container mx-auto px-4 py-6 max-w-3xl">
         <Outlet />
       </main>
+
+      <footer className="border-t py-3 text-center text-xs text-muted-foreground">
+        © i9 — Todos os direitos reservados · Sistema desenvolvido por Alvo Sistemas e Gestão
+      </footer>
     </div>
   );
 }

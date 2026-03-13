@@ -214,6 +214,9 @@ export default function PortalLoginPage() {
             <br />
             <Link to="/login" className="text-primary hover:underline">Acesso administrativo →</Link>
           </p>
+          <p className="text-center text-xs text-muted-foreground mt-2">
+            Desenvolvido por Alvo Sistemas e Gestão
+          </p>
         </CardContent>
       </Card>
     </div>
