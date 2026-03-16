@@ -11,7 +11,7 @@ interface CustomerSearchProps {
   onNameSelected?: (name: string) => void;
 }
 
-export function CustomerSearch({ value, onChange }: CustomerSearchProps) {
+export function CustomerSearch({ value, onChange, onNameSelected }: CustomerSearchProps) {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<{ id: string; full_name: string; document: string | null }[]>([]);
   const [selectedName, setSelectedName] = useState("");
