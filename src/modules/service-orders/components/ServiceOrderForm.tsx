@@ -7,6 +7,7 @@ import { useDevicesByCustomer } from "@/modules/devices/hooks/useDevices";
 import { deviceTypeLabels } from "@/modules/devices/types";
 import { useTechniciansList } from "@/modules/users/hooks/useUsers";
 import { CustomerSearch } from "@/modules/devices/components/CustomerSearch";
+import NewCustomerDialog from "./NewCustomerDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,7 +69,15 @@ export default function ServiceOrderForm({ initialData }: Props) {
           <CardContent className="space-y-4">
             <FormField control={form.control} name="customer_id" render={({ field }) => (
               <FormItem>
-                <FormLabel>Cliente *</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Cliente *</FormLabel>
+                  <NewCustomerDialog
+                    onCustomerCreated={(id, name) => {
+                      field.onChange(id);
+                      form.setValue("device_id", "");
+                    }}
+                  />
+                </div>
                 <FormControl>
                   <CustomerSearch value={field.value} onChange={(id) => {
                     field.onChange(id);
