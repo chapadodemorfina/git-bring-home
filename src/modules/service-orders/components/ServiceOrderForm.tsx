@@ -7,6 +7,7 @@ import { useDevicesByCustomer } from "@/modules/devices/hooks/useDevices";
 import { deviceTypeLabels } from "@/modules/devices/types";
 import { useTechniciansList } from "@/modules/users/hooks/useUsers";
 import { CustomerSearch } from "@/modules/devices/components/CustomerSearch";
+import NewCustomerDialog from "./NewCustomerDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
