@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Save, ArrowLeft } from "lucide-react";
 import { useState } from "react";
+import NewDeviceDialog from "./NewDeviceDialog";
 
 interface Props {
   initialData?: ServiceOrder;
