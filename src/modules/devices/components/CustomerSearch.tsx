@@ -8,6 +8,7 @@ const db = supabase as any;
 interface CustomerSearchProps {
   value: string;
   onChange: (id: string) => void;
+  onNameSelected?: (name: string) => void;
 }
 
 export function CustomerSearch({ value, onChange }: CustomerSearchProps) {
