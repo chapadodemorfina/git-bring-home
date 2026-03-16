@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Save, ArrowLeft } from "lucide-react";
 import { useState } from "react";
+import NewDeviceDialog from "./NewDeviceDialog";
 
 interface Props {
   initialData?: ServiceOrder;
@@ -81,7 +82,13 @@ export default function ServiceOrderForm({ initialData }: Props) {
             {customerId && (
               <FormField control={form.control} name="device_id" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Dispositivo</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Dispositivo</FormLabel>
+                    <NewDeviceDialog
+                      customerId={customerId}
+                      onDeviceCreated={(id) => field.onChange(id)}
+                    />
+                  </div>
                   <Select value={field.value || ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Selecione um dispositivo (opcional)" /></SelectTrigger>
