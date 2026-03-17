@@ -229,7 +229,7 @@ export default function DiagnosisForm({ serviceOrderId, existing, deviceType, de
           <Card>
             <CardHeader><CardTitle className="text-base">Peças Necessárias</CardTitle></CardHeader>
             <CardContent>
-              <DiagnosisPartsPanel diagnosisId={existing.id} readOnly={isCompleted} />
+              <DiagnosisPartsPanel diagnosisId={existing.id} readOnly={isCompleted} deviceType={deviceType} deviceBrand={deviceBrand} deviceModel={deviceModel} />
             </CardContent>
           </Card>
         </>
