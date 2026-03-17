@@ -24,6 +24,7 @@ interface Props {
 }
 
 export default function QuoteBuilder({ quote }: Props) {
+  const companyName = useCompanyName("i9 Solutions");
   const { data: items, isLoading } = useQuoteItems(quote.id);
   const addItem = useAddQuoteItem();
   const deleteItem = useDeleteQuoteItem();
