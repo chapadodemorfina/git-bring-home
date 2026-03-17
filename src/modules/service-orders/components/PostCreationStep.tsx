@@ -70,7 +70,7 @@ export default function PostCreationStep({ orderId }: Props) {
         <CardContent className="flex flex-wrap gap-3">
           <Button
             variant="outline"
-            onClick={() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`)}
+            onClick={() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true)}
           >
             <Tag className="mr-2 h-4 w-4" /> Imprimir Etiqueta
           </Button>
