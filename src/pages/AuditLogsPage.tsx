@@ -251,33 +251,40 @@ export default function AuditLogsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Detail Dialog */}
+      {/* Detail Dialog with Diff */}
       <Dialog open={!!detailLog} onOpenChange={() => setDetailLog(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader><DialogTitle>Detalhes da Alteração</DialogTitle></DialogHeader>
           {detailLog && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div><p className="text-xs text-muted-foreground">Ação</p><Badge className={actionColors[detailLog.action] || ""}>{detailLog.action}</Badge></div>
                 <div><p className="text-xs text-muted-foreground">Tabela</p><p>{tableLabels[detailLog.table_name || ""] || detailLog.table_name}</p></div>
-                <div><p className="text-xs text-muted-foreground">Registro</p><p className="font-mono">{detailLog.record_id}</p></div>
-                <div><p className="text-xs text-muted-foreground">Data</p><p>{format(new Date(detailLog.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}</p></div>
+                <div><p className="text-xs text-muted-foreground">Registro</p><p className="font-mono text-xs">{detailLog.record_id}</p></div>
+                <div><p className="text-xs text-muted-foreground">Data</p><p className="text-xs">{format(new Date(detailLog.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}</p></div>
               </div>
-              {detailLog.old_data && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Dados Anteriores</p>
-                  <ScrollArea className="h-[200px] rounded border p-3">
-                    <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.old_data, null, 2)}</pre>
-                  </ScrollArea>
-                </div>
-              )}
-              {detailLog.new_data && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Dados Novos</p>
-                  <ScrollArea className="h-[200px] rounded border p-3">
-                    <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.new_data, null, 2)}</pre>
-                  </ScrollArea>
-                </div>
+
+              {detailLog.old_data && detailLog.new_data ? (
+                <DiffView oldData={detailLog.old_data} newData={detailLog.new_data} />
+              ) : (
+                <>
+                  {detailLog.old_data && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Dados Anteriores</p>
+                      <ScrollArea className="h-[200px] rounded border p-3">
+                        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.old_data, null, 2)}</pre>
+                      </ScrollArea>
+                    </div>
+                  )}
+                  {detailLog.new_data && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Dados Novos</p>
+                      <ScrollArea className="h-[200px] rounded border p-3">
+                        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.new_data, null, 2)}</pre>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
