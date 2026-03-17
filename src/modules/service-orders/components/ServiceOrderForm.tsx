@@ -18,6 +18,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Save, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import NewDeviceDialog from "./NewDeviceDialog";
+import IntakeChecklist from "./IntakeChecklist";
+import IntakePhotoUpload from "./IntakePhotoUpload";
 
 interface Props {
   initialData?: ServiceOrder;
