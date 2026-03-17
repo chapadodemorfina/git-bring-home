@@ -78,6 +78,21 @@ export function useAllWarranties() {
   });
 }
 
+export function useWarrantiesPaginated(search?: string, page: number = 1) {
+  return useQuery<PaginatedResult<any>>({
+    queryKey: ["warranties-paginated", search, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page, search };
+      return executePaginatedQuery<any>(params, {
+        table: "warranties",
+        select: "*, service_orders(order_number, customer_id, device_id, customers(full_name), devices(brand, model))",
+        searchColumns: ["warranty_number"],
+        defaultSort: { column: "created_at", ascending: false },
+      });
+    },
+  });
+}
+
 export function useVoidWarranty() {
   const qc = useQueryClient();
   const { toast } = useToast();
