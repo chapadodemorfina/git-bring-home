@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import TablePagination from "@/components/ui/table-pagination";
+import DataPagination from "@/components/ui/data-pagination";
 import { Search, Plus, Eye, Pencil, Trash2, Loader2, Building2, User } from "lucide-react";
 
 export default function CustomersListPage() {
