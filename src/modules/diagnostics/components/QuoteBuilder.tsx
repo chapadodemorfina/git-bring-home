@@ -101,9 +101,11 @@ export default function QuoteBuilder({ quote }: Props) {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => {
+            const laborCost = laborItems.reduce((s, i) => s + Number(i.total_price), 0);
+            const partsCost = partItems.reduce((s, i) => s + Number(i.total_price), 0);
             generateQuotePdf(
-              { ...quote, total_amount: Number(quote.total_amount), labor_cost: Number(quote.labor_cost), parts_cost: Number(quote.parts_cost), analysis_fee: Number(quote.analysis_fee) },
-              (items || []).map((i: any) => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) })),
+              { ...quote, total_amount: Number(quote.total_amount), labor_cost: laborCost, parts_cost: partsCost, analysis_fee: Number(quote.analysis_fee) },
+              (items || []).map((i) => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) })),
               companyName
             );
           }}>
