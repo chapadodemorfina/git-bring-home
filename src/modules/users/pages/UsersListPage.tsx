@@ -2,7 +2,7 @@
  * Sistema de gestão técnica i9
  * Desenvolvido por Alvo Sistemas e Gestão
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUsersList, useDeactivateUser, useActivateUser, useResetPasswordLink, useResetPasswordManual } from "../hooks/useUsers";
 import { roleLabels, roleBadgeVariants, AppRole } from "../types";
@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Loader2, Search, Plus, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Copy, Link2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import DataPagination, { DEFAULT_PAGE_SIZE } from "@/components/ui/data-pagination";
 
 export default function UsersListPage() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export default function UsersListPage() {
   const resetManualMutation = useResetPasswordManual();
 
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: string; email: string; name: string }>({
     open: false, userId: "", email: "", name: "",
   });
@@ -36,15 +38,28 @@ export default function UsersListPage() {
     open: false, action: "", userId: "", name: "",
   });
 
-  const filtered = (users || []).filter((u) => {
-    if (!search) return true;
-    const lower = search.toLowerCase();
-    return (
-      u.full_name?.toLowerCase().includes(lower) ||
-      u.email?.toLowerCase().includes(lower) ||
-      u.roles?.some((r) => roleLabels[r]?.toLowerCase().includes(lower))
-    );
-  });
+  const filtered = useMemo(() => {
+    const list = (users || []).filter((u) => {
+      if (!search) return true;
+      const lower = search.toLowerCase();
+      return (
+        u.full_name?.toLowerCase().includes(lower) ||
+        u.email?.toLowerCase().includes(lower) ||
+        u.roles?.some((r) => roleLabels[r]?.toLowerCase().includes(lower))
+      );
+    });
+    return list;
+  }, [users, search]);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / DEFAULT_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = filtered.slice((safePage - 1) * DEFAULT_PAGE_SIZE, safePage * DEFAULT_PAGE_SIZE);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
   const handleConfirmAction = () => {
     if (confirmDialog.action === "deactivate") {
@@ -97,7 +112,7 @@ export default function UsersListPage() {
             <Input
               placeholder="Buscar por nome, email ou função..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-9"
             />
           </div>
@@ -107,95 +122,98 @@ export default function UsersListPage() {
             <div className="flex justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : paged.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {search ? "Nenhum resultado encontrado" : "Nenhum usuário cadastrado"}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Telefone</TableHead>
-                     <TableHead>Funções</TableHead>
-                     <TableHead>Status</TableHead>
-                     <TableHead>Último Acesso</TableHead>
-                     <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((u) => (
-                    <TableRow key={u.id}>
-                      <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
-                      <TableCell>{u.email}</TableCell>
-                      <TableCell>{u.phone || "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {u.roles.length === 0 ? (
-                            <Badge variant="outline" className="text-muted-foreground">Sem função</Badge>
-                          ) : (
-                            u.roles.map((r) => (
-                              <Badge key={r} variant={roleBadgeVariants[r] || "outline"}>
-                                {roleLabels[r] || r}
-                              </Badge>
-                            ))
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={u.is_active ? "default" : "secondary"}>
-                          {u.is_active ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {u.last_sign_in_at ? (
-                          <span className="text-sm">{new Date(u.last_sign_in_at).toLocaleDateString("pt-BR")} {new Date(u.last_sign_in_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Nunca acessou</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => navigate(`/system/users/${u.id}/edit`)}>
-                              <Pencil className="mr-2 h-4 w-4" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => {
-                              setRecoveryLink(null);
-                              setNewPassword("");
-                              setResetDialog({ open: true, userId: u.id, email: u.email, name: u.full_name });
-                            }}>
-                              <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {u.is_active ? (
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => setConfirmDialog({ open: true, action: "deactivate", userId: u.id, name: u.full_name })}
-                              >
-                                <UserX className="mr-2 h-4 w-4" /> Desativar
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, action: "activate", userId: u.id, name: u.full_name })}>
-                                <UserCheck className="mr-2 h-4 w-4" /> Reativar
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Telefone</TableHead>
+                       <TableHead>Funções</TableHead>
+                       <TableHead>Status</TableHead>
+                       <TableHead>Último Acesso</TableHead>
+                       <TableHead className="w-12"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {paged.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
+                        <TableCell>{u.email}</TableCell>
+                        <TableCell>{u.phone || "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {u.roles.length === 0 ? (
+                              <Badge variant="outline" className="text-muted-foreground">Sem função</Badge>
+                            ) : (
+                              u.roles.map((r) => (
+                                <Badge key={r} variant={roleBadgeVariants[r] || "outline"}>
+                                  {roleLabels[r] || r}
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={u.is_active ? "default" : "secondary"}>
+                            {u.is_active ? "Ativo" : "Inativo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {u.last_sign_in_at ? (
+                            <span className="text-sm">{new Date(u.last_sign_in_at).toLocaleDateString("pt-BR")} {new Date(u.last_sign_in_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Nunca acessou</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => navigate(`/system/users/${u.id}/edit`)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => {
+                                setRecoveryLink(null);
+                                setNewPassword("");
+                                setResetDialog({ open: true, userId: u.id, email: u.email, name: u.full_name });
+                              }}>
+                                <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {u.is_active ? (
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => setConfirmDialog({ open: true, action: "deactivate", userId: u.id, name: u.full_name })}
+                                >
+                                  <UserX className="mr-2 h-4 w-4" /> Desativar
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, action: "activate", userId: u.id, name: u.full_name })}>
+                                  <UserCheck className="mr-2 h-4 w-4" /> Reativar
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <DataPagination page={safePage} pageSize={DEFAULT_PAGE_SIZE} total={total} onPageChange={setPage} />
+            </>
           )}
         </CardContent>
       </Card>
@@ -243,7 +261,6 @@ export default function UsersListPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Generate recovery link */}
             <div className="space-y-2">
               <Button
                 variant="outline"

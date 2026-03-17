@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
@@ -21,6 +23,31 @@ export function useWhatsAppConversations(statusFilter?: string) {
         customer_name: d.customers?.full_name || null,
         customers: undefined,
       }));
+    },
+    refetchInterval: 10000,
+  });
+}
+
+export function useWhatsAppConversationsPaginated(statusFilter?: string, page: number = 1) {
+  return useQuery<PaginatedResult<any>>({
+    queryKey: ["wa-conversations-paginated", statusFilter, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page };
+      const result = await executePaginatedQuery<any>(params, {
+        table: "whatsapp_conversations",
+        select: "*, customers(full_name)",
+        defaultSort: { column: "last_message_at", ascending: false },
+        additionalFilters: (q: any) => statusFilter ? q.eq("status", statusFilter) : q,
+        countFilters: (q: any) => statusFilter ? q.eq("status", statusFilter) : q,
+      });
+      return {
+        ...result,
+        items: result.items.map((d: any) => ({
+          ...d,
+          customer_name: d.customers?.full_name || null,
+          customers: undefined,
+        })),
+      };
     },
     refetchInterval: 10000,
   });
@@ -98,7 +125,6 @@ export function useSendHumanReply() {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async ({ conversationId, text }: { conversationId: string; text: string }) => {
-      // Call the whatsapp-send edge function for actual delivery
       const { data, error } = await supabase.functions.invoke("whatsapp-send", {
         body: { conversation_id: conversationId, text },
       });
@@ -136,7 +162,6 @@ export function useResolveConversation() {
         .eq("conversation_id", conversationId)
         .in("status", ["pending", "assigned", "active"]);
 
-      // Clear any pending states
       await db.from("whatsapp_pending_states")
         .delete()
         .eq("conversation_id", conversationId);
