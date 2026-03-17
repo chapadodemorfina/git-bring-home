@@ -114,20 +114,21 @@ export function useSupplier(id: string | undefined) {
   });
 }
 
-export function useSuppliers(search?: string, showArchived = false) {
-  return useQuery<Supplier[]>({
-    queryKey: ["suppliers", search, showArchived],
+export function useSuppliers(search?: string, showArchived = false, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+  return useQuery({
+    queryKey: ["suppliers", search, showArchived, page, pageSize],
     queryFn: async () => {
-      let query = sb.from("suppliers").select("*").order("name");
-      if (!showArchived) query = query.eq("is_active", true);
-      if (search) {
-        query = query.or(
-          `name.ilike.%${search}%,contact_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,document.ilike.%${search}%`
-        );
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      const filters: Record<string, any> = {};
+      if (!showArchived) filters.is_active = true;
+      return executePaginatedQuery<Supplier>(
+        { page, pageSize, search: search || undefined, filters, sortBy: "name", sortOrder: "asc" },
+        {
+          table: "suppliers",
+          select: "*",
+          searchColumns: ["name", "contact_name", "email", "phone", "document"],
+          defaultSort: { column: "name", ascending: true },
+        }
+      );
     },
   });
 }
