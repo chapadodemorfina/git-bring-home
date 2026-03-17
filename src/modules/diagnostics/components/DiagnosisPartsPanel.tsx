@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDiagnosisParts, useAddDiagnosisPart, useDeleteDiagnosisPart } from "../hooks/useDiagnostics";
-import { useProducts } from "@/modules/inventory/hooks/useInventory";
+import { useAllProducts } from "@/modules/inventory/hooks/useInventory";
 import PartCompatibilityHelper from "@/modules/inventory/components/PartCompatibilityHelper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ interface Props {
 
 export default function DiagnosisPartsPanel({ diagnosisId, readOnly, deviceType, deviceBrand, deviceModel }: Props) {
   const { data: parts, isLoading } = useDiagnosisParts(diagnosisId);
-  const { data: products } = useProducts();
+  const { data: products } = useAllProducts();
   const addPart = useAddDiagnosisPart();
   const deletePart = useDeleteDiagnosisPart();
   const [partName, setPartName] = useState("");

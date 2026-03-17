@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useProducts, useConsumePart, useRepairPartsUsed } from "../hooks/useInventory";
+import { useAllProducts, useConsumePart, useRepairPartsUsed } from "../hooks/useInventory";
 import { consumePartSchema, type ConsumePartFormData } from "../types";
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 
 export default function ConsumePartPanel({ serviceOrderId }: Props) {
   const [showForm, setShowForm] = useState(false);
-  const { data: products } = useProducts();
+  const { data: products } = useAllProducts();
   const { data: partsUsed } = useRepairPartsUsed(serviceOrderId);
   const consumePart = useConsumePart();
 

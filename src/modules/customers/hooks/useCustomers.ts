@@ -2,34 +2,29 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer, CustomerFormData, CustomerAddress, AddressFormData, CustomerContact, ContactFormData } from "../types";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_PAGE_SIZE } from "@/components/ui/data-pagination";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
 
 // Helper to work around generated types not including new tables
 const db = supabase as any;
 
-const PAGE_SIZE = 50;
-
-export function useCustomers(search?: string, filterActive?: boolean | null, page: number = 1) {
+export function useCustomers(search?: string, filterActive?: boolean | null, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
   return useQuery({
-    queryKey: ["customers", search, filterActive, page],
+    queryKey: ["customers", search, filterActive, page, pageSize],
     queryFn: async () => {
-      let countQuery = db.from("customers").select("id", { count: "exact", head: true });
-      let query = db.from("customers").select("*").order("created_at", { ascending: false })
-        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-
-      if (search) {
-        const filter = `full_name.ilike.%${search}%,document.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%,whatsapp.ilike.%${search}%,notes.ilike.%${search}%`;
-        query = query.or(filter);
-        countQuery = countQuery.or(filter);
-      }
-
+      const filters: Record<string, any> = {};
       if (filterActive !== null && filterActive !== undefined) {
-        query = query.eq("is_active", filterActive);
-        countQuery = countQuery.eq("is_active", filterActive);
+        filters.is_active = filterActive;
       }
-
-      const [{ data, error }, { count }] = await Promise.all([query, countQuery]);
-      if (error) throw error;
-      return { items: data as Customer[], total: count || 0, page, pageSize: PAGE_SIZE };
+      return executePaginatedQuery<Customer>(
+        { page, pageSize, search: search || undefined, filters },
+        {
+          table: "customers",
+          select: "*",
+          searchColumns: ["full_name", "document", "phone", "email", "whatsapp", "notes"],
+          defaultSort: { column: "created_at", ascending: false },
+        }
+      );
     },
   });
 }

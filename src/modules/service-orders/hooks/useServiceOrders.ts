@@ -6,24 +6,23 @@ import {
   ServiceOrderStatus,
 } from "../types";
 import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_PAGE_SIZE, type PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
-const PAGE_SIZE = 50;
-
-export function useServiceOrders(search?: string, filterStatus?: string | null, page: number = 1) {
+export function useServiceOrders(search?: string, filterStatus?: string | null, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
   return useQuery({
-    queryKey: ["service-orders", search, filterStatus, page],
+    queryKey: ["service-orders", search, filterStatus, page, pageSize],
     queryFn: async () => {
-      let countQuery = db
-        .from("service_orders")
-        .select("id", { count: "exact", head: true });
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
 
+      let countQuery = db.from("service_orders").select("id", { count: "exact", head: true });
       let query = db
         .from("service_orders")
         .select("*, customers!inner(full_name), devices(brand, model)")
         .order("created_at", { ascending: false })
-        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+        .range(from, to);
 
       if (search) {
         const filter = `order_number.ilike.%${search}%,reported_issue.ilike.%${search}%,intake_notes.ilike.%${search}%,internal_notes.ilike.%${search}%`;
@@ -37,6 +36,7 @@ export function useServiceOrders(search?: string, filterStatus?: string | null, 
 
       const [{ data, error }, { count }] = await Promise.all([query, countQuery]);
       if (error) throw error;
+      const total = count || 0;
       return {
         items: (data as any[]).map((d) => ({
           ...d,
@@ -45,10 +45,11 @@ export function useServiceOrders(search?: string, filterStatus?: string | null, 
           customers: undefined,
           devices: undefined,
         })) as ServiceOrder[],
-        total: count || 0,
+        total,
         page,
-        pageSize: PAGE_SIZE,
-      };
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      } as PaginatedResult<ServiceOrder>;
     },
   });
 }

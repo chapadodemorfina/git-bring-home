@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { X, Plus, PackageCheck, Wrench } from "lucide-react";
-import { useProducts } from "../hooks/useInventory";
+import { useAllProducts } from "../hooks/useInventory";
 import {
   useScrapDisassemblies,
   useRecoveredParts,
@@ -33,7 +33,7 @@ export function DisassemblyPanel({ scrapId, onClose }: Props) {
   const { data: disassemblies = [] } = useScrapDisassemblies(scrapId);
   const latestDisassembly = disassemblies[0];
   const { data: parts = [] } = useRecoveredParts(latestDisassembly?.id);
-  const { data: products = [] } = useProducts();
+  const { data: products = [] } = useAllProducts();
   const addPart = useAddRecoveredPart();
   const recoverToStock = useRecoverPartToStock();
   const createDisassembly = useCreateDisassembly();

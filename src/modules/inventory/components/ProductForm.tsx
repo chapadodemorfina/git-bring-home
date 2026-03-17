@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSuppliers } from "../hooks/useInventory";
+import { useAllSuppliers } from "../hooks/useInventory";
 import { productSchema, type ProductFormData, productCategories, type Product } from "../types";
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function ProductForm({ defaultValues, onSubmit, isLoading }: Props) {
-  const { data: suppliers } = useSuppliers();
+  const { data: suppliers } = useAllSuppliers();
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {

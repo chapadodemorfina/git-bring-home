@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useProducts, usePartReservations, useReservePart, useReleaseReservation } from "../hooks/useInventory";
+import { useAllProducts, usePartReservations, useReservePart, useReleaseReservation } from "../hooks/useInventory";
 
 interface Props {
   serviceOrderId: string;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function PartReservationPanel({ serviceOrderId, diagnosisId }: Props) {
-  const { data: products } = useProducts();
+  const { data: products } = useAllProducts();
   const { data: reservations } = usePartReservations(serviceOrderId);
   const reserve = useReservePart();
   const release = useReleaseReservation();

@@ -5,22 +5,53 @@ import type {
   Product, Supplier, StockMovement, RepairPartUsed, PurchaseEntry,
   ProductFormData, SupplierFormData, StockEntryFormData, ConsumePartFormData,
 } from "../types";
+import { DEFAULT_PAGE_SIZE, type PaginatedResult } from "@/components/ui/data-pagination";
+import { executePaginatedQuery } from "@/hooks/usePaginatedQuery";
 
 const sb = supabase as any;
 
 // ── Products ──
-export function useProducts(search?: string, showArchived = false) {
-  return useQuery<Product[]>({
-    queryKey: ["products", search, showArchived],
+export function useProducts(search?: string, showArchived = false, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+  return useQuery({
+    queryKey: ["products", search, showArchived, page, pageSize],
     queryFn: async () => {
-      let query = sb.from("products").select("*, suppliers(id, name)").order("name");
-      if (!showArchived) query = query.eq("is_active", true);
+      const filters: Record<string, any> = {};
+      if (!showArchived) filters.is_active = true;
+      return executePaginatedQuery<Product>(
+        { page, pageSize, search: search || undefined, filters, sortBy: "name", sortOrder: "asc" },
+        {
+          table: "products",
+          select: "*, suppliers(id, name)",
+          searchColumns: ["name", "sku", "brand", "category", "compatible_devices", "location"],
+          defaultSort: { column: "name", ascending: true },
+        }
+      );
+    },
+  });
+}
+
+/** Returns ALL active products as a flat array — for dropdowns and selectors only */
+export function useAllProducts(search?: string) {
+  return useQuery<Product[]>({
+    queryKey: ["products-all", search],
+    queryFn: async () => {
+      let query = sb.from("products").select("*, suppliers(id, name)").eq("is_active", true).order("name");
       if (search) {
-        query = query.or(
-          `name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%,compatible_devices.ilike.%${search}%,location.ilike.%${search}%`
-        );
+        query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%`);
       }
       const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/** Returns ALL suppliers as a flat array — for dropdowns only */
+export function useAllSuppliers() {
+  return useQuery<Supplier[]>({
+    queryKey: ["suppliers-all"],
+    queryFn: async () => {
+      const { data, error } = await sb.from("suppliers").select("*").eq("is_active", true).order("name");
       if (error) throw error;
       return data;
     },
@@ -111,20 +142,21 @@ export function useSupplier(id: string | undefined) {
   });
 }
 
-export function useSuppliers(search?: string, showArchived = false) {
-  return useQuery<Supplier[]>({
-    queryKey: ["suppliers", search, showArchived],
+export function useSuppliers(search?: string, showArchived = false, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+  return useQuery({
+    queryKey: ["suppliers", search, showArchived, page, pageSize],
     queryFn: async () => {
-      let query = sb.from("suppliers").select("*").order("name");
-      if (!showArchived) query = query.eq("is_active", true);
-      if (search) {
-        query = query.or(
-          `name.ilike.%${search}%,contact_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,document.ilike.%${search}%`
-        );
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      const filters: Record<string, any> = {};
+      if (!showArchived) filters.is_active = true;
+      return executePaginatedQuery<Supplier>(
+        { page, pageSize, search: search || undefined, filters, sortBy: "name", sortOrder: "asc" },
+        {
+          table: "suppliers",
+          select: "*",
+          searchColumns: ["name", "contact_name", "email", "phone", "document"],
+          defaultSort: { column: "name", ascending: true },
+        }
+      );
     },
   });
 }
@@ -189,15 +221,31 @@ export function useUpdateSupplier() {
 }
 
 // ── Stock Movements ──
-export function useStockMovements(productId?: string) {
-  return useQuery<StockMovement[]>({
-    queryKey: ["stock_movements", productId],
+export function useStockMovements(productId?: string, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+  return useQuery({
+    queryKey: ["stock_movements", productId, page, pageSize],
     queryFn: async () => {
-      let q = sb.from("stock_movements").select("*, products(name, sku)").order("created_at", { ascending: false }).limit(200);
-      if (productId) q = q.eq("product_id", productId);
-      const { data, error } = await q;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let countQuery = sb.from("stock_movements").select("id", { count: "exact", head: true });
+      let dataQuery = sb.from("stock_movements").select("*, products(name, sku)").order("created_at", { ascending: false }).range(from, to);
+
+      if (productId) {
+        dataQuery = dataQuery.eq("product_id", productId);
+        countQuery = countQuery.eq("product_id", productId);
+      }
+
+      const [{ data, error }, { count }] = await Promise.all([dataQuery, countQuery]);
       if (error) throw error;
-      return data;
+      const total = count || 0;
+      return {
+        items: (data || []) as StockMovement[],
+        total,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      } as PaginatedResult<StockMovement>;
     },
   });
 }

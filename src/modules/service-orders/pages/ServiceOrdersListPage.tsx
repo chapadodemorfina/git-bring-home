@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import TablePagination from "@/components/ui/table-pagination";
+import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -86,7 +86,7 @@ export default function ServiceOrdersListPage() {
                   ))}
                 </TableBody>
               </Table>
-              <TablePagination page={page} pageSize={data?.pageSize || 50} total={total} onPageChange={setPage} />
+              <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
             </div>
           )}
         </CardContent>
