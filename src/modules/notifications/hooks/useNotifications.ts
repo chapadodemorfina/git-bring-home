@@ -151,3 +151,16 @@ export function useNotificationLogs(queueId?: string) {
     },
   });
 }
+
+export function useNotificationLogsPaginated(page: number = 1) {
+  return useQuery<PaginatedResult<any>>({
+    queryKey: ["notification-logs-paginated", page],
+    queryFn: async () => {
+      return executePaginatedQuery<any>({ page }, {
+        table: "notification_logs",
+        select: "*",
+        defaultSort: { column: "created_at", ascending: false },
+      });
+    },
+  });
+}
