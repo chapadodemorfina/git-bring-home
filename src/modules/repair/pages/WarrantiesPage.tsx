@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useWarrantyAnalytics, useAllWarranties, useVoidWarranty } from "../hooks/useWarrantyAnalytics";
+import { useWarrantyAnalytics, useWarrantiesPaginated, useVoidWarranty } from "../hooks/useWarrantyAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import DataPagination from "@/components/ui/data-pagination";
 import { Shield, ShieldCheck, ShieldX, AlertTriangle, RotateCcw, BarChart3, Search } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,12 +31,16 @@ const defaultAnalytics = {
 
 export default function WarrantiesPage() {
   const { data: rawAnalytics, isLoading: analyticsLoading, error: analyticsError } = useWarrantyAnalytics();
-  const { data: warranties, isLoading, error: warrantyError } = useAllWarranties();
   const voidWarranty = useVoidWarranty();
   const [voidOpen, setVoidOpen] = useState(false);
   const [selectedWarrantyId, setSelectedWarrantyId] = useState<string | null>(null);
   const [voidReason, setVoidReason] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const { data: warrantiesData, isLoading, error: warrantyError } = useWarrantiesPaginated(search, page);
+  const warranties = warrantiesData?.items || [];
+  const total = warrantiesData?.total || 0;
 
   const analytics = { ...defaultAnalytics, ...rawAnalytics };
 
@@ -53,19 +58,7 @@ export default function WarrantiesPage() {
     return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Ativa</Badge>;
   };
 
-  const safeWarranties = warranties || [];
-  const filteredWarranties = useMemo(() => {
-    if (!search) return safeWarranties;
-    const lower = search.toLowerCase();
-    return safeWarranties.filter((w: any) =>
-      w.warranty_number?.toLowerCase().includes(lower) ||
-      w.service_orders?.order_number?.toLowerCase().includes(lower) ||
-      w.service_orders?.customers?.full_name?.toLowerCase().includes(lower) ||
-      `${w.service_orders?.devices?.brand || ""} ${w.service_orders?.devices?.model || ""}`.toLowerCase().includes(lower)
-    );
-  }, [safeWarranties, search]);
-
-  if (isLoading || analyticsLoading) return <div className="space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)}</div>;
+  if (analyticsLoading) return <div className="space-y-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)}</div>;
 
   if (analyticsError || warrantyError) {
     return (
@@ -106,64 +99,73 @@ export default function WarrantiesPage() {
             <CardHeader className="pb-3">
               <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por nº garantia, OS, cliente, dispositivo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+                <Input placeholder="Buscar por nº garantia, OS, cliente, dispositivo..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nº Garantia</TableHead>
-                    <TableHead>OS</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Dispositivo</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Validade</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredWarranties.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                        Nenhuma garantia encontrada
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredWarranties.map((w: any) => (
-                      <TableRow key={w.id}>
-                        <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
-                        <TableCell>
-                          <Link to={`/service-orders/${w.service_order_id}`} className="text-primary hover:underline text-sm">
-                            {w.service_orders?.order_number}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-sm">{w.service_orders?.customers?.full_name || "—"}</TableCell>
-                        <TableCell className="text-sm">
-                          {w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-xs">
-                            {w.warranty_type === "parts_warranty" ? "Peças" : w.warranty_type === "manufacturer_warranty" ? "Fabricante" : "Reparo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {format(new Date(w.start_date), "dd/MM/yy", { locale: ptBR })} → {format(new Date(w.end_date), "dd/MM/yy", { locale: ptBR })}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(w)}</TableCell>
-                        <TableCell>
-                          {!w.is_void && !isPast(new Date(w.end_date)) && (
-                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { setSelectedWarrantyId(w.id); setVoidOpen(true); }}>
-                              Anular
-                            </Button>
-                          )}
-                        </TableCell>
+              {isLoading ? (
+                <div className="p-6 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+              ) : (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nº Garantia</TableHead>
+                        <TableHead>OS</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Dispositivo</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Validade</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {warranties.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                            Nenhuma garantia encontrada
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        warranties.map((w: any) => (
+                          <TableRow key={w.id}>
+                            <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
+                            <TableCell>
+                              <Link to={`/service-orders/${w.service_order_id}`} className="text-primary hover:underline text-sm">
+                                {w.service_orders?.order_number}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="text-sm">{w.service_orders?.customers?.full_name || "—"}</TableCell>
+                            <TableCell className="text-sm">
+                              {w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {w.warranty_type === "parts_warranty" ? "Peças" : w.warranty_type === "manufacturer_warranty" ? "Fabricante" : "Reparo"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {format(new Date(w.start_date), "dd/MM/yy", { locale: ptBR })} → {format(new Date(w.end_date), "dd/MM/yy", { locale: ptBR })}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(w)}</TableCell>
+                            <TableCell>
+                              {!w.is_void && !isPast(new Date(w.end_date)) && (
+                                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { setSelectedWarrantyId(w.id); setVoidOpen(true); }}>
+                                  Anular
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                  <div className="px-4">
+                    <DataPagination page={page} pageSize={warrantiesData?.pageSize || 25} total={total} onPageChange={setPage} />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
