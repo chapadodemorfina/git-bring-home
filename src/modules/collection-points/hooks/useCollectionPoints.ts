@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 import type {
   CollectionPoint, CollectionPointUser, CollectionTransfer,
   CollectionPointCommission, CollectionPointFormData, TransferStatus,
@@ -8,10 +10,26 @@ import type {
 
 const sb = supabase as any;
 
-// ── Collection Points ──
-export function useCollectionPoints(search?: string) {
+// ── Collection Points (paginated) ──
+export function useCollectionPoints(search?: string, page: number = 1) {
+  return useQuery<PaginatedResult<CollectionPoint>>({
+    queryKey: ["collection_points", search, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page, search };
+      return executePaginatedQuery<CollectionPoint>(params, {
+        table: "collection_points",
+        select: "*",
+        searchColumns: ["name", "responsible_person", "city", "phone", "whatsapp", "email", "company_name"],
+        defaultSort: { column: "name", ascending: true },
+      });
+    },
+  });
+}
+
+/** Flat list for dropdowns / selectors */
+export function useAllCollectionPoints(search?: string) {
   return useQuery<CollectionPoint[]>({
-    queryKey: ["collection_points", search],
+    queryKey: ["collection_points_all", search],
     queryFn: async () => {
       let query = sb.from("collection_points").select("*").order("name");
       if (search) {

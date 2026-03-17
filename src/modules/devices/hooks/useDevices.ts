@@ -2,32 +2,33 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Device, DeviceFormData, DeviceAccessory, AccessoryFormData, DevicePhoto } from "../types";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
-export function useDevices(search?: string, filterType?: string | null) {
-  return useQuery({
-    queryKey: ["devices", search, filterType],
+export function useDevices(search?: string, filterType?: string | null, page: number = 1) {
+  return useQuery<PaginatedResult<Device>>({
+    queryKey: ["devices", search, filterType, page],
     queryFn: async () => {
-      let query = db.from("devices").select("*, customers!inner(full_name)").order("created_at", { ascending: false });
-
-      if (search) {
-        query = query.or(
-          `brand.ilike.%${search}%,model.ilike.%${search}%,serial_number.ilike.%${search}%,imei.ilike.%${search}%,color.ilike.%${search}%,reported_issue.ilike.%${search}%`
-        );
-      }
-
-      if (filterType) {
-        query = query.eq("device_type", filterType);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data as any[]).map((d) => ({
-        ...d,
-        customer_name: d.customers?.full_name,
-        customers: undefined,
-      })) as Device[];
+      const params: PaginationParams = { page, search };
+      const result = await executePaginatedQuery<any>(params, {
+        table: "devices",
+        select: "*, customers!inner(full_name)",
+        searchColumns: ["brand", "model", "serial_number", "imei", "color", "reported_issue"],
+        defaultSort: { column: "created_at", ascending: false },
+        additionalFilters: (q: any) => filterType ? q.eq("device_type", filterType) : q,
+        countSelect: "id",
+        countFilters: (q: any) => filterType ? q.eq("device_type", filterType) : q,
+      });
+      return {
+        ...result,
+        items: result.items.map((d: any) => ({
+          ...d,
+          customer_name: d.customers?.full_name,
+          customers: undefined,
+        })),
+      };
     },
   });
 }

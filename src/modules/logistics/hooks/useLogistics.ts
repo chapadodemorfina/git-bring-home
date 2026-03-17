@@ -2,47 +2,34 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PickupDelivery, PickupDeliveryFormData, TransportEvent, LogisticsStatus } from "../types";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
-export function usePickupsDeliveries(search?: string, filterStatus?: string | null) {
-  return useQuery({
-    queryKey: ["pickups-deliveries", search, filterStatus],
+export function usePickupsDeliveries(search?: string, filterStatus?: string | null, page: number = 1) {
+  return useQuery<PaginatedResult<PickupDelivery>>({
+    queryKey: ["pickups-deliveries", search, filterStatus, page],
     queryFn: async () => {
-      let query = db
-        .from("pickups_deliveries")
-        .select("*, service_orders!inner(order_number, customers!inner(full_name))")
-        .order("created_at", { ascending: false });
-
-      if (search) {
-        query = query.or(
-          `driver_name.ilike.%${search}%,contact_name.ilike.%${search}%,notes.ilike.%${search}%,address_street.ilike.%${search}%,address_city.ilike.%${search}%,contact_phone.ilike.%${search}%`
-        );
-      }
-      if (filterStatus) query = query.eq("status", filterStatus);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      let results = (data as any[]).map((d) => ({
-        ...d,
-        order_number: d.service_orders?.order_number,
-        customer_name: d.service_orders?.customers?.full_name,
-        service_orders: undefined,
-      })) as PickupDelivery[];
-
-      // Client-side filter for joined fields (order_number, customer_name)
-      if (search) {
-        const lower = search.toLowerCase();
-        results = results.filter(r =>
-          r.order_number?.toLowerCase().includes(lower) ||
-          r.customer_name?.toLowerCase().includes(lower) ||
-          r.driver_name?.toLowerCase().includes(lower) ||
-          r.contact_name?.toLowerCase().includes(lower) ||
-          r.notes?.toLowerCase().includes(lower)
-        );
-      }
-
-      return results;
+      const params: PaginationParams = { page, search };
+      const result = await executePaginatedQuery<any>(params, {
+        table: "pickups_deliveries",
+        select: "*, service_orders!inner(order_number, customers!inner(full_name))",
+        searchColumns: ["driver_name", "contact_name", "notes", "address_street", "address_city", "contact_phone"],
+        defaultSort: { column: "created_at", ascending: false },
+        additionalFilters: (q: any) => filterStatus ? q.eq("status", filterStatus) : q,
+        countSelect: "id",
+        countFilters: (q: any) => filterStatus ? q.eq("status", filterStatus) : q,
+      });
+      return {
+        ...result,
+        items: result.items.map((d: any) => ({
+          ...d,
+          order_number: d.service_orders?.order_number,
+          customer_name: d.service_orders?.customers?.full_name,
+          service_orders: undefined,
+        })),
+      };
     },
   });
 }
@@ -82,7 +69,6 @@ export function useCreatePickupDelivery() {
       const { data, error } = await db.from("pickups_deliveries").insert(payload).select().single();
       if (error) throw error;
 
-      // Log initial event
       await db.from("transport_events").insert({
         pickup_delivery_id: data.id,
         to_status: "pickup_requested",

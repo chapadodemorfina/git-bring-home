@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Monitor, Eye } from "lucide-react";
+import DataPagination from "@/components/ui/data-pagination";
+import { Plus, Search, Monitor, Eye, Loader2 } from "lucide-react";
 import { useDevices } from "../hooks/useDevices";
 import { deviceTypeLabels, DeviceType } from "../types";
 
@@ -14,7 +15,10 @@ export default function DevicesListPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
-  const { data: devices = [], isLoading } = useDevices(search, filterType);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useDevices(search, filterType, page);
+  const devices = data?.items || [];
+  const total = data?.total || 0;
 
   return (
     <div className="space-y-6">
@@ -36,11 +40,11 @@ export default function DevicesListPage() {
               <Input
                 placeholder="Buscar por marca, modelo, serial, IMEI, cor, problema..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9"
               />
             </div>
-            <Select value={filterType || "all"} onValueChange={(v) => setFilterType(v === "all" ? null : v)}>
+            <Select value={filterType || "all"} onValueChange={(v) => { setFilterType(v === "all" ? null : v); setPage(1); }}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
@@ -54,57 +58,60 @@ export default function DevicesListPage() {
           </div>
 
           {isLoading ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">Carregando...</p>
+            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : devices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
               <Monitor className="h-12 w-12" />
               <p>Nenhum dispositivo encontrado</p>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Marca / Modelo</TableHead>
-                    <TableHead className="hidden md:table-cell">Serial</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {devices.map((device) => (
-                    <TableRow
-                      key={device.id}
-                      className="cursor-pointer"
-                      onClick={() => navigate(`/devices/${device.id}`)}
-                    >
-                      <TableCell>
-                        <Badge variant="outline">{deviceTypeLabels[device.device_type]}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {[device.brand, device.model].filter(Boolean).join(" ") || "—"}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">
-                        {device.serial_number || "—"}
-                      </TableCell>
-                      <TableCell>{device.customer_name || "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant={device.is_active ? "default" : "secondary"}>
-                          {device.is_active ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button size="icon" variant="ghost" className="h-8 w-8">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Marca / Modelo</TableHead>
+                      <TableHead className="hidden md:table-cell">Serial</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-12"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {devices.map((device) => (
+                      <TableRow
+                        key={device.id}
+                        className="cursor-pointer"
+                        onClick={() => navigate(`/devices/${device.id}`)}
+                      >
+                        <TableCell>
+                          <Badge variant="outline">{deviceTypeLabels[device.device_type]}</Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {[device.brand, device.model].filter(Boolean).join(" ") || "—"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-muted-foreground">
+                          {device.serial_number || "—"}
+                        </TableCell>
+                        <TableCell>{device.customer_name || "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant={device.is_active ? "default" : "secondary"}>
+                            {device.is_active ? "Ativo" : "Inativo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button size="icon" variant="ghost" className="h-8 w-8">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+            </>
           )}
         </CardContent>
       </Card>
