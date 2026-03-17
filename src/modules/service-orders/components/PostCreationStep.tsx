@@ -51,6 +51,15 @@ export default function PostCreationStep({ orderId }: Props) {
   if (isLoading) return <Skeleton className="h-64 w-full" />;
   if (!order) return null;
 
+  const handlePrintLabel = async () => {
+    if (!trackingUrl) {
+      await generateLink.mutateAsync(orderId);
+      setTimeout(() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true), 1500);
+    } else {
+      printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -71,9 +80,10 @@ export default function PostCreationStep({ orderId }: Props) {
         <CardContent className="flex flex-wrap gap-3">
           <Button
             variant="outline"
-            onClick={() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true)}
+            onClick={handlePrintLabel}
+            disabled={generateLink.isPending}
           >
-            <Tag className="mr-2 h-4 w-4" /> Imprimir Etiqueta
+            <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Imprimir Etiqueta"}
           </Button>
           <Button
             variant="outline"
