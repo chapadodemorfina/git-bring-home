@@ -106,6 +106,7 @@ export function useFinancialEntriesPaginated(
   });
 }
 
+export function useFinancialEntry(id: string | undefined) {
   return useQuery({
     queryKey: ["financial-entry", id],
     enabled: !!id,
