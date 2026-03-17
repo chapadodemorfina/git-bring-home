@@ -14,7 +14,7 @@ import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarra
 import DeviceLocationPanel from "../components/DeviceLocationPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
 import CustomerCommunicationPanel from "../components/CustomerCommunicationPanel";
-import { useServiceOrderPublicLinks } from "@/modules/tracking/hooks/usePublicTracking";
+import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +55,7 @@ export default function ServiceOrderDetailPage() {
   const receiptRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const companyName = useCompanyName("i9 Solutions");
+  const generateLink = useGeneratePublicLink();
 
   const db = supabase as any;
   const { data: statusHistory } = useQuery({
@@ -80,6 +81,17 @@ export default function ServiceOrderDetailPage() {
   const handleExportPdf = () => {
     if (!order) return;
     generateServiceOrderPdf(order, statusHistory || [], companyName);
+  };
+
+  const handlePrintLabel = async () => {
+    if (!order || !id) return;
+    if (!trackingUrl) {
+      await generateLink.mutateAsync(id);
+      // Wait for query refetch to get the new link - print after a short delay
+      setTimeout(() => printElement(labelRef.current, `Etiqueta ${order.order_number}`, true), 1500);
+    } else {
+      printElement(labelRef.current, `Etiqueta ${order.order_number}`, true);
+    }
   };
 
   const handleDelete = async () => {
@@ -120,8 +132,8 @@ export default function ServiceOrderDetailPage() {
           <Button variant="outline" onClick={() => printElement(receiptRef.current, order.order_number)}>
             <Printer className="mr-2 h-4 w-4" /> Recibo
           </Button>
-          <Button variant="outline" onClick={() => printElement(labelRef.current, `Etiqueta ${order.order_number}`, true)}>
-            <Tag className="mr-2 h-4 w-4" /> Etiqueta
+          <Button variant="outline" onClick={handlePrintLabel} disabled={generateLink.isPending}>
+            <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Etiqueta"}
           </Button>
           <Button variant="outline" asChild>
             <Link to={`/service-orders/${order.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar</Link>

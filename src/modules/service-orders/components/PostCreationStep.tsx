@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useServiceOrder } from "../hooks/useServiceOrders";
-import { useServiceOrderPublicLinks } from "@/modules/tracking/hooks/usePublicTracking";
+import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { useCompanyName } from "@/hooks/useCompanyName";
 import IntakePhotoUpload from "./IntakePhotoUpload";
 import SignatureCapture from "./SignatureCapture";
@@ -38,6 +38,7 @@ export default function PostCreationStep({ orderId }: Props) {
   const navigate = useNavigate();
   const { data: order, isLoading } = useServiceOrder(orderId);
   const { data: publicLinks } = useServiceOrderPublicLinks(orderId);
+  const generateLink = useGeneratePublicLink();
   const companyName = useCompanyName("Assistência Técnica");
   const receiptRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,15 @@ export default function PostCreationStep({ orderId }: Props) {
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
   if (!order) return null;
+
+  const handlePrintLabel = async () => {
+    if (!trackingUrl) {
+      await generateLink.mutateAsync(orderId);
+      setTimeout(() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true), 1500);
+    } else {
+      printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -70,9 +80,10 @@ export default function PostCreationStep({ orderId }: Props) {
         <CardContent className="flex flex-wrap gap-3">
           <Button
             variant="outline"
-            onClick={() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true)}
+            onClick={handlePrintLabel}
+            disabled={generateLink.isPending}
           >
-            <Tag className="mr-2 h-4 w-4" /> Imprimir Etiqueta
+            <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Imprimir Etiqueta"}
           </Button>
           <Button
             variant="outline"
