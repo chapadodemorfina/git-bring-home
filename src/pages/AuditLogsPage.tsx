@@ -294,6 +294,54 @@ export default function AuditLogsPage() {
   );
 }
 
+function DiffView({ oldData, newData }: { oldData: any; newData: any }) {
+  const allKeys = Array.from(new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})]));
+  const ignoredKeys = ["updated_at", "created_at"];
+  const changedKeys = allKeys.filter(k => !ignoredKeys.includes(k) && JSON.stringify(oldData?.[k]) !== JSON.stringify(newData?.[k]));
+  const unchangedKeys = allKeys.filter(k => !ignoredKeys.includes(k) && JSON.stringify(oldData?.[k]) === JSON.stringify(newData?.[k]));
+
+  if (changedKeys.length === 0) {
+    return <p className="text-sm text-muted-foreground text-center py-4">Nenhuma alteração significativa detectada.</p>;
+  }
+
+  const formatVal = (v: any) => {
+    if (v === null || v === undefined) return <span className="text-muted-foreground italic">null</span>;
+    if (typeof v === "object") return <span className="font-mono text-xs">{JSON.stringify(v)}</span>;
+    return <span>{String(v)}</span>;
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-medium text-muted-foreground">{changedKeys.length} campo(s) alterado(s)</p>
+      <ScrollArea className="max-h-[400px]">
+        <div className="rounded-md border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted/50">
+                <th className="text-left px-3 py-1.5 text-xs font-medium w-1/4">Campo</th>
+                <th className="text-left px-3 py-1.5 text-xs font-medium w-[37.5%]">Antes</th>
+                <th className="text-left px-3 py-1.5 text-xs font-medium w-[37.5%]">Depois</th>
+              </tr>
+            </thead>
+            <tbody>
+              {changedKeys.map((key) => (
+                <tr key={key} className="border-t bg-amber-50/50 dark:bg-amber-950/10">
+                  <td className="px-3 py-2 font-mono text-xs font-medium">{key}</td>
+                  <td className="px-3 py-2 text-destructive/80 break-all">{formatVal(oldData?.[key])}</td>
+                  <td className="px-3 py-2 text-green-700 dark:text-green-400 break-all">{formatVal(newData?.[key])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ScrollArea>
+      {unchangedKeys.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">{unchangedKeys.length} campo(s) não alterado(s)</p>
+      )}
+    </div>
+  );
+}
+
 function AlertSection({ title, icon, items, render }: {
   title: string;
   icon: React.ReactNode;
