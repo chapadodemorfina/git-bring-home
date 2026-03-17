@@ -57,7 +57,7 @@ function useMarkPaid() {
 export default function CommissionManagementPage() {
   const [cpFilter, setCpFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const { data: points } = useCollectionPoints();
+  const { data: points } = useAllCollectionPoints();
   const { data: commissions, isLoading } = useAllCommissions({
     cpId: cpFilter !== "all" ? cpFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
