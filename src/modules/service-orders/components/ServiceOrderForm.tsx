@@ -68,7 +68,7 @@ export default function ServiceOrderForm({ initialData }: Props) {
     return (
       <div className="space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold text-green-600 dark:text-green-400">✓ OS criada com sucesso!</h2>
+          <h2 className="text-xl font-bold text-primary">✓ OS criada com sucesso!</h2>
           <p className="text-sm text-muted-foreground">Agora registre fotos do estado do dispositivo na entrada.</p>
         </div>
         <IntakePhotoUpload orderId={createdOrderId} />
