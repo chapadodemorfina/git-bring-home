@@ -55,6 +55,7 @@ export default function ServiceOrderDetailPage() {
   const receiptRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const companyName = useCompanyName("i9 Solutions");
+  const generateLink = useGeneratePublicLink();
 
   const db = supabase as any;
   const { data: statusHistory } = useQuery({
