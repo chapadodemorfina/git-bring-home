@@ -19,8 +19,7 @@ import { Save, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import NewDeviceDialog from "./NewDeviceDialog";
 import IntakeChecklist from "./IntakeChecklist";
-import IntakePhotoUpload from "./IntakePhotoUpload";
-import SignatureCapture from "./SignatureCapture";
+import PostCreationStep from "./PostCreationStep";
 
 interface Props {
   initialData?: ServiceOrder;
