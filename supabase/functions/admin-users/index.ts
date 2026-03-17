@@ -324,9 +324,12 @@ Deno.serve(async (req) => {
           .select("*")
           .order("created_at", { ascending: false });
 
-        // Get all auth users to detect inconsistencies
+        // Get all auth users to detect inconsistencies and get last_sign_in_at
         const { data: authUsersData } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
-        const authUserIds = new Set((authUsersData?.users || []).map((u: any) => u.id));
+        const authUsersMap = new Map<string, any>();
+        (authUsersData?.users || []).forEach((u: any) => {
+          authUsersMap.set(u.id, u);
+        });
 
         const { data: allRoles } = await adminClient
           .from("user_roles")
@@ -338,10 +341,14 @@ Deno.serve(async (req) => {
           rolesMap[r.user_id].push(r.role);
         });
 
-        const users = (profiles || []).map((p: any) => ({
-          ...p,
-          roles: rolesMap[p.id] || [],
-        }));
+        const users = (profiles || []).map((p: any) => {
+          const authUser = authUsersMap.get(p.id);
+          return {
+            ...p,
+            roles: rolesMap[p.id] || [],
+            last_sign_in_at: authUser?.last_sign_in_at || null,
+          };
+        });
 
         // Detect auth users without profile (orphaned)
         const profileIds = new Set((profiles || []).map((p: any) => p.id));

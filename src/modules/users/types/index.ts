@@ -15,6 +15,7 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   roles: AppRole[];
+  last_sign_in_at?: string | null;
 }
 
 export interface CreateUserPayload {

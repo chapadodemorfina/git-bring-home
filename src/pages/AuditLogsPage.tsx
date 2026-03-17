@@ -251,38 +251,93 @@ export default function AuditLogsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Detail Dialog */}
+      {/* Detail Dialog with Diff */}
       <Dialog open={!!detailLog} onOpenChange={() => setDetailLog(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader><DialogTitle>Detalhes da Alteração</DialogTitle></DialogHeader>
           {detailLog && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div><p className="text-xs text-muted-foreground">Ação</p><Badge className={actionColors[detailLog.action] || ""}>{detailLog.action}</Badge></div>
                 <div><p className="text-xs text-muted-foreground">Tabela</p><p>{tableLabels[detailLog.table_name || ""] || detailLog.table_name}</p></div>
-                <div><p className="text-xs text-muted-foreground">Registro</p><p className="font-mono">{detailLog.record_id}</p></div>
-                <div><p className="text-xs text-muted-foreground">Data</p><p>{format(new Date(detailLog.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}</p></div>
+                <div><p className="text-xs text-muted-foreground">Registro</p><p className="font-mono text-xs">{detailLog.record_id}</p></div>
+                <div><p className="text-xs text-muted-foreground">Data</p><p className="text-xs">{format(new Date(detailLog.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}</p></div>
               </div>
-              {detailLog.old_data && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Dados Anteriores</p>
-                  <ScrollArea className="h-[200px] rounded border p-3">
-                    <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.old_data, null, 2)}</pre>
-                  </ScrollArea>
-                </div>
-              )}
-              {detailLog.new_data && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Dados Novos</p>
-                  <ScrollArea className="h-[200px] rounded border p-3">
-                    <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.new_data, null, 2)}</pre>
-                  </ScrollArea>
-                </div>
+
+              {detailLog.old_data && detailLog.new_data ? (
+                <DiffView oldData={detailLog.old_data} newData={detailLog.new_data} />
+              ) : (
+                <>
+                  {detailLog.old_data && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Dados Anteriores</p>
+                      <ScrollArea className="h-[200px] rounded border p-3">
+                        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.old_data, null, 2)}</pre>
+                      </ScrollArea>
+                    </div>
+                  )}
+                  {detailLog.new_data && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Dados Novos</p>
+                      <ScrollArea className="h-[200px] rounded border p-3">
+                        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(detailLog.new_data, null, 2)}</pre>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DiffView({ oldData, newData }: { oldData: any; newData: any }) {
+  const allKeys = Array.from(new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})]));
+  const ignoredKeys = ["updated_at", "created_at"];
+  const changedKeys = allKeys.filter(k => !ignoredKeys.includes(k) && JSON.stringify(oldData?.[k]) !== JSON.stringify(newData?.[k]));
+  const unchangedKeys = allKeys.filter(k => !ignoredKeys.includes(k) && JSON.stringify(oldData?.[k]) === JSON.stringify(newData?.[k]));
+
+  if (changedKeys.length === 0) {
+    return <p className="text-sm text-muted-foreground text-center py-4">Nenhuma alteração significativa detectada.</p>;
+  }
+
+  const formatVal = (v: any) => {
+    if (v === null || v === undefined) return <span className="text-muted-foreground italic">null</span>;
+    if (typeof v === "object") return <span className="font-mono text-xs">{JSON.stringify(v)}</span>;
+    return <span>{String(v)}</span>;
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-medium text-muted-foreground">{changedKeys.length} campo(s) alterado(s)</p>
+      <ScrollArea className="max-h-[400px]">
+        <div className="rounded-md border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted/50">
+                <th className="text-left px-3 py-1.5 text-xs font-medium w-1/4">Campo</th>
+                <th className="text-left px-3 py-1.5 text-xs font-medium w-[37.5%]">Antes</th>
+                <th className="text-left px-3 py-1.5 text-xs font-medium w-[37.5%]">Depois</th>
+              </tr>
+            </thead>
+            <tbody>
+              {changedKeys.map((key) => (
+                <tr key={key} className="border-t bg-amber-50/50 dark:bg-amber-950/10">
+                  <td className="px-3 py-2 font-mono text-xs font-medium">{key}</td>
+                  <td className="px-3 py-2 text-destructive/80 break-all">{formatVal(oldData?.[key])}</td>
+                  <td className="px-3 py-2 text-green-700 dark:text-green-400 break-all">{formatVal(newData?.[key])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ScrollArea>
+      {unchangedKeys.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">{unchangedKeys.length} campo(s) não alterado(s)</p>
+      )}
     </div>
   );
 }
