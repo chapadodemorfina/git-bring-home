@@ -87,6 +87,33 @@ export function useNotificationQueue(filters?: { status?: string; channel?: stri
   });
 }
 
+export function useNotificationQueuePaginated(filters?: { status?: string; channel?: string }, page: number = 1) {
+  return useQuery<PaginatedResult<any>>({
+    queryKey: ["notification-queue-paginated", filters, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page };
+      return executePaginatedQuery<any>(params, {
+        table: "notification_queue",
+        select: "*",
+        defaultSort: { column: "created_at", ascending: false },
+        additionalFilters: (q: any) => {
+          let query = q;
+          if (filters?.status) query = query.eq("status", filters.status);
+          if (filters?.channel) query = query.eq("channel", filters.channel);
+          return query;
+        },
+        countFilters: (q: any) => {
+          let query = q;
+          if (filters?.status) query = query.eq("status", filters.status);
+          if (filters?.channel) query = query.eq("channel", filters.channel);
+          return query;
+        },
+      });
+    },
+    refetchInterval: 15000,
+  });
+}
+
 export function useRetryNotification() {
   const qc = useQueryClient();
   const { toast } = useToast();
