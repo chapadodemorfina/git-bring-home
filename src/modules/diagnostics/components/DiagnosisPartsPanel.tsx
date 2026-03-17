@@ -1,17 +1,22 @@
 import { useState } from "react";
 import { useDiagnosisParts, useAddDiagnosisPart, useDeleteDiagnosisPart } from "../hooks/useDiagnostics";
 import { useProducts } from "@/modules/inventory/hooks/useInventory";
+import PartCompatibilityHelper from "@/modules/inventory/components/PartCompatibilityHelper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Link2 } from "lucide-react";
 
 interface Props {
   diagnosisId: string;
   readOnly?: boolean;
+  deviceType?: string | null;
+  deviceBrand?: string | null;
+  deviceModel?: string | null;
 }
 
-export default function DiagnosisPartsPanel({ diagnosisId, readOnly }: Props) {
+export default function DiagnosisPartsPanel({ diagnosisId, readOnly, deviceType, deviceBrand, deviceModel }: Props) {
   const { data: parts, isLoading } = useDiagnosisParts(diagnosisId);
   const { data: products } = useProducts();
   const addPart = useAddDiagnosisPart();
@@ -97,6 +102,25 @@ export default function DiagnosisPartsPanel({ diagnosisId, readOnly }: Props) {
             </tfoot>
           </table>
         </div>
+      )}
+
+      {!readOnly && (deviceType || deviceBrand || deviceModel) && (
+        <>
+          <Separator />
+          <PartCompatibilityHelper
+            deviceType={deviceType}
+            deviceBrand={deviceBrand}
+            deviceModel={deviceModel}
+            onSelectProduct={async (product) => {
+              await addPart.mutateAsync({
+                diagnosisId,
+                partName: product.name,
+                quantity: 1,
+                estimatedUnitCost: product.cost_price,
+              });
+            }}
+          />
+        </>
       )}
 
       {!readOnly && (
