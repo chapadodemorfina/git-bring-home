@@ -11,6 +11,9 @@ import { TechnicianProductivityChart } from "@/components/dashboard/TechnicianPr
 import { PartsConsumptionChart } from "@/components/dashboard/PartsConsumptionChart";
 import { CollectionPointsChart } from "@/components/dashboard/CollectionPointsChart";
 import { CommonDefectsChart } from "@/components/dashboard/CommonDefectsChart";
+import { SlaComplianceChart } from "@/components/dashboard/SlaComplianceChart";
+import { QuoteConversionChart } from "@/components/dashboard/QuoteConversionChart";
+import { OrdersTrendChart } from "@/components/dashboard/OrdersTrendChart";
 import LowStockAlert from "@/modules/inventory/components/LowStockAlert";
 import { useCompanyName } from "@/hooks/useCompanyName";
 import { AlertTriangle } from "lucide-react";
@@ -70,7 +73,14 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold tracking-tight">Dashboard Executivo</h1>
           {companyName && <p className="text-muted-foreground">Inteligência operacional — {companyName}</p>}
         </div>
-        <DashboardFilters dateRange={dateRange} onDateRangeChange={setDateRange} preset={preset} onPresetChange={setPreset} />
+        <DashboardFilters
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          preset={preset}
+          onPresetChange={setPreset}
+          summary={summary}
+          companyName={companyName || "i9 Solutions"}
+        />
       </div>
 
       <LowStockAlert />
@@ -98,6 +108,13 @@ export default function Dashboard() {
 
       {/* Pipeline */}
       <PipelineView data={summary.pipeline || {}} />
+
+      {/* Analytics row - SLA, Quote funnel, Orders trend */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <SlaComplianceChart totalOrders={summary.total_orders} slaOverdueCount={summary.sla_overdue_count} />
+        <QuoteConversionChart total={summary.quotes_total} approved={summary.quotes_approved} rejected={summary.quotes_rejected} />
+        <OrdersTrendChart data={summary.monthly_trend || []} />
+      </div>
 
       {/* Charts row 1 */}
       <div className="grid gap-4 lg:grid-cols-2">

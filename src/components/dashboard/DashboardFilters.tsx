@@ -6,16 +6,19 @@ import { CalendarIcon, Download, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { DateRange } from "@/hooks/useDashboardData";
+import { DateRange, DashboardSummary } from "@/hooks/useDashboardData";
+import { generateDashboardReportPdf } from "@/lib/pdf-generators/dashboard-report-pdf";
 
 interface Props {
   dateRange: DateRange;
   onDateRangeChange: (range: DateRange) => void;
   preset: string;
   onPresetChange: (preset: string) => void;
+  summary?: DashboardSummary;
+  companyName?: string;
 }
 
-export function DashboardFilters({ dateRange, onDateRangeChange, preset, onPresetChange }: Props) {
+export function DashboardFilters({ dateRange, onDateRangeChange, preset, onPresetChange, summary, companyName }: Props) {
   const handlePreset = (value: string) => {
     onPresetChange(value);
     const now = new Date();
@@ -28,6 +31,12 @@ export function DashboardFilters({ dateRange, onDateRangeChange, preset, onPrese
       default: from = new Date(now.getTime() - 30 * 86400000);
     }
     onDateRangeChange({ from, to: now });
+  };
+
+  const handleExport = () => {
+    if (!summary) return;
+    const dateLabel = `Período: ${format(dateRange.from, "dd/MM/yyyy")} a ${format(dateRange.to, "dd/MM/yyyy")}`;
+    generateDashboardReportPdf(summary, companyName || "i9 Solutions", dateLabel);
   };
 
   return (
@@ -68,7 +77,7 @@ export function DashboardFilters({ dateRange, onDateRangeChange, preset, onPrese
         </PopoverContent>
       </Popover>
 
-      <Button variant="outline" size="sm" disabled>
+      <Button variant="outline" size="sm" onClick={handleExport} disabled={!summary}>
         <Download className="h-4 w-4 mr-2" />
         Exportar
       </Button>
