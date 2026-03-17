@@ -99,16 +99,27 @@ export default function QuoteBuilder({ quote }: Props) {
           <CardTitle className="font-mono">{quote.quote_number}</CardTitle>
           <Badge className={quoteStatusColors[quote.status]}>{quoteStatusLabels[quote.status]}</Badge>
         </div>
-        {quote.status === "draft" && (
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
-              <Plus className="mr-1 h-4 w-4" /> Item
-            </Button>
-            <Button size="sm" onClick={() => updateQuote.mutate({ id: quote.id, data: { status: "sent" as any } })}>
-              Enviar ao Cliente
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => {
+            generateQuotePdf(
+              { ...quote, total_amount: Number(quote.total_amount), labor_cost: Number(quote.labor_cost), parts_cost: Number(quote.parts_cost), analysis_fee: Number(quote.analysis_fee) },
+              (items || []).map((i: any) => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) })),
+              companyName
+            );
+          }}>
+            <FileDown className="mr-1 h-4 w-4" /> PDF
+          </Button>
+          {quote.status === "draft" && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" /> Item
+              </Button>
+              <Button size="sm" onClick={() => updateQuote.mutate({ id: quote.id, data: { status: "sent" as any } })}>
+                Enviar ao Cliente
+              </Button>
+            </>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
