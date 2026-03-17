@@ -12,13 +12,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Printer, Tag, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function printElement(el: HTMLElement | null, title: string) {
+function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   if (!el) return;
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
+
+  const labelStyles = isLabel
+    ? `@page{size:80mm 50mm;margin:0}body{width:80mm;height:50mm;margin:0;overflow:hidden}`
+    : ``;
+
   printWindow.document.write(`
     <html><head><title>${title}</title>
-    <style>body{margin:0;font-family:Arial,sans-serif}@media print{body{-webkit-print-color-adjust:exact}}</style>
+    <style>body{margin:0;font-family:Arial,sans-serif}@media print{body{-webkit-print-color-adjust:exact}${labelStyles}}</style>
     </head><body>${el.innerHTML}</body></html>
   `);
   printWindow.document.close();
@@ -65,7 +70,7 @@ export default function PostCreationStep({ orderId }: Props) {
         <CardContent className="flex flex-wrap gap-3">
           <Button
             variant="outline"
-            onClick={() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`)}
+            onClick={() => printElement(labelRef.current, `Etiqueta - ${order.order_number}`, true)}
           >
             <Tag className="mr-2 h-4 w-4" /> Imprimir Etiqueta
           </Button>
