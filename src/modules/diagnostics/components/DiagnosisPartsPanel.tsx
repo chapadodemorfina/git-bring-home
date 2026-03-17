@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDiagnosisParts, useAddDiagnosisPart, useDeleteDiagnosisPart } from "../hooks/useDiagnostics";
-import { useProducts } from "@/modules/inventory/hooks/useInventory";
+import { useAllProducts } from "@/modules/inventory/hooks/useInventory";
 import PartCompatibilityHelper from "@/modules/inventory/components/PartCompatibilityHelper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
