@@ -5,24 +5,27 @@ import type {
   Product, Supplier, StockMovement, RepairPartUsed, PurchaseEntry,
   ProductFormData, SupplierFormData, StockEntryFormData, ConsumePartFormData,
 } from "../types";
+import { DEFAULT_PAGE_SIZE, type PaginatedResult } from "@/components/ui/data-pagination";
+import { executePaginatedQuery } from "@/hooks/usePaginatedQuery";
 
 const sb = supabase as any;
 
 // ── Products ──
-export function useProducts(search?: string, showArchived = false) {
-  return useQuery<Product[]>({
-    queryKey: ["products", search, showArchived],
+export function useProducts(search?: string, showArchived = false, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+  return useQuery({
+    queryKey: ["products", search, showArchived, page, pageSize],
     queryFn: async () => {
-      let query = sb.from("products").select("*, suppliers(id, name)").order("name");
-      if (!showArchived) query = query.eq("is_active", true);
-      if (search) {
-        query = query.or(
-          `name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%,compatible_devices.ilike.%${search}%,location.ilike.%${search}%`
-        );
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      const filters: Record<string, any> = {};
+      if (!showArchived) filters.is_active = true;
+      return executePaginatedQuery<Product>(
+        { page, pageSize, search: search || undefined, filters, sortBy: "name", sortOrder: "asc" },
+        {
+          table: "products",
+          select: "*, suppliers(id, name)",
+          searchColumns: ["name", "sku", "brand", "category", "compatible_devices", "location"],
+          defaultSort: { column: "name", ascending: true },
+        }
+      );
     },
   });
 }
