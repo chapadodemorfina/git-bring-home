@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useServiceOrder } from "../hooks/useServiceOrders";
-import { useServiceOrderPublicLinks } from "@/modules/tracking/hooks/usePublicTracking";
+import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { useCompanyName } from "@/hooks/useCompanyName";
 import IntakePhotoUpload from "./IntakePhotoUpload";
 import SignatureCapture from "./SignatureCapture";
