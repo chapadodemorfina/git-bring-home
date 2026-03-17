@@ -218,8 +218,9 @@ export default function ServiceOrderForm({ initialData }: Props) {
 
             <FormField control={form.control} name="physical_condition" render={({ field }) => (
               <FormItem>
-                <FormLabel>Condição Física</FormLabel>
-                <FormControl><Textarea rows={2} placeholder="Riscos, amassados, tela trincada..." {...field} /></FormControl>
+                <FormControl>
+                  <IntakeChecklist value={field.value || ""} onChange={field.onChange} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
