@@ -105,6 +105,38 @@ export function useScrapItems() {
   });
 }
 
+export function useScrapItemsPaginated(
+  search?: string,
+  statusFilter?: string,
+  categoryFilter?: string,
+  page: number = 1,
+) {
+  return useQuery<PaginatedResult<ScrapItem>>({
+    queryKey: ["inventory_scrap_paginated", search, statusFilter, categoryFilter, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page, search };
+      return executePaginatedQuery<ScrapItem>(params, {
+        table: "inventory_scrap",
+        select: "*, service_orders(order_number), customers(full_name)",
+        searchColumns: ["device_type", "brand", "model", "imei_serial", "notes"],
+        defaultSort: { column: "created_at", ascending: false },
+        additionalFilters: (q: any) => {
+          let query = q;
+          if (statusFilter) query = query.eq("status", statusFilter);
+          if (categoryFilter) query = query.eq("scrap_category", categoryFilter);
+          return query;
+        },
+        countFilters: (q: any) => {
+          let query = q;
+          if (statusFilter) query = query.eq("status", statusFilter);
+          if (categoryFilter) query = query.eq("scrap_category", categoryFilter);
+          return query;
+        },
+      });
+    },
+  });
+}
+
 export function useScrapItem(id: string | undefined) {
   return useQuery<ScrapItem>({
     queryKey: ["inventory_scrap", id],
