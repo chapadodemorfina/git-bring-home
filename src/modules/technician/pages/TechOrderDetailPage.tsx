@@ -12,6 +12,7 @@ import QuickStatusBar from "../components/QuickStatusBar";
 import RepairPhotoUpload from "../components/RepairPhotoUpload";
 import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
 import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuotePanel";
+import RepairTimer from "@/modules/repair/components/RepairTimer";
 
 export default function TechOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
