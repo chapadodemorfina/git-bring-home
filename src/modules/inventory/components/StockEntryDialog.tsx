@@ -16,7 +16,7 @@ interface Props {
 }
 
 export default function StockEntryDialog({ open, onOpenChange, preselectedProductId }: Props) {
-  const { data: products } = useProducts();
+  const { data: products } = useAllProducts();
   const addEntry = useAddStockEntry();
   const form = useForm<StockEntryFormData>({
     resolver: zodResolver(stockEntrySchema),

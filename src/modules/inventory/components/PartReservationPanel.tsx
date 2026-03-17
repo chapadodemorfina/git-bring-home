@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function PartReservationPanel({ serviceOrderId, diagnosisId }: Props) {
-  const { data: products } = useProducts();
+  const { data: products } = useAllProducts();
   const { data: reservations } = usePartReservations(serviceOrderId);
   const reserve = useReservePart();
   const release = useReleaseReservation();

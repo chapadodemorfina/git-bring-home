@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function ProductForm({ defaultValues, onSubmit, isLoading }: Props) {
-  const { data: suppliers } = useSuppliers();
+  const { data: suppliers } = useAllSuppliers();
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
