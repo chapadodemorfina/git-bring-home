@@ -1937,6 +1937,53 @@ export type Database = {
           },
         ]
       }
+      repair_timer_sessions: {
+        Row: {
+          accumulated_seconds: number
+          created_at: string
+          ended_at: string | null
+          id: string
+          notes: string | null
+          paused_at: string | null
+          service_order_id: string
+          started_at: string
+          status: string
+          technician_id: string
+        }
+        Insert: {
+          accumulated_seconds?: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          paused_at?: string | null
+          service_order_id: string
+          started_at?: string
+          status?: string
+          technician_id: string
+        }
+        Update: {
+          accumulated_seconds?: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          paused_at?: string | null
+          service_order_id?: string
+          started_at?: string
+          status?: string
+          technician_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_timer_sessions_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrap_carcass_details: {
         Row: {
           aesthetic_state: string | null
