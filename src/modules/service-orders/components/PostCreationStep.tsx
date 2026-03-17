@@ -38,6 +38,7 @@ export default function PostCreationStep({ orderId }: Props) {
   const navigate = useNavigate();
   const { data: order, isLoading } = useServiceOrder(orderId);
   const { data: publicLinks } = useServiceOrderPublicLinks(orderId);
+  const generateLink = useGeneratePublicLink();
   const companyName = useCompanyName("Assistência Técnica");
   const receiptRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
