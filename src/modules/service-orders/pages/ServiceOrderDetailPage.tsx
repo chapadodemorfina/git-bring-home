@@ -120,7 +120,7 @@ export default function ServiceOrderDetailPage() {
           <Button variant="outline" onClick={() => printElement(receiptRef.current, order.order_number)}>
             <Printer className="mr-2 h-4 w-4" /> Recibo
           </Button>
-          <Button variant="outline" onClick={() => printElement(labelRef.current, `Etiqueta ${order.order_number}`)}>
+          <Button variant="outline" onClick={() => printElement(labelRef.current, `Etiqueta ${order.order_number}`, true)}>
             <Tag className="mr-2 h-4 w-4" /> Etiqueta
           </Button>
           <Button variant="outline" asChild>
