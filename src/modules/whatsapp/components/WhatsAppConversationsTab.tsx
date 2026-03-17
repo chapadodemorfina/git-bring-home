@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useWhatsAppConversations } from "../hooks/useWhatsApp";
+import { useWhatsAppConversationsPaginated } from "../hooks/useWhatsApp";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DataPagination from "@/components/ui/data-pagination";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import WhatsAppConversationDetail from "./WhatsAppConversationDetail";
@@ -27,8 +28,15 @@ const statusLabels: Record<string, string> = {
 
 export default function WhatsAppConversationsTab() {
   const [filter, setFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: conversations, isLoading } = useWhatsAppConversations(filter === "all" ? undefined : filter);
+  const { data, isLoading } = useWhatsAppConversationsPaginated(
+    filter === "all" ? undefined : filter,
+    page,
+  );
+
+  const conversations = data?.items || [];
+  const total = data?.total || 0;
 
   if (selectedId) {
     return <WhatsAppConversationDetail id={selectedId} onBack={() => setSelectedId(null)} />;
@@ -39,7 +47,7 @@ export default function WhatsAppConversationsTab() {
       <CardHeader>
         <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
           <CardTitle>Conversas</CardTitle>
-          <Select value={filter} onValueChange={setFilter}>
+          <Select value={filter} onValueChange={(v) => { setFilter(v); setPage(1); }}>
             <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
@@ -57,25 +65,28 @@ export default function WhatsAppConversationsTab() {
         ) : !conversations?.length ? (
           <p className="text-center py-8 text-muted-foreground">Nenhuma conversa encontrada.</p>
         ) : (
-          <div className="space-y-2">
-            {conversations.map((c: any) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => setSelectedId(c.id)}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium truncate">{c.customer_name || c.phone}</span>
-                    <Badge className={statusColors[c.status] || ""}>{statusLabels[c.status] || c.status}</Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {c.phone} · Última msg: {format(new Date(c.last_message_at), "dd/MM HH:mm", { locale: ptBR })}
+          <>
+            <div className="space-y-2">
+              {conversations.map((c: any) => (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => setSelectedId(c.id)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium truncate">{c.customer_name || c.phone}</span>
+                      <Badge className={statusColors[c.status] || ""}>{statusLabels[c.status] || c.status}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {c.phone} · Última msg: {format(new Date(c.last_message_at), "dd/MM HH:mm", { locale: ptBR })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+          </>
         )}
       </CardContent>
     </Card>
