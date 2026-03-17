@@ -181,6 +181,44 @@ export function usePortalAttachments(orderId: string | undefined) {
   });
 }
 
+// Financial entries for the customer
+export function usePortalFinancials(customerId: string | undefined) {
+  return useQuery({
+    queryKey: ["portal-financials", customerId],
+    enabled: !!customerId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("financial_entries")
+        .select("id, description, amount, paid_amount, status, due_date, category")
+        .eq("customer_id", customerId!)
+        .eq("entry_type", "revenue")
+        .neq("status", "cancelled")
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+}
+
+// Diagnosis data for a service order
+export function usePortalDiagnosis(orderId: string | undefined) {
+  return useQuery({
+    queryKey: ["portal-diagnosis", orderId],
+    enabled: !!orderId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("diagnostics")
+        .select("id, diagnosis_status, probable_cause, technical_findings, repair_viability, estimated_cost, repair_complexity")
+        .eq("service_order_id", orderId!)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 // Logistics
 export function usePortalLogistics(customerId: string | undefined) {
   return useQuery({
