@@ -58,6 +58,7 @@ export function useAllSuppliers() {
   });
 }
 
+export function useProduct(id: string | undefined) {
   return useQuery<Product>({
     queryKey: ["products", id],
     enabled: !!id,
