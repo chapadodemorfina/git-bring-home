@@ -49,12 +49,33 @@ export default function ServiceOrderDetailPage() {
   const [statusOpen, setStatusOpen] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
+  const companyName = useCompanyName("i9 Solutions");
+
+  const db = supabase as any;
+  const { data: statusHistory } = useQuery({
+    queryKey: ["so-status-history-pdf", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("service_order_status_history")
+        .select("*")
+        .eq("service_order_id", id!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
 
   const { data: publicLinks } = useServiceOrderPublicLinks(id);
   const activeLink = publicLinks?.find((l: any) => l.status === "active");
   const trackingUrl = activeLink
     ? `${window.location.origin}/track/${activeLink.public_token}`
     : null;
+
+  const handleExportPdf = () => {
+    if (!order) return;
+    generateServiceOrderPdf(order, statusHistory || [], companyName);
+  };
 
   const handleDelete = async () => {
     if (!id) return;
