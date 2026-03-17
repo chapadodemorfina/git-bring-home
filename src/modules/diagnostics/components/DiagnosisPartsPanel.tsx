@@ -11,9 +11,12 @@ import { Plus, Trash2, Link2 } from "lucide-react";
 interface Props {
   diagnosisId: string;
   readOnly?: boolean;
+  deviceType?: string | null;
+  deviceBrand?: string | null;
+  deviceModel?: string | null;
 }
 
-export default function DiagnosisPartsPanel({ diagnosisId, readOnly }: Props) {
+export default function DiagnosisPartsPanel({ diagnosisId, readOnly, deviceType, deviceBrand, deviceModel }: Props) {
   const { data: parts, isLoading } = useDiagnosisParts(diagnosisId);
   const { data: products } = useProducts();
   const addPart = useAddDiagnosisPart();
