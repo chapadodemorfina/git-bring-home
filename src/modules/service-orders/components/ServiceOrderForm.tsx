@@ -19,8 +19,7 @@ import { Save, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import NewDeviceDialog from "./NewDeviceDialog";
 import IntakeChecklist from "./IntakeChecklist";
-import IntakePhotoUpload from "./IntakePhotoUpload";
-import SignatureCapture from "./SignatureCapture";
+import PostCreationStep from "./PostCreationStep";
 
 interface Props {
   initialData?: ServiceOrder;
@@ -66,24 +65,7 @@ export default function ServiceOrderForm({ initialData }: Props) {
 
   // Post-creation: show photo upload + signature step
   if (createdOrderId) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold text-primary">✓ OS criada com sucesso!</h2>
-          <p className="text-sm text-muted-foreground">Registre fotos, condição do dispositivo e colete a assinatura do cliente.</p>
-        </div>
-        <IntakePhotoUpload orderId={createdOrderId} />
-        <SignatureCapture orderId={createdOrderId} />
-        <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={() => navigate("/service-orders")}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Lista de OS
-          </Button>
-          <Button onClick={() => navigate(`/service-orders/${createdOrderId}`)}>
-            Ver Detalhes da OS
-          </Button>
-        </div>
-      </div>
-    );
+    return <PostCreationStep orderId={createdOrderId} />;
   }
 
   return (
