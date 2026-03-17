@@ -20,9 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSmartphone, Tag } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSmartphone, Tag, FileDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
+import { useCompanyName } from "@/hooks/useCompanyName";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 function printElement(el: HTMLElement | null, title: string) {
   if (!el) return;
