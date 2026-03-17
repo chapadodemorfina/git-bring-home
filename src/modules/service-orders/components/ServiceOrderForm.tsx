@@ -20,6 +20,7 @@ import { useState } from "react";
 import NewDeviceDialog from "./NewDeviceDialog";
 import IntakeChecklist from "./IntakeChecklist";
 import IntakePhotoUpload from "./IntakePhotoUpload";
+import SignatureCapture from "./SignatureCapture";
 
 interface Props {
   initialData?: ServiceOrder;
@@ -63,15 +64,16 @@ export default function ServiceOrderForm({ initialData }: Props) {
     }
   };
 
-  // Post-creation: show photo upload step
+  // Post-creation: show photo upload + signature step
   if (createdOrderId) {
     return (
       <div className="space-y-6">
         <div className="text-center space-y-2">
           <h2 className="text-xl font-bold text-primary">✓ OS criada com sucesso!</h2>
-          <p className="text-sm text-muted-foreground">Agora registre fotos do estado do dispositivo na entrada.</p>
+          <p className="text-sm text-muted-foreground">Registre fotos, condição do dispositivo e colete a assinatura do cliente.</p>
         </div>
         <IntakePhotoUpload orderId={createdOrderId} />
+        <SignatureCapture orderId={createdOrderId} />
         <div className="flex gap-3 justify-center">
           <Button variant="outline" onClick={() => navigate("/service-orders")}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Lista de OS
