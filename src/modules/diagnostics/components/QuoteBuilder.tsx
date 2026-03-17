@@ -15,7 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Wrench, Package } from "lucide-react";
+import { Plus, Trash2, Wrench, Package, FileDown } from "lucide-react";
+import { generateQuotePdf } from "@/lib/pdf-generators/quote-pdf";
+import { useCompanyName } from "@/hooks/useCompanyName";
 
 interface Props {
   quote: RepairQuote;
