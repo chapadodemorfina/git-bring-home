@@ -20,6 +20,7 @@ import { useState } from "react";
 import NewDeviceDialog from "./NewDeviceDialog";
 import IntakeChecklist from "./IntakeChecklist";
 import IntakePhotoUpload from "./IntakePhotoUpload";
+import SignatureCapture from "./SignatureCapture";
 
 interface Props {
   initialData?: ServiceOrder;
