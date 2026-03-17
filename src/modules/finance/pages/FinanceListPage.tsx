@@ -24,9 +24,15 @@ export default function FinanceListPage() {
   const [tab, setTab] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const companyName = useCompanyName("i9 Solutions");
 
   const entryType = tab === "all" ? null : (tab as FinancialEntryType);
   const { data: entries, isLoading } = useFinancialEntries(entryType, filterStatus as FinancialEntryStatus | null, search);
+
+  const handleExportPdf = () => {
+    if (!entries?.length) return;
+    generateFinancialReportPdf(entries, companyName);
+  };
 
   return (
     <div className="space-y-6">
@@ -37,9 +43,14 @@ export default function FinanceListPage() {
           </h1>
           <p className="text-muted-foreground">Receitas, despesas e comissões</p>
         </div>
-        <Button asChild>
-          <Link to="/finance/new"><Plus className="mr-2 h-4 w-4" /> Novo Lançamento</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportPdf} disabled={!entries?.length}>
+            <FileDown className="mr-2 h-4 w-4" /> Exportar PDF
+          </Button>
+          <Button asChild>
+            <Link to="/finance/new"><Plus className="mr-2 h-4 w-4" /> Novo Lançamento</Link>
+          </Button>
+        </div>
       </div>
 
       <FinanceDashboard />
