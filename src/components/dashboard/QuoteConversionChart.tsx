@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
 
 interface Props {
   total: number;
@@ -71,6 +71,3 @@ export function QuoteConversionChart({ total, approved, rejected }: Props) {
     </Card>
   );
 }
-
-// Need to import Cell from recharts
-import { Cell } from "recharts";
