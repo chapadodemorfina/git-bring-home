@@ -109,6 +109,9 @@ export default function ServiceOrderDetailPage() {
               <RefreshCw className="mr-2 h-4 w-4" /> Alterar Status
             </Button>
           )}
+          <Button variant="outline" onClick={handleExportPdf}>
+            <FileDown className="mr-2 h-4 w-4" /> PDF
+          </Button>
           <Button variant="outline" onClick={() => printElement(receiptRef.current, order.order_number)}>
             <Printer className="mr-2 h-4 w-4" /> Recibo
           </Button>
