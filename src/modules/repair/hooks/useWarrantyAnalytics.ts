@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
@@ -72,6 +74,21 @@ export function useAllWarranties() {
         .limit(200);
       if (error) throw error;
       return (data || []) as any[];
+    },
+  });
+}
+
+export function useWarrantiesPaginated(search?: string, page: number = 1) {
+  return useQuery<PaginatedResult<any>>({
+    queryKey: ["warranties-paginated", search, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page, search };
+      return executePaginatedQuery<any>(params, {
+        table: "warranties",
+        select: "*, service_orders(order_number, customer_id, device_id, customers(full_name), devices(brand, model))",
+        searchColumns: ["warranty_number"],
+        defaultSort: { column: "created_at", ascending: false },
+      });
     },
   });
 }

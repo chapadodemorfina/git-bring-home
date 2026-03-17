@@ -5,6 +5,8 @@ import {
   FinancialEntryType, FinancialEntryStatus,
 } from "../types";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
@@ -56,6 +58,50 @@ export function useFinancialEntries(
       }
 
       return results;
+    },
+  });
+}
+
+export function useFinancialEntriesPaginated(
+  entryType?: FinancialEntryType | null,
+  status?: FinancialEntryStatus | null,
+  search?: string,
+  page: number = 1,
+) {
+  return useQuery<PaginatedResult<FinancialEntry>>({
+    queryKey: ["financial-entries-paginated", entryType, status, search, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page, search };
+      const result = await executePaginatedQuery<any>(params, {
+        table: "financial_entries",
+        select: "*, customers(full_name), suppliers(name), service_orders(order_number)",
+        searchColumns: ["description", "category", "notes"],
+        defaultSort: { column: "created_at", ascending: false },
+        additionalFilters: (q: any) => {
+          let query = q;
+          if (entryType) query = query.eq("entry_type", entryType);
+          if (status) query = query.eq("status", status);
+          return query;
+        },
+        countFilters: (q: any) => {
+          let query = q;
+          if (entryType) query = query.eq("entry_type", entryType);
+          if (status) query = query.eq("status", status);
+          return query;
+        },
+      });
+      return {
+        ...result,
+        items: result.items.map((d: any) => ({
+          ...d,
+          customer_name: d.customers?.full_name,
+          supplier_name: d.suppliers?.name,
+          order_number: d.service_orders?.order_number,
+          customers: undefined,
+          suppliers: undefined,
+          service_orders: undefined,
+        })),
+      };
     },
   });
 }

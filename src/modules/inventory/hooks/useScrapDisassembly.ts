@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const sb = supabase as any;
 
@@ -99,6 +101,38 @@ export function useScrapItems() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+}
+
+export function useScrapItemsPaginated(
+  search?: string,
+  statusFilter?: string,
+  categoryFilter?: string,
+  page: number = 1,
+) {
+  return useQuery<PaginatedResult<ScrapItem>>({
+    queryKey: ["inventory_scrap_paginated", search, statusFilter, categoryFilter, page],
+    queryFn: async () => {
+      const params: PaginationParams = { page, search };
+      return executePaginatedQuery<ScrapItem>(params, {
+        table: "inventory_scrap",
+        select: "*, service_orders(order_number), customers(full_name)",
+        searchColumns: ["device_type", "brand", "model", "imei_serial", "notes"],
+        defaultSort: { column: "created_at", ascending: false },
+        additionalFilters: (q: any) => {
+          let query = q;
+          if (statusFilter) query = query.eq("status", statusFilter);
+          if (categoryFilter) query = query.eq("scrap_category", categoryFilter);
+          return query;
+        },
+        countFilters: (q: any) => {
+          let query = q;
+          if (statusFilter) query = query.eq("status", statusFilter);
+          if (categoryFilter) query = query.eq("scrap_category", categoryFilter);
+          return query;
+        },
+      });
     },
   });
 }

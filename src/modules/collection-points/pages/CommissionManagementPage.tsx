@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCollectionPoints } from "../hooks/useCollectionPoints";
+import { useAllCollectionPoints } from "../hooks/useCollectionPoints";
 import { commissionTypeLabels } from "../types";
 
 const db = supabase as any;
@@ -57,7 +57,7 @@ function useMarkPaid() {
 export default function CommissionManagementPage() {
   const [cpFilter, setCpFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const { data: points } = useCollectionPoints();
+  const { data: points } = useAllCollectionPoints();
   const { data: commissions, isLoading } = useAllCommissions({
     cpId: cpFilter !== "all" ? cpFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,

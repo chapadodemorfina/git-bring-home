@@ -11,9 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import DataPagination from "@/components/ui/data-pagination";
 import { FileText, AlertTriangle, Shield, Search, Eye, Activity } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
@@ -68,17 +71,29 @@ const tableLabels: Record<string, string> = {
   quote_approvals: "Aprovações",
 };
 
-function useAuditLogs(filters: { action: string; table_name: string; search: string }) {
-  return useQuery({
+function useAuditLogs(filters: { action: string; table_name: string; search: string; page: number }) {
+  return useQuery<PaginatedResult<AuditLog>>({
     queryKey: ["audit-logs", filters],
     queryFn: async () => {
-      let query = db.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200);
-      if (filters.action && filters.action !== "all") query = query.eq("action", filters.action);
-      if (filters.table_name && filters.table_name !== "all") query = query.eq("table_name", filters.table_name);
-      if (filters.search) query = query.or(`record_id.ilike.%${filters.search}%,action.ilike.%${filters.search}%`);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as AuditLog[];
+      const params: PaginationParams = { page: filters.page, search: filters.search };
+      return executePaginatedQuery<AuditLog>(params, {
+        table: "audit_logs",
+        select: "*",
+        searchColumns: ["record_id", "action"],
+        defaultSort: { column: "created_at", ascending: false },
+        additionalFilters: (q: any) => {
+          let query = q;
+          if (filters.action && filters.action !== "all") query = query.eq("action", filters.action);
+          if (filters.table_name && filters.table_name !== "all") query = query.eq("table_name", filters.table_name);
+          return query;
+        },
+        countFilters: (q: any) => {
+          let query = q;
+          if (filters.action && filters.action !== "all") query = query.eq("action", filters.action);
+          if (filters.table_name && filters.table_name !== "all") query = query.eq("table_name", filters.table_name);
+          return query;
+        },
+      });
     },
   });
 }
@@ -108,9 +123,12 @@ export default function AuditLogsPage() {
   const [action, setAction] = useState("all");
   const [tableName, setTableName] = useState("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [detailLog, setDetailLog] = useState<AuditLog | null>(null);
 
-  const { data: logs, isLoading } = useAuditLogs({ action, table_name: tableName, search });
+  const { data, isLoading } = useAuditLogs({ action, table_name: tableName, search, page });
+  const logs = data?.items || [];
+  const total = data?.total || 0;
   const { data: rawSuspicious, isLoading: suspiciousLoading } = useSuspiciousActivity(7);
 
   const suspicious = { ...defaultSuspicious, ...rawSuspicious, summary: { ...defaultSuspicious.summary, ...(rawSuspicious?.summary || {}) } };
@@ -152,9 +170,9 @@ export default function AuditLogsPage() {
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por ID de registro..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              <Input placeholder="Buscar por ID de registro..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
             </div>
-            <Select value={action} onValueChange={setAction}>
+            <Select value={action} onValueChange={(v) => { setAction(v); setPage(1); }}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Ação" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas Ações</SelectItem>
@@ -164,7 +182,7 @@ export default function AuditLogsPage() {
                 <SelectItem value="warranty_voided">Garantia Anulada</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={tableName} onValueChange={setTableName}>
+            <Select value={tableName} onValueChange={(v) => { setTableName(v); setPage(1); }}>
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Tabela" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas Tabelas</SelectItem>
@@ -179,40 +197,45 @@ export default function AuditLogsPage() {
               {isLoading ? (
                 <div className="p-8 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Ação</TableHead>
-                      <TableHead>Tabela</TableHead>
-                      <TableHead>Registro</TableHead>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {!(logs || []).length ? (
-                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum registro encontrado</TableCell></TableRow>
-                    ) : (
-                      (logs || []).map((l) => (
-                        <TableRow key={l.id}>
-                          <TableCell className="text-sm whitespace-nowrap">{format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
-                          <TableCell><Badge className={actionColors[l.action] || ""}>{l.action}</Badge></TableCell>
-                          <TableCell className="text-sm">{tableLabels[l.table_name || ""] || l.table_name || "—"}</TableCell>
-                          <TableCell className="font-mono text-xs">{l.record_id?.slice(0, 8) || "—"}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{l.user_id?.slice(0, 8) || "sistema"}</TableCell>
-                          <TableCell>
-                            {(l.old_data || l.new_data) && (
-                              <Button variant="ghost" size="sm" onClick={() => setDetailLog(l)}>
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Ação</TableHead>
+                        <TableHead>Tabela</TableHead>
+                        <TableHead>Registro</TableHead>
+                        <TableHead>Usuário</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {!logs.length ? (
+                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum registro encontrado</TableCell></TableRow>
+                      ) : (
+                        logs.map((l) => (
+                          <TableRow key={l.id}>
+                            <TableCell className="text-sm whitespace-nowrap">{format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+                            <TableCell><Badge className={actionColors[l.action] || ""}>{l.action}</Badge></TableCell>
+                            <TableCell className="text-sm">{tableLabels[l.table_name || ""] || l.table_name || "—"}</TableCell>
+                            <TableCell className="font-mono text-xs">{l.record_id?.slice(0, 8) || "—"}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{l.user_id?.slice(0, 8) || "sistema"}</TableCell>
+                            <TableCell>
+                              {(l.old_data || l.new_data) && (
+                                <Button variant="ghost" size="sm" onClick={() => setDetailLog(l)}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                  <div className="px-4">
+                    <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -351,15 +374,18 @@ function AlertSection({ title, icon, items, render }: {
   if (!items.length) return null;
   return (
     <Card className="border-orange-200 dark:border-orange-800">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">{icon} {title} <Badge variant="destructive">{items.length}</Badge></CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">{icon} {title} ({items.length})</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <ul className="space-y-1 text-sm">
           {items.map((item, i) => (
-            <div key={i} className="text-sm p-2 rounded bg-muted/50">{render(item)}</div>
+            <li key={i} className="flex items-start gap-2">
+              <span className="text-muted-foreground">•</span>
+              {render(item)}
+            </li>
           ))}
-        </div>
+        </ul>
       </CardContent>
     </Card>
   );

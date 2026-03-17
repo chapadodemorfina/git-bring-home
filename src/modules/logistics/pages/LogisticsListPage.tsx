@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,7 +17,10 @@ import { ptBR } from "date-fns/locale";
 export default function LogisticsListPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const { data: items, isLoading } = usePickupsDeliveries(search, filterStatus);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = usePickupsDeliveries(search, filterStatus, page);
+  const items = data?.items || [];
+  const total = data?.total || 0;
 
   return (
     <div className="space-y-6">
@@ -38,13 +42,13 @@ export default function LogisticsListPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por OS, motorista, contato, endereço..."
+                placeholder="Buscar por motorista, contato, endereço..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9"
               />
             </div>
-            <Select value={filterStatus || "all"} onValueChange={(v) => setFilterStatus(v === "all" ? null : v)}>
+            <Select value={filterStatus || "all"} onValueChange={(v) => { setFilterStatus(v === "all" ? null : v); setPage(1); }}>
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Filtrar status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -58,33 +62,36 @@ export default function LogisticsListPage() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-          ) : !items?.length ? (
+          ) : !items.length ? (
             <p className="text-center py-8 text-muted-foreground">Nenhuma solicitação encontrada.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>OS</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Motorista</TableHead>
-                  <TableHead>Criado em</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((item) => (
-                  <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/logistics/${item.id}`}>
-                    <TableCell className="font-mono font-medium">{item.order_number}</TableCell>
-                    <TableCell>{item.customer_name}</TableCell>
-                    <TableCell>{typeLabels[item.logistics_type]}</TableCell>
-                    <TableCell><Badge className={statusColors[item.status]}>{statusLabels[item.status]}</Badge></TableCell>
-                    <TableCell>{item.driver_name || "—"}</TableCell>
-                    <TableCell>{format(new Date(item.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>OS</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Motorista</TableHead>
+                    <TableHead>Criado em</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {items.map((item) => (
+                    <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/logistics/${item.id}`}>
+                      <TableCell className="font-mono font-medium">{item.order_number}</TableCell>
+                      <TableCell>{item.customer_name}</TableCell>
+                      <TableCell>{typeLabels[item.logistics_type]}</TableCell>
+                      <TableCell><Badge className={statusColors[item.status]}>{statusLabels[item.status]}</Badge></TableCell>
+                      <TableCell>{item.driver_name || "—"}</TableCell>
+                      <TableCell>{format(new Date(item.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+            </>
           )}
         </CardContent>
       </Card>

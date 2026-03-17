@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Recycle, Plus, Search, Eye, BarChart3 } from "lucide-react";
-import { useScrapItems, useScrapRecoveryValue } from "../hooks/useScrapDisassembly";
+import DataPagination from "@/components/ui/data-pagination";
+import { Recycle, Plus, Search, Eye, BarChart3, Loader2 } from "lucide-react";
+import { useScrapItemsPaginated, useScrapRecoveryValue } from "../hooks/useScrapDisassembly";
 import { format } from "date-fns";
 
 const statusLabels: Record<string, string> = {
@@ -44,18 +45,18 @@ export default function ScrapListPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [page, setPage] = useState(1);
 
-  const { data: scraps = [], isLoading } = useScrapItems();
+  const { data, isLoading } = useScrapItemsPaginated(
+    search,
+    statusFilter !== "all" ? statusFilter : undefined,
+    categoryFilter !== "all" ? categoryFilter : undefined,
+    page,
+  );
   const { data: recoveryValue = 0 } = useScrapRecoveryValue();
 
-  const filtered = scraps.filter((s) => {
-    const q = search.toLowerCase();
-    const matchesSearch = !q || [s.device_type, s.brand, s.model, s.imei_serial, s.notes].filter(Boolean).join(" ").toLowerCase().includes(q);
-    const matchesStatus = statusFilter === "all" || s.status === statusFilter;
-    const matchesCategory = categoryFilter === "all" || s.scrap_category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
-
+  const scraps = data?.items || [];
+  const total = data?.total || 0;
   const fmt = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
@@ -82,9 +83,9 @@ export default function ScrapListPage() {
       <div className="flex gap-2 flex-wrap">
         <div className="relative max-w-xs flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>
@@ -93,7 +94,7 @@ export default function ScrapListPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setPage(1); }}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas categorias</SelectItem>
@@ -107,52 +108,57 @@ export default function ScrapListPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <p className="p-6 text-muted-foreground text-sm">Carregando...</p>
-          ) : filtered.length === 0 ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : scraps.length === 0 ? (
             <p className="p-6 text-muted-foreground text-sm">Nenhuma sucata encontrada.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Marca / Modelo</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Origem</TableHead>
-                  <TableHead>Valor Est.</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((s) => (
-                  <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/inventory/scrap/${s.id}`)}>
-                    <TableCell className="font-medium">{s.device_type}</TableCell>
-                    <TableCell>{[s.brand, s.model].filter(Boolean).join(" ") || "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{categoryLabels[s.scrap_category || ""] || s.scrap_category || "—"}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[s.status || ""] || ""} variant="outline">
-                        {statusLabels[s.status || ""] || s.status || "—"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {s.service_orders?.order_number || s.customers?.full_name || "—"}
-                    </TableCell>
-                    <TableCell>{fmt.format(s.estimated_recovery_value || 0)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(s.created_at), "dd/MM/yy")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); navigate(`/inventory/scrap/${s.id}`); }}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Marca / Modelo</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Origem</TableHead>
+                    <TableHead>Valor Est.</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {scraps.map((s) => (
+                    <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/inventory/scrap/${s.id}`)}>
+                      <TableCell className="font-medium">{s.device_type}</TableCell>
+                      <TableCell>{[s.brand, s.model].filter(Boolean).join(" ") || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{categoryLabels[s.scrap_category || ""] || s.scrap_category || "—"}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[s.status || ""] || ""} variant="outline">
+                          {statusLabels[s.status || ""] || s.status || "—"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {s.service_orders?.order_number || s.customers?.full_name || "—"}
+                      </TableCell>
+                      <TableCell>{fmt.format(s.estimated_recovery_value || 0)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(s.created_at), "dd/MM/yy")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); navigate(`/inventory/scrap/${s.id}`); }}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="px-4">
+                <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

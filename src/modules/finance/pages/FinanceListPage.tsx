@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useFinancialEntries } from "../hooks/useFinance";
+import { useFinancialEntriesPaginated } from "../hooks/useFinance";
 import {
   entryTypeLabels, entryTypeColors, statusLabels, statusColors,
   FinancialEntryType, FinancialEntryStatus,
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DataPagination from "@/components/ui/data-pagination";
 import { Plus, DollarSign, Search, FileDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,10 +25,13 @@ export default function FinanceListPage() {
   const [tab, setTab] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const companyName = useCompanyName("i9 Solutions");
 
   const entryType = tab === "all" ? null : (tab as FinancialEntryType);
-  const { data: entries, isLoading } = useFinancialEntries(entryType, filterStatus as FinancialEntryStatus | null, search);
+  const { data, isLoading } = useFinancialEntriesPaginated(entryType, filterStatus as FinancialEntryStatus | null, search, page);
+  const entries = data?.items || [];
+  const total = data?.total || 0;
 
   const handleExportPdf = () => {
     if (!entries?.length) return;
@@ -59,7 +63,7 @@ export default function FinanceListPage() {
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
             <div className="flex flex-col md:flex-row gap-3 items-start md:items-center flex-1">
-              <Tabs value={tab} onValueChange={setTab}>
+              <Tabs value={tab} onValueChange={(v) => { setTab(v); setPage(1); }}>
                 <TabsList>
                   <TabsTrigger value="all">Todos</TabsTrigger>
                   <TabsTrigger value="revenue">Receitas</TabsTrigger>
@@ -70,11 +74,11 @@ export default function FinanceListPage() {
 
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por descrição, categoria, cliente, fornecedor..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+                <Input placeholder="Buscar por descrição, categoria, notas..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
               </div>
             </div>
 
-            <Select value={filterStatus || "all"} onValueChange={(v) => setFilterStatus(v === "all" ? null : v)}>
+            <Select value={filterStatus || "all"} onValueChange={(v) => { setFilterStatus(v === "all" ? null : v); setPage(1); }}>
               <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -91,44 +95,47 @@ export default function FinanceListPage() {
           ) : !entries?.length ? (
             <p className="text-center py-8 text-muted-foreground">Nenhum lançamento encontrado.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Referência</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead className="text-right">Pago</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entries.map((entry) => (
-                  <TableRow
-                    key={entry.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => window.location.href = `/finance/${entry.id}`}
-                  >
-                    <TableCell className="font-medium max-w-[250px] truncate">{entry.description}</TableCell>
-                    <TableCell><Badge className={entryTypeColors[entry.entry_type]}>{entryTypeLabels[entry.entry_type]}</Badge></TableCell>
-                    <TableCell><Badge className={statusColors[entry.status]}>{statusLabels[entry.status]}</Badge></TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {entry.order_number || entry.customer_name || entry.supplier_name || "—"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {entry.due_date ? format(new Date(entry.due_date), "dd/MM/yy", { locale: ptBR }) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-medium">
-                      R$ {Number(entry.amount).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-muted-foreground">
-                      R$ {Number(entry.paid_amount).toFixed(2)}
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Referência</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="text-right">Pago</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {entries.map((entry) => (
+                    <TableRow
+                      key={entry.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => window.location.href = `/finance/${entry.id}`}
+                    >
+                      <TableCell className="font-medium max-w-[250px] truncate">{entry.description}</TableCell>
+                      <TableCell><Badge className={entryTypeColors[entry.entry_type]}>{entryTypeLabels[entry.entry_type]}</Badge></TableCell>
+                      <TableCell><Badge className={statusColors[entry.status]}>{statusLabels[entry.status]}</Badge></TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {entry.order_number || entry.customer_name || entry.supplier_name || "—"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {entry.due_date ? format(new Date(entry.due_date), "dd/MM/yy", { locale: ptBR }) : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-medium">
+                        R$ {Number(entry.amount).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-muted-foreground">
+                        R$ {Number(entry.paid_amount).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+            </>
           )}
         </CardContent>
       </Card>
