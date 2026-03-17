@@ -149,7 +149,13 @@ export default function UsersListPage() {
                           {u.is_active ? "Ativo" : "Inativo"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{new Date(u.created_at).toLocaleDateString("pt-BR")}</TableCell>
+                      <TableCell>
+                        {u.last_sign_in_at ? (
+                          <span className="text-sm">{new Date(u.last_sign_in_at).toLocaleDateString("pt-BR")} {new Date(u.last_sign_in_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Nunca acessou</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
