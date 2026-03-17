@@ -19,7 +19,7 @@ interface Props {
 
 export default function ConsumePartPanel({ serviceOrderId }: Props) {
   const [showForm, setShowForm] = useState(false);
-  const { data: products } = useProducts();
+  const { data: products } = useAllProducts();
   const { data: partsUsed } = useRepairPartsUsed(serviceOrderId);
   const consumePart = useConsumePart();
 

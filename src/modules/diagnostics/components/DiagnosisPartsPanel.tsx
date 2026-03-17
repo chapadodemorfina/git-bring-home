@@ -18,7 +18,7 @@ interface Props {
 
 export default function DiagnosisPartsPanel({ diagnosisId, readOnly, deviceType, deviceBrand, deviceModel }: Props) {
   const { data: parts, isLoading } = useDiagnosisParts(diagnosisId);
-  const { data: products } = useProducts();
+  const { data: products } = useAllProducts();
   const addPart = useAddDiagnosisPart();
   const deletePart = useDeleteDiagnosisPart();
   const [partName, setPartName] = useState("");
