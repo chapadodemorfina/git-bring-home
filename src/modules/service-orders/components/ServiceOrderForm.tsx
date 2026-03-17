@@ -18,6 +18,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Save, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import NewDeviceDialog from "./NewDeviceDialog";
+import IntakeChecklist from "./IntakeChecklist";
+import IntakePhotoUpload from "./IntakePhotoUpload";
 
 interface Props {
   initialData?: ServiceOrder;
@@ -46,6 +48,7 @@ export default function ServiceOrderForm({ initialData }: Props) {
     },
   });
 
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const customerId = form.watch("customer_id");
   const { data: customerDevices } = useDevicesByCustomer(customerId || undefined);
   const { data: technicians } = useTechniciansList();
@@ -56,9 +59,30 @@ export default function ServiceOrderForm({ initialData }: Props) {
       navigate(`/service-orders/${initialData!.id}`);
     } else {
       const so = await createMutation.mutateAsync(data);
-      navigate(`/service-orders/${so.id}`);
+      setCreatedOrderId(so.id);
     }
   };
+
+  // Post-creation: show photo upload step
+  if (createdOrderId) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-bold text-primary">✓ OS criada com sucesso!</h2>
+          <p className="text-sm text-muted-foreground">Agora registre fotos do estado do dispositivo na entrada.</p>
+        </div>
+        <IntakePhotoUpload orderId={createdOrderId} />
+        <div className="flex gap-3 justify-center">
+          <Button variant="outline" onClick={() => navigate("/service-orders")}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Lista de OS
+          </Button>
+          <Button onClick={() => navigate(`/service-orders/${createdOrderId}`)}>
+            Ver Detalhes da OS
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -194,8 +218,9 @@ export default function ServiceOrderForm({ initialData }: Props) {
 
             <FormField control={form.control} name="physical_condition" render={({ field }) => (
               <FormItem>
-                <FormLabel>Condição Física</FormLabel>
-                <FormControl><Textarea rows={2} placeholder="Riscos, amassados, tela trincada..." {...field} /></FormControl>
+                <FormControl>
+                  <IntakeChecklist value={field.value || ""} onChange={field.onChange} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
