@@ -50,6 +50,7 @@ export default function ProductsListPage() {
           </Label>
         </div>
       </div>
+      <SmartReplenishmentPanel />
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando...</p>
