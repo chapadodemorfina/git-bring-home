@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import DataPagination from "@/components/ui/data-pagination";
 import { useStockMovements } from "../hooks/useInventory";
 import { movementTypeLabels, type StockMovementType } from "../types";
 
@@ -16,39 +18,46 @@ const movementColors: Record<StockMovementType, string> = {
 };
 
 export default function StockMovementsTable({ productId }: { productId?: string }) {
-  const { data: movements, isLoading } = useStockMovements(productId);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useStockMovements(productId, page);
+
+  const movements = data?.items || [];
+  const total = data?.total || 0;
 
   if (isLoading) return <p className="text-muted-foreground text-sm py-4">Carregando movimentações...</p>;
-  if (!movements?.length) return <p className="text-muted-foreground text-sm py-4">Nenhuma movimentação registrada.</p>;
+  if (!movements.length) return <p className="text-muted-foreground text-sm py-4">Nenhuma movimentação registrada.</p>;
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Data</TableHead>
-          {!productId && <TableHead>Produto</TableHead>}
-          <TableHead>Tipo</TableHead>
-          <TableHead className="text-right">Qtd</TableHead>
-          <TableHead className="text-right">Anterior</TableHead>
-          <TableHead className="text-right">Novo</TableHead>
-          <TableHead>Observações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {movements.map(m => (
-          <TableRow key={m.id}>
-            <TableCell className="whitespace-nowrap">{format(new Date(m.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
-            {!productId && <TableCell>{m.products?.sku} — {m.products?.name}</TableCell>}
-            <TableCell>
-              <Badge variant="secondary" className={movementColors[m.movement_type]}>{movementTypeLabels[m.movement_type]}</Badge>
-            </TableCell>
-            <TableCell className="text-right font-mono">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</TableCell>
-            <TableCell className="text-right font-mono">{m.previous_quantity}</TableCell>
-            <TableCell className="text-right font-mono">{m.new_quantity}</TableCell>
-            <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate">{m.notes}</TableCell>
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Data</TableHead>
+            {!productId && <TableHead>Produto</TableHead>}
+            <TableHead>Tipo</TableHead>
+            <TableHead className="text-right">Qtd</TableHead>
+            <TableHead className="text-right">Anterior</TableHead>
+            <TableHead className="text-right">Novo</TableHead>
+            <TableHead>Observações</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {movements.map(m => (
+            <TableRow key={m.id}>
+              <TableCell className="whitespace-nowrap">{format(new Date(m.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+              {!productId && <TableCell>{m.products?.sku} — {m.products?.name}</TableCell>}
+              <TableCell>
+                <Badge variant="secondary" className={movementColors[m.movement_type]}>{movementTypeLabels[m.movement_type]}</Badge>
+              </TableCell>
+              <TableCell className="text-right font-mono">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</TableCell>
+              <TableCell className="text-right font-mono">{m.previous_quantity}</TableCell>
+              <TableCell className="text-right font-mono">{m.new_quantity}</TableCell>
+              <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate">{m.notes}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+    </div>
   );
 }

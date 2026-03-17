@@ -33,7 +33,7 @@ export function DisassemblyPanel({ scrapId, onClose }: Props) {
   const { data: disassemblies = [] } = useScrapDisassemblies(scrapId);
   const latestDisassembly = disassemblies[0];
   const { data: parts = [] } = useRecoveredParts(latestDisassembly?.id);
-  const { data: products = [] } = useProducts();
+  const { data: products = [] } = useAllProducts();
   const addPart = useAddRecoveredPart();
   const recoverToStock = useRecoverPartToStock();
   const createDisassembly = useCreateDisassembly();
