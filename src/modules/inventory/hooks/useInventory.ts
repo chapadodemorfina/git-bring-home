@@ -193,15 +193,31 @@ export function useUpdateSupplier() {
 }
 
 // ── Stock Movements ──
-export function useStockMovements(productId?: string) {
-  return useQuery<StockMovement[]>({
-    queryKey: ["stock_movements", productId],
+export function useStockMovements(productId?: string, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+  return useQuery({
+    queryKey: ["stock_movements", productId, page, pageSize],
     queryFn: async () => {
-      let q = sb.from("stock_movements").select("*, products(name, sku)").order("created_at", { ascending: false }).limit(200);
-      if (productId) q = q.eq("product_id", productId);
-      const { data, error } = await q;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let countQuery = sb.from("stock_movements").select("id", { count: "exact", head: true });
+      let dataQuery = sb.from("stock_movements").select("*, products(name, sku)").order("created_at", { ascending: false }).range(from, to);
+
+      if (productId) {
+        dataQuery = dataQuery.eq("product_id", productId);
+        countQuery = countQuery.eq("product_id", productId);
+      }
+
+      const [{ data, error }, { count }] = await Promise.all([dataQuery, countQuery]);
       if (error) throw error;
-      return data;
+      const total = count || 0;
+      return {
+        items: (data || []) as StockMovement[],
+        total,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      } as PaginatedResult<StockMovement>;
     },
   });
 }

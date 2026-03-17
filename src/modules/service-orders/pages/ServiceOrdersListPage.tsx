@@ -86,7 +86,7 @@ export default function ServiceOrdersListPage() {
                   ))}
                 </TableBody>
               </Table>
-              <TablePagination page={page} pageSize={data?.pageSize || 50} total={total} onPageChange={setPage} />
+              <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
             </div>
           )}
         </CardContent>
