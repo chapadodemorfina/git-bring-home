@@ -119,10 +119,10 @@ export default function UsersListPage() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Telefone</TableHead>
-                    <TableHead>Funções</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Criado em</TableHead>
-                    <TableHead className="w-12"></TableHead>
+                     <TableHead>Funções</TableHead>
+                     <TableHead>Status</TableHead>
+                     <TableHead>Último Acesso</TableHead>
+                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
