@@ -30,7 +30,34 @@ export function useProducts(search?: string, showArchived = false, page: number 
   });
 }
 
-export function useProduct(id: string | undefined) {
+/** Returns ALL active products as a flat array — for dropdowns and selectors only */
+export function useAllProducts(search?: string) {
+  return useQuery<Product[]>({
+    queryKey: ["products-all", search],
+    queryFn: async () => {
+      let query = sb.from("products").select("*, suppliers(id, name)").eq("is_active", true).order("name");
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%,brand.ilike.%${search}%`);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/** Returns ALL suppliers as a flat array — for dropdowns only */
+export function useAllSuppliers() {
+  return useQuery<Supplier[]>({
+    queryKey: ["suppliers-all"],
+    queryFn: async () => {
+      const { data, error } = await sb.from("suppliers").select("*").eq("is_active", true).order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
   return useQuery<Product>({
     queryKey: ["products", id],
     enabled: !!id,
