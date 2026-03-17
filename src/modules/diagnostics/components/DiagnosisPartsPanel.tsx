@@ -104,6 +104,25 @@ export default function DiagnosisPartsPanel({ diagnosisId, readOnly, deviceType,
         </div>
       )}
 
+      {!readOnly && (deviceType || deviceBrand || deviceModel) && (
+        <>
+          <Separator />
+          <PartCompatibilityHelper
+            deviceType={deviceType}
+            deviceBrand={deviceBrand}
+            deviceModel={deviceModel}
+            onSelectProduct={async (product) => {
+              await addPart.mutateAsync({
+                diagnosisId,
+                partName: product.name,
+                quantity: 1,
+                estimatedUnitCost: product.cost_price,
+              });
+            }}
+          />
+        </>
+      )}
+
       {!readOnly && (
         <div className="space-y-2 pt-2">
           <div className="flex items-center gap-2">
