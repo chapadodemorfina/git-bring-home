@@ -60,10 +60,22 @@ export function useServiceOrder(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await db
         .from("service_orders")
-        .select("*, customers!inner(full_name, phone, document), devices(brand, model, device_type, serial_number, imei, color), collection_points(name)")
+        .select("*, customers!inner(full_name, phone, document), devices(brand, model, device_type, serial_number, imei, color)")
         .eq("id", id!)
         .single();
       if (error) throw error;
+
+      // Fetch collection point name separately (no FK exists)
+      let collection_point_name: string | null = null;
+      if (data.collection_point_id) {
+        const { data: cp } = await db
+          .from("collection_points")
+          .select("name")
+          .eq("id", data.collection_point_id)
+          .maybeSingle();
+        collection_point_name = cp?.name || null;
+      }
+
       return {
         ...data,
         customer_name: data.customers?.full_name,
@@ -76,7 +88,7 @@ export function useServiceOrder(id: string | undefined) {
         device_color: data.devices?.color || null,
         device_brand: data.devices?.brand || null,
         device_model: data.devices?.model || null,
-        collection_point_name: data.collection_points?.name || null,
+        collection_point_name,
         customers: undefined,
         devices: undefined,
         collection_points: undefined,
