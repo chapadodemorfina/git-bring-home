@@ -14,7 +14,7 @@ import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarra
 import DeviceLocationPanel from "../components/DeviceLocationPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
 import CustomerCommunicationPanel from "../components/CustomerCommunicationPanel";
-import { useServiceOrderPublicLinks } from "@/modules/tracking/hooks/usePublicTracking";
+import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
