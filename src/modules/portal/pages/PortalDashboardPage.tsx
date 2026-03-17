@@ -1,21 +1,24 @@
-import { useCustomerByAuth, usePortalServiceOrders, usePortalWarranties } from "../hooks/usePortal";
+import { useCustomerByAuth, usePortalServiceOrders, usePortalWarranties, usePortalFinancials } from "../hooks/usePortal";
 import { statusLabels, statusColors } from "@/modules/service-orders/types";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
   ClipboardList, CheckCircle, Clock, AlertTriangle, Shield,
-  ChevronRight, Wrench, Package,
+  ChevronRight, Wrench, DollarSign,
 } from "lucide-react";
 import { format, isPast, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import OrderProgressStepper from "../components/OrderProgressStepper";
+import PortalFinancialSummary from "../components/PortalFinancialSummary";
 
 export default function PortalDashboardPage() {
   const { data: customer, isLoading: custLoading, error: custError } = useCustomerByAuth();
   const { data: orders, isLoading: ordersLoading } = usePortalServiceOrders(customer?.id);
   const { data: warranties, isLoading: warrantyLoading } = usePortalWarranties(customer?.id);
+  const { data: financials } = usePortalFinancials(customer?.id);
 
   if (custLoading) {
     return (
@@ -47,13 +50,16 @@ export default function PortalDashboardPage() {
   const completedOrders = allOrders.filter((o: any) => o.status === "delivered");
   const awaitingApproval = allOrders.filter((o: any) => o.status === "awaiting_customer_approval");
   const activeWarranties = (warranties || []).filter((w: any) => !w.is_void && !isPast(new Date(w.end_date)));
+  const openBalance = (financials || [])
+    .filter((f: any) => ["pending", "partial", "overdue"].includes(f.status))
+    .reduce((sum: number, f: any) => sum + (f.amount - f.paid_amount), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold">Olá, {customer?.full_name}!</h1>
-        <p className="text-muted-foreground">Bem-vindo ao Portal do Cliente</p>
+        <p className="text-muted-foreground text-sm">Bem-vindo ao Portal do Cliente</p>
       </div>
 
       {/* KPI Cards */}
@@ -62,7 +68,7 @@ export default function PortalDashboardPage() {
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 mb-1">
               <Wrench className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Em andamento</span>
+              <span className="text-[11px] text-muted-foreground">Em andamento</span>
             </div>
             <p className="text-2xl font-bold">{activeOrders.length}</p>
           </CardContent>
@@ -71,7 +77,7 @@ export default function PortalDashboardPage() {
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 mb-1">
               <Clock className="h-4 w-4 text-amber-500" />
-              <span className="text-xs text-muted-foreground">Aguardando Aprovação</span>
+              <span className="text-[11px] text-muted-foreground">Aguard. Aprovação</span>
             </div>
             <p className="text-2xl font-bold">{awaitingApproval.length}</p>
           </CardContent>
@@ -80,7 +86,7 @@ export default function PortalDashboardPage() {
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">Concluídos</span>
+              <span className="text-[11px] text-muted-foreground">Concluídos</span>
             </div>
             <p className="text-2xl font-bold">{completedOrders.length}</p>
           </CardContent>
@@ -88,10 +94,12 @@ export default function PortalDashboardPage() {
         <Card>
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 mb-1">
-              <Shield className="h-4 w-4 text-blue-500" />
-              <span className="text-xs text-muted-foreground">Garantias Ativas</span>
+              <DollarSign className="h-4 w-4 text-primary" />
+              <span className="text-[11px] text-muted-foreground">Saldo Aberto</span>
             </div>
-            <p className="text-2xl font-bold">{activeWarranties.length}</p>
+            <p className="text-2xl font-bold font-mono">
+              {openBalance > 0 ? `R$${openBalance.toFixed(0)}` : "—"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -99,26 +107,26 @@ export default function PortalDashboardPage() {
       {/* Pending Approvals Alert */}
       {awaitingApproval.length > 0 && (
         <Card className="border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20">
-          <CardContent className="py-4">
+          <CardContent className="py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
                 <div>
                   <p className="font-medium text-sm">
-                    {awaitingApproval.length} orçamento(s) aguardando sua aprovação
+                    {awaitingApproval.length} orçamento(s) aguardando aprovação
                   </p>
-                  <p className="text-xs text-muted-foreground">Revise e aprove para dar continuidade ao reparo</p>
+                  <p className="text-xs text-muted-foreground">Revise para dar continuidade ao reparo</p>
                 </div>
               </div>
               <Button size="sm" asChild>
-                <Link to="/portal/quotes">Ver Orçamentos</Link>
+                <Link to="/portal/quotes">Ver</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Active Repairs */}
+      {/* Active Repairs with mini stepper */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Reparos Ativos</h2>
@@ -127,7 +135,7 @@ export default function PortalDashboardPage() {
           </Button>
         </div>
         {ordersLoading ? (
-          <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
+          <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
         ) : activeOrders.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
@@ -141,20 +149,20 @@ export default function PortalDashboardPage() {
               <Link key={order.id} to={`/portal/order/${order.id}`}>
                 <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
                   <CardContent className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-mono font-bold text-sm">{order.order_number}</span>
-                          <Badge className={statusColors[order.status as keyof typeof statusColors] + " text-[10px]"}>
-                            {statusLabels[order.status as keyof typeof statusLabels]}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {order.device_label || "Dispositivo"} · {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                        </p>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-sm">{order.order_number}</span>
+                        <Badge className={statusColors[order.status as keyof typeof statusColors] + " text-[10px]"}>
+                          {statusLabels[order.status as keyof typeof statusLabels]}
+                        </Badge>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {order.device_label || "Dispositivo"} · {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                    </p>
+                    {/* Mini stepper */}
+                    <OrderProgressStepper currentStatus={order.status} />
                   </CardContent>
                 </Card>
               </Link>
@@ -162,6 +170,11 @@ export default function PortalDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Financial Summary */}
+      {financials && financials.length > 0 && (
+        <PortalFinancialSummary entries={financials} />
+      )}
 
       {/* Active Warranties */}
       {activeWarranties.length > 0 && (
@@ -192,40 +205,6 @@ export default function PortalDashboardPage() {
                 </Card>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Recent History */}
-      {completedOrders.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Histórico Recente</h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/portal/orders">Ver todos <ChevronRight className="h-4 w-4 ml-1" /></Link>
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {completedOrders.slice(0, 3).map((order: any) => (
-              <Link key={order.id} to={`/portal/order/${order.id}`}>
-                <Card className="hover:bg-muted/50 transition-colors cursor-pointer opacity-75">
-                  <CardContent className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm">{order.order_number}</span>
-                          <Badge variant="outline" className="text-[10px]">Entregue</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {order.device_label} · {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
           </div>
         </div>
       )}
