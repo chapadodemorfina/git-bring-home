@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useDiagnosisParts, useAddDiagnosisPart, useDeleteDiagnosisPart } from "../hooks/useDiagnostics";
 import { useProducts } from "@/modules/inventory/hooks/useInventory";
+import PartCompatibilityHelper from "@/modules/inventory/components/PartCompatibilityHelper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Link2 } from "lucide-react";
 
 interface Props {
