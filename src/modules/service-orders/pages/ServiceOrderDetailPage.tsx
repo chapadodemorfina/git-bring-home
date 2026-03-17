@@ -132,8 +132,8 @@ export default function ServiceOrderDetailPage() {
           <Button variant="outline" onClick={() => printElement(receiptRef.current, order.order_number)}>
             <Printer className="mr-2 h-4 w-4" /> Recibo
           </Button>
-          <Button variant="outline" onClick={() => printElement(labelRef.current, `Etiqueta ${order.order_number}`, true)}>
-            <Tag className="mr-2 h-4 w-4" /> Etiqueta
+          <Button variant="outline" onClick={handlePrintLabel} disabled={generateLink.isPending}>
+            <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Etiqueta"}
           </Button>
           <Button variant="outline" asChild>
             <Link to={`/service-orders/${order.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar</Link>
