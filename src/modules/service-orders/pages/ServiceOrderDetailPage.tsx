@@ -83,6 +83,17 @@ export default function ServiceOrderDetailPage() {
     generateServiceOrderPdf(order, statusHistory || [], companyName);
   };
 
+  const handlePrintLabel = async () => {
+    if (!order || !id) return;
+    if (!trackingUrl) {
+      await generateLink.mutateAsync(id);
+      // Wait for query refetch to get the new link - print after a short delay
+      setTimeout(() => printElement(labelRef.current, `Etiqueta ${order.order_number}`, true), 1500);
+    } else {
+      printElement(labelRef.current, `Etiqueta ${order.order_number}`, true);
+    }
+  };
+
   const handleDelete = async () => {
     if (!id) return;
     await deleteMutation.mutateAsync(id);
