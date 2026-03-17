@@ -85,6 +85,9 @@ export default function TechOrderDetailPage() {
         </Card>
       )}
 
+      {/* Repair Timer */}
+      <RepairTimer serviceOrderId={order.id} />
+
       {/* Photo Upload */}
       <RepairPhotoUpload orderId={order.id} />
 
