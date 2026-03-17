@@ -5,6 +5,8 @@ import {
   FinancialEntryType, FinancialEntryStatus,
 } from "../types";
 import { useToast } from "@/hooks/use-toast";
+import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
+import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
