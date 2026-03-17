@@ -20,9 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSmartphone, Tag } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSmartphone, Tag, FileDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
+import { useCompanyName } from "@/hooks/useCompanyName";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 function printElement(el: HTMLElement | null, title: string) {
   if (!el) return;
@@ -45,12 +49,33 @@ export default function ServiceOrderDetailPage() {
   const [statusOpen, setStatusOpen] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
+  const companyName = useCompanyName("i9 Solutions");
+
+  const db = supabase as any;
+  const { data: statusHistory } = useQuery({
+    queryKey: ["so-status-history-pdf", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("service_order_status_history")
+        .select("*")
+        .eq("service_order_id", id!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
 
   const { data: publicLinks } = useServiceOrderPublicLinks(id);
   const activeLink = publicLinks?.find((l: any) => l.status === "active");
   const trackingUrl = activeLink
     ? `${window.location.origin}/track/${activeLink.public_token}`
     : null;
+
+  const handleExportPdf = () => {
+    if (!order) return;
+    generateServiceOrderPdf(order, statusHistory || [], companyName);
+  };
 
   const handleDelete = async () => {
     if (!id) return;
@@ -84,6 +109,9 @@ export default function ServiceOrderDetailPage() {
               <RefreshCw className="mr-2 h-4 w-4" /> Alterar Status
             </Button>
           )}
+          <Button variant="outline" onClick={handleExportPdf}>
+            <FileDown className="mr-2 h-4 w-4" /> PDF
+          </Button>
           <Button variant="outline" onClick={() => printElement(receiptRef.current, order.order_number)}>
             <Printer className="mr-2 h-4 w-4" /> Recibo
           </Button>

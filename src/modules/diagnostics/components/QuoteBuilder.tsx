@@ -15,13 +15,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Wrench, Package } from "lucide-react";
+import { Plus, Trash2, Wrench, Package, FileDown } from "lucide-react";
+import { generateQuotePdf } from "@/lib/pdf-generators/quote-pdf";
+import { useCompanyName } from "@/hooks/useCompanyName";
 
 interface Props {
   quote: RepairQuote;
 }
 
 export default function QuoteBuilder({ quote }: Props) {
+  const companyName = useCompanyName("i9 Solutions");
   const { data: items, isLoading } = useQuoteItems(quote.id);
   const addItem = useAddQuoteItem();
   const deleteItem = useDeleteQuoteItem();
@@ -96,16 +99,29 @@ export default function QuoteBuilder({ quote }: Props) {
           <CardTitle className="font-mono">{quote.quote_number}</CardTitle>
           <Badge className={quoteStatusColors[quote.status]}>{quoteStatusLabels[quote.status]}</Badge>
         </div>
-        {quote.status === "draft" && (
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
-              <Plus className="mr-1 h-4 w-4" /> Item
-            </Button>
-            <Button size="sm" onClick={() => updateQuote.mutate({ id: quote.id, data: { status: "sent" as any } })}>
-              Enviar ao Cliente
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => {
+            const laborCost = laborItems.reduce((s, i) => s + Number(i.total_price), 0);
+            const partsCost = partItems.reduce((s, i) => s + Number(i.total_price), 0);
+            generateQuotePdf(
+              { ...quote, total_amount: Number(quote.total_amount), labor_cost: laborCost, parts_cost: partsCost, analysis_fee: Number(quote.analysis_fee) },
+              (items || []).map((i) => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price), total_price: Number(i.total_price) })),
+              companyName
+            );
+          }}>
+            <FileDown className="mr-1 h-4 w-4" /> PDF
+          </Button>
+          {quote.status === "draft" && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" /> Item
+              </Button>
+              <Button size="sm" onClick={() => updateQuote.mutate({ id: quote.id, data: { status: "sent" as any } })}>
+                Enviar ao Cliente
+              </Button>
+            </>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
