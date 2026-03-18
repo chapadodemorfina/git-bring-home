@@ -28,7 +28,7 @@ import {
 import {
   Search, Plus, Minus, Trash2, ShoppingCart, DollarSign, CreditCard, Smartphone,
   Banknote, XCircle, Printer, Receipt, RotateCcw, Maximize, Minimize,
-  UserPlus, Package, Keyboard,
+  UserPlus, Package, Keyboard, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -225,6 +225,10 @@ export default function PdvPage() {
       return;
     }
     if (!user) return;
+    if (!openCashRegister) {
+      toast({ title: "Caixa não aberto", description: "Abra o caixa antes de finalizar vendas.", variant: "destructive" });
+      return;
+    }
 
     const received = parseFloat(amountReceived) || 0;
     const payAmount = paymentMethod === "cash" && received > total ? total : (received || total);
@@ -387,6 +391,14 @@ export default function PdvPage() {
           </Button>
         </div>
       </div>
+
+      {/* ── Cash Register Warning ── */}
+      {!openCashRegister && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive border-b border-destructive/20">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm font-medium">Caixa não aberto — abra o caixa em <a href="/cash-register" className="underline font-bold">/cash-register</a> antes de finalizar vendas.</span>
+        </div>
+      )}
 
       {/* ── Main 3-Panel Layout ── */}
       <div className="flex-1 flex gap-0 overflow-hidden">

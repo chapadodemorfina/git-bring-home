@@ -15,6 +15,8 @@ import {
   type CashRegister,
 } from "../hooks/useCashRegister";
 import { useAuth } from "@/contexts/AuthContext";
+import { generateCashRegisterClosingPdf } from "@/lib/pdf-generators/cash-register-closing-pdf";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +40,7 @@ import {
   DollarSign, Lock, Unlock, ArrowDownCircle, ArrowUpCircle,
   Banknote, CreditCard, Smartphone, Receipt, TrendingDown,
   TrendingUp, AlertTriangle, CheckCircle2, Clock, History,
-  Loader2,
+  Loader2, Printer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -92,9 +94,28 @@ export default function CashRegisterPage() {
 
   const handleClose = () => {
     if (!openRegister) return;
+    const registerSnapshot = { ...openRegister };
+    const summarySnapshot = summary ? { ...summary } : null;
     closeMut.mutate(
       { register_id: openRegister.id, counted_amount: parseFloat(countedAmount) || 0, closing_notes: closeNotes || undefined },
-      { onSuccess: () => { setShowClose(false); setCountedAmount(""); setCloseNotes(""); } }
+      {
+        onSuccess: async (result: any) => {
+          setShowClose(false);
+          setCountedAmount("");
+          setCloseNotes("");
+          // Auto-print closing report
+          try {
+            await printClosingReport(registerSnapshot.id, {
+              ...registerSnapshot,
+              closed_at: new Date().toISOString(),
+              expected_amount: result?.expected_amount ?? null,
+              counted_amount: result?.counted_amount ?? null,
+              difference_amount: result?.difference ?? null,
+              closing_notes: closeNotes || null,
+            }, summarySnapshot);
+          } catch { /* non-blocking */ }
+        },
+      }
     );
   };
 
@@ -118,6 +139,39 @@ export default function CashRegisterPage() {
     setMovAmount("");
     setMovDesc("");
     setShowMovement(true);
+  };
+
+  const printClosingReport = async (registerId: string, registerData: any, summaryData: any) => {
+    const db2 = supabase as any;
+    // Fetch movements for this register
+    const { data: movs } = await db2
+      .from("cash_register_movements")
+      .select("*, profiles!cash_register_movements_created_by_fkey(full_name)")
+      .eq("cash_register_id", registerId)
+      .order("created_at", { ascending: true });
+
+    const movRows = (movs || []).map((m: any) => ({
+      ...m,
+      created_by_name: m.profiles?.full_name || null,
+    }));
+
+    // If no summary provided, calculate from movements
+    const sum = summaryData || (() => {
+      const ms = movRows;
+      return {
+        cash_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "cash").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        pix_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "pix").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        credit_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "credit_card").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        debit_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "debit_card").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        withdrawals: ms.filter((m: any) => m.movement_type === "withdrawal").reduce((s: number, m: any) => s + Math.abs(Number(m.amount)), 0),
+        reinforcements: ms.filter((m: any) => m.movement_type === "reinforcement").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        expenses: ms.filter((m: any) => m.movement_type === "expense").reduce((s: number, m: any) => s + Math.abs(Number(m.amount)), 0),
+        total_in: ms.filter((m: any) => m.amount > 0).reduce((s: number, m: any) => s + Number(m.amount), 0),
+        total_out: ms.filter((m: any) => m.amount < 0).reduce((s: number, m: any) => s + Math.abs(Number(m.amount)), 0),
+      };
+    })();
+
+    generateCashRegisterClosingPdf(registerData, sum, movRows, "i9 Solution");
   };
 
   if (loadingRegister) {
@@ -550,6 +604,18 @@ export default function CashRegisterPage() {
               {showHistoryDetail.closing_notes && (
                 <div><span className="text-muted-foreground">Observações (fechamento):</span> <p>{showHistoryDetail.closing_notes}</p></div>
               )}
+              <Separator />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  if (showHistoryDetail) {
+                    printClosingReport(showHistoryDetail.id, showHistoryDetail, null);
+                  }
+                }}
+              >
+                <Printer className="h-4 w-4 mr-2" /> Imprimir Relatório de Fechamento
+              </Button>
             </div>
           )}
         </DialogContent>
