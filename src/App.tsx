@@ -118,6 +118,8 @@ import QuoteEditPage from "./modules/quotes/pages/QuoteEditPage";
 
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
+import WarrantyDetailPage from "./modules/repair/pages/WarrantyDetailPage";
+import WarrantyReturnsPage from "./modules/repair/pages/WarrantyReturnsPage";
 
 // Public Tracking
 import PublicTrackingPage from "./modules/tracking/pages/PublicTrackingPage";
