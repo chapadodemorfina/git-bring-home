@@ -86,7 +86,7 @@ export function addHeader(
   const t = THEME;
 
   const info: CompanyInfo = typeof company === "string"
-    ? { name: company, cnpj: "", address: "", phone: "", email: "", logoUrl: "" }
+    ? { name: company, legalName: "", cnpj: "", address: "", phone: "", email: "", logoUrl: "" }
     : company;
 
   const companyName = info.name || "Assistência Técnica";
