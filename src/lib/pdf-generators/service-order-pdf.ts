@@ -44,6 +44,13 @@ interface SignatureData { signer_name: string; signer_role: string; signature_da
 interface TermData { title: string; content: string; }
 interface ChecklistItem { label: string; checked: boolean; notes?: string; }
 
+export interface PdfDisplayOptions {
+  showQrCode?: boolean;
+  showSignatures?: boolean;
+  showTerms?: boolean;
+  mode?: "compact" | "full";
+}
+
 export interface ServiceOrderPdfOptions {
   order: ServiceOrderData;
   statusHistory?: StatusEntry[];
@@ -57,6 +64,7 @@ export interface ServiceOrderPdfOptions {
   exitChecklist?: ChecklistItem[];
   qrCodeImageData?: string | null;
   trackingUrl?: string | null;
+  displayOptions?: PdfDisplayOptions;
 }
 
 // ─── Maps ─────────────────────────────────────────────────────
