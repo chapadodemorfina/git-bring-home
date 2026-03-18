@@ -368,22 +368,24 @@ export function addFooter(doc: jsPDF, company?: CompanyInfo | string) {
     doc.setLineWidth(0.25);
     doc.line(M, pageH - 14, pageW - M, pageH - 14);
 
-    doc.setFontSize(5.5);
+    doc.setFontSize(6);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(...THEME.mutedText);
+    doc.setTextColor(80, 90, 105);
 
     if (companyName) {
       doc.setFont("helvetica", "bold");
+      doc.setTextColor(60, 70, 85);
       doc.text(companyName, M, pageH - 10.5);
       doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 90, 105);
     }
 
     doc.text(`Gerado em ${dateStr}`, pageW / 2, pageH - 10.5, { align: "center" });
     doc.text(`Página ${i} de ${pageCount}`, pageW - M, pageH - 10.5, { align: "right" });
 
     // Developer credit
-    doc.setFontSize(4.5);
-    doc.setTextColor(170, 178, 190);
+    doc.setFontSize(5);
+    doc.setTextColor(140, 150, 165);
     doc.text(DEVELOPER_CREDIT, pageW / 2, pageH - 7, { align: "center" });
   }
 }
