@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreateSale } from "../hooks/useSales";
 import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
 import { useGenerateSaleCommissions } from "@/modules/commissions/hooks/useCommissions";
+import { useAutoSendMessage } from "@/modules/messaging/hooks/useCustomerMessaging";
 import { useToast } from "@/hooks/use-toast";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
 import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
@@ -105,7 +106,7 @@ export default function PdvPage() {
   const { data: openCashRegister } = useOpenCashRegister();
   const addCashMovement = useAddCashMovement();
   const generateCommissions = useGenerateSaleCommissions();
-
+  const autoSend = useAutoSendMessage();
   // ── State ──
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -274,10 +275,39 @@ export default function PdvPage() {
       setLastSaleId(result.id);
       setLastSaleNumber(result.sale_number || "");
       setShowSuccessDialog(true);
+
+      // Auto-send WhatsApp receipt (non-blocking, only if customer has phone)
+      if (customerId && customerName) {
+        try {
+          const { data: cust } = await db.from("customers").select("phone, whatsapp").eq("id", customerId).single();
+          const custPhone = cust?.whatsapp || cust?.phone;
+          if (custPhone) {
+            const itemsSummary = cart.map(i => `${i.quantity}x ${i.name}`).join(", ");
+            autoSend({
+              customerId,
+              phone: custPhone,
+              eventType: "sale_completed",
+              referenceType: "sale",
+              referenceId: result.id,
+              templateKey: "sale_completed_whatsapp",
+              variables: {
+                customer_name: customerName,
+                sale_number: result.sale_number || "",
+                items_summary: itemsSummary,
+                total_amount: total.toFixed(2),
+                payment_method: paymentMethodLabels[paymentMethod] || paymentMethod,
+                sale_date: new Date().toLocaleString("pt-BR"),
+              },
+            });
+          }
+        } catch {
+          // non-blocking
+        }
+      }
     } catch {
       // error handled by mutation
     }
-  }, [cart, user, customerId, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast, openCashRegister, addCashMovement]);
+  }, [cart, user, customerId, customerName, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast, openCashRegister, addCashMovement, autoSend]);
 
   // ── Post-sale actions ──
   const handleNewSale = useCallback(() => {

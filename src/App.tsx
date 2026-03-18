@@ -108,7 +108,7 @@ import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
 import PdvPage from "./modules/sales/pages/PdvPage";
 import CashRegisterPage from "./modules/cash-register/pages/CashRegisterPage";
 import CommissionsPage from "./modules/commissions/pages/CommissionsPage";
-
+import MessageHistoryPage from "./modules/messaging/pages/MessageHistoryPage";
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
@@ -206,6 +206,9 @@ const App = () => (
 
               {/* Commissions */}
               <Route path="/commissions" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance", "front_desk", "bench_technician", "field_technician"]}><CommissionsPage /></RoleGuard></ProtectedPage>} />
+
+              {/* Message History */}
+              <Route path="/message-history" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><MessageHistoryPage /></RoleGuard></ProtectedPage>} />
 
               {/* Warranties */}
               <Route path="/warranties" element={<ProtectedPage><WarrantiesPage /></ProtectedPage>} />

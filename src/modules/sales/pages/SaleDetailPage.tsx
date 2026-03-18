@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useSale, useSaleItems, useSalePayments, useSaleReturns, useCancelSale, useCompleteSale, useAddSalePayment, useProcessReturn } from "../hooks/useSales";
 import { saleStatusLabels, saleStatusColors, paymentStatusLabels, paymentMethodLabels, SalePaymentMethod } from "../types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,11 +16,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Printer, XCircle, RotateCcw, Plus, FileText, Pencil, Receipt } from "lucide-react";
+import { ArrowLeft, Printer, XCircle, RotateCcw, Plus, FileText, Pencil, Receipt, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
+import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
+import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
 
 export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +34,18 @@ export default function SaleDetailPage() {
   const { data: items } = useSaleItems(id);
   const { data: payments } = useSalePayments(id);
   const { data: returns } = useSaleReturns(id);
+
+  // Fetch customer phone for WhatsApp
+  const { data: customerData } = useQuery({
+    queryKey: ["sale-customer-phone", sale?.customer_id],
+    enabled: !!sale?.customer_id,
+    queryFn: async () => {
+      const sdb = supabase as any;
+      const { data } = await sdb.from("customers").select("phone, whatsapp").eq("id", sale!.customer_id).single();
+      return data as { phone: string | null; whatsapp: string | null } | null;
+    },
+  });
+  const customerPhone = customerData?.whatsapp || customerData?.phone || null;
 
   const cancelSale = useCancelSale();
   const completeSale = useCompleteSale();
@@ -112,6 +128,25 @@ export default function SaleDetailPage() {
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> A4</Button>
           <Button variant="outline" size="sm" onClick={handleThermalPrint}><Receipt className="mr-2 h-4 w-4" /> Cupom 80mm</Button>
+          {sale.status === "completed" && sale.customer_id && (
+            <WhatsAppSendButton
+              customerId={sale.customer_id}
+              customerPhone={customerPhone}
+              customerName={sale.customer_name || "Cliente"}
+              eventType="sale_completed"
+              referenceType="sale"
+              referenceId={sale.id}
+              templateKey="sale_completed_whatsapp"
+              variables={{
+                sale_number: sale.sale_number,
+                items_summary: items?.map(i => `${i.quantity}x ${i.product_name_snapshot}`).join(", ") || "",
+                total_amount: Number(sale.total_amount).toFixed(2),
+                payment_method: payments?.map(p => paymentMethodLabels[p.payment_method]).join(", ") || "",
+                sale_date: format(new Date(sale.completed_at || sale.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+              }}
+              label="WhatsApp"
+            />
+          )}
           {sale.status === "draft" && (
             <>
               <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
@@ -260,6 +295,9 @@ export default function SaleDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* WhatsApp Message History */}
+          <MessageHistoryPanel referenceType="sale" referenceId={sale.id} />
         </div>
       </div>
 

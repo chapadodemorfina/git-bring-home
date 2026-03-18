@@ -14,6 +14,8 @@ import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarra
 import DeviceLocationPanel from "../components/DeviceLocationPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
 import CustomerCommunicationPanel from "../components/CustomerCommunicationPanel";
+import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
+import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
 import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -135,6 +137,23 @@ export default function ServiceOrderDetailPage() {
           <Button variant="outline" onClick={handlePrintLabel} disabled={generateLink.isPending}>
             <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Etiqueta"}
           </Button>
+          {(order.status === "ready_for_pickup" || order.status === "delivered") && (
+            <WhatsAppSendButton
+              customerId={order.customer_id}
+              customerPhone={order.customer_phone}
+              customerName={order.customer_name || "Cliente"}
+              eventType="os_ready"
+              referenceType="service_order"
+              referenceId={order.id}
+              templateKey="os_ready_whatsapp"
+              variables={{
+                order_number: order.order_number,
+                status: order.status === "ready_for_pickup" ? "Pronto para retirada" : "Concluído",
+                final_notes: order.internal_notes || "",
+              }}
+              label="WhatsApp"
+            />
+          )}
           <Button variant="outline" asChild>
             <Link to={`/service-orders/${order.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar</Link>
           </Button>
@@ -270,6 +289,9 @@ export default function ServiceOrderDetailPage() {
             customerPhone={order.customer_phone}
             customerName={order.customer_name || "Cliente"}
           />
+
+          {/* WhatsApp Message History */}
+          <MessageHistoryPanel referenceType="service_order" referenceId={order.id} />
         </div>
       </div>
 

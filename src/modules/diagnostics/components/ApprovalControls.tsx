@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { RepairQuote, quoteStatusLabels } from "../types";
 import { useRecordApproval, useQuoteApprovals } from "../hooks/useDiagnostics";
+import { useAutoSendMessage } from "@/modules/messaging/hooks/useCustomerMessaging";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,8 +28,38 @@ export default function ApprovalControls({ quote, serviceOrderId }: Props) {
   const [chargeAnalysisFee, setChargeAnalysisFee] = useState(false);
   const recordApproval = useRecordApproval();
   const { data: approvals } = useQuoteApprovals(quote.id);
+  const autoSend = useAutoSendMessage();
 
   const canDecide = quote.status === "sent";
+
+  const sendApprovalWhatsApp = async () => {
+    try {
+      const db = supabase as any;
+      const { data: so } = await db
+        .from("service_orders")
+        .select("order_number, customer_id, customers(full_name, phone, whatsapp)")
+        .eq("id", serviceOrderId)
+        .single();
+      const phone = so?.customers?.whatsapp || so?.customers?.phone;
+      if (phone && so?.customer_id) {
+        autoSend({
+          customerId: so.customer_id,
+          phone,
+          eventType: "quote_approved",
+          referenceType: "quote",
+          referenceId: quote.id,
+          templateKey: "quote_approved_whatsapp",
+          variables: {
+            customer_name: so.customers?.full_name || "Cliente",
+            order_number: so.order_number,
+            approved_amount: Number(quote.total_amount).toFixed(2),
+          },
+        });
+      }
+    } catch {
+      // non-blocking
+    }
+  };
 
   const handleApprove = async () => {
     await recordApproval.mutateAsync({
@@ -37,6 +69,8 @@ export default function ApprovalControls({ quote, serviceOrderId }: Props) {
       decidedByName: decidedByName || undefined,
       reason: reason || undefined,
     });
+    // Auto-send WhatsApp notification
+    sendApprovalWhatsApp();
     setApproveOpen(false);
     resetForm();
   };
