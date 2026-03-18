@@ -106,6 +106,12 @@ export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const col2 = 110;
   const CW = 165; // content width for text cards
 
+  const showSigs = displayOptions?.showSignatures !== false;
+
+  // Reserve extra bottom space for initials/signatures (18mm footer + 14mm initials area)
+  const INITIALS_RESERVE = showSigs ? 32 : 18;
+  setBottomReserve(INITIALS_RESERVE);
+
   // ── Fetch logo ──
   const logoDataUrl = company.logoUrl ? await fetchImageAsDataUrl(company.logoUrl) : null;
 
@@ -113,7 +119,8 @@ export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   let y = addHeader(doc, company,
     `Ordem de Serviço: ${order.order_number}`,
     statusLabels[order.status as keyof typeof statusLabels] || order.status,
-    logoDataUrl
+    logoDataUrl,
+    qrCodeImageData || null
   );
 
   // ── 1. INFORMAÇÕES DA OS ──
