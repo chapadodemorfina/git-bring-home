@@ -114,6 +114,25 @@ export default function SaleDetailPage() {
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> A4</Button>
           <Button variant="outline" size="sm" onClick={handleThermalPrint}><Receipt className="mr-2 h-4 w-4" /> Cupom 80mm</Button>
+          {sale.status === "completed" && sale.customer_id && (
+            <WhatsAppSendButton
+              customerId={sale.customer_id}
+              customerPhone={sale.customer_phone || null}
+              customerName={sale.customer_name || "Cliente"}
+              eventType="sale_completed"
+              referenceType="sale"
+              referenceId={sale.id}
+              templateKey="sale_completed_whatsapp"
+              variables={{
+                sale_number: sale.sale_number,
+                items_summary: items?.map(i => `${i.quantity}x ${i.product_name_snapshot}`).join(", ") || "",
+                total_amount: Number(sale.total_amount).toFixed(2),
+                payment_method: payments?.map(p => paymentMethodLabels[p.payment_method]).join(", ") || "",
+                sale_date: format(new Date(sale.completed_at || sale.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+              }}
+              label="WhatsApp"
+            />
+          )}
           {sale.status === "draft" && (
             <>
               <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
