@@ -103,6 +103,7 @@ import PortalSupportPage from "./modules/portal/pages/PortalSupportPage";
 import SalesListPage from "./modules/sales/pages/SalesListPage";
 import SaleCreatePage from "./modules/sales/pages/SaleCreatePage";
 import SaleDetailPage from "./modules/sales/pages/SaleDetailPage";
+import SaleEditPage from "./modules/sales/pages/SaleEditPage";
 import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
 
 // Warranties
@@ -196,6 +197,7 @@ const App = () => (
               <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><SaleDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/sales/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleEditPage /></RoleGuard></ProtectedPage>} />
 
               {/* Warranties */}
               <Route path="/warranties" element={<ProtectedPage><WarrantiesPage /></ProtectedPage>} />

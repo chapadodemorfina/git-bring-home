@@ -14,10 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Printer, XCircle, RotateCcw, Plus, FileText } from "lucide-react";
+import { ArrowLeft, Printer, XCircle, RotateCcw, Plus, FileText, Pencil, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
+import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
 
 export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,6 +91,11 @@ export default function SaleDetailPage() {
     generateSaleReceiptPdf(sale, items, payments || [], companyName);
   };
 
+  const handleThermalPrint = () => {
+    if (!sale || !items) return;
+    generateSaleThermalReceiptPdf(sale, items, payments || [], companyName);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -104,11 +110,17 @@ export default function SaleDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Comprovante</Button>
+          <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> A4</Button>
+          <Button variant="outline" size="sm" onClick={handleThermalPrint}><Receipt className="mr-2 h-4 w-4" /> Cupom 80mm</Button>
           {sale.status === "draft" && (
-            <Button size="sm" onClick={() => completeSale.mutate(sale.id)}>
-              <Plus className="mr-2 h-4 w-4" /> Concluir
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </Button>
+              <Button size="sm" onClick={() => completeSale.mutate(sale.id)}>
+                <Plus className="mr-2 h-4 w-4" /> Concluir
+              </Button>
+            </>
           )}
           {(sale.status === "completed" || sale.status === "partially_refunded") && canManage && (
             <Button variant="outline" size="sm" onClick={() => setShowReturn(true)}>
