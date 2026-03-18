@@ -14,11 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Printer, XCircle, RotateCcw, Plus, FileText, Pencil, Receipt } from "lucide-react";
+import { ArrowLeft, Printer, XCircle, RotateCcw, Plus, FileText, Pencil, Receipt, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
+import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
+import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
 
 export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
