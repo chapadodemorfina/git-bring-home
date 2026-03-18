@@ -37,6 +37,21 @@ export interface DashboardSummary {
   stock_value: number;
   low_stock_count: number;
   pipeline: Record<string, number>;
+  // New sales/financial metrics
+  sales_count: number;
+  sales_revenue: number;
+  sales_avg_ticket: number;
+  today_sales_revenue: number;
+  today_sales_count: number;
+  sales_by_payment_method: { method: string; count: number; amount: number }[];
+  top_products_sold: { name: string; qty: number; revenue: number }[];
+  team_ranking: { user_id: string; name: string; sales_count: number; sales_revenue: number; so_count: number; total_revenue: number }[];
+  receivables_total: number;
+  receivables_overdue: number;
+  payables_total: number;
+  cash_balance: number;
+  services_completed: number;
+  os_conversion_rate: number;
 }
 
 const defaultSummary: DashboardSummary = {
@@ -68,6 +83,20 @@ const defaultSummary: DashboardSummary = {
   stock_value: 0,
   low_stock_count: 0,
   pipeline: {},
+  sales_count: 0,
+  sales_revenue: 0,
+  sales_avg_ticket: 0,
+  today_sales_revenue: 0,
+  today_sales_count: 0,
+  sales_by_payment_method: [],
+  top_products_sold: [],
+  team_ranking: [],
+  receivables_total: 0,
+  receivables_overdue: 0,
+  payables_total: 0,
+  cash_balance: 0,
+  services_completed: 0,
+  os_conversion_rate: 0,
 };
 
 export function useDashboardData(dateRange: DateRange) {
@@ -94,20 +123,10 @@ export function useDashboardData(dateRange: DateRange) {
         technician_orders: data.technician_orders || [],
         collection_point_orders: data.collection_point_orders || [],
         top_parts: data.top_parts || [],
+        sales_by_payment_method: data.sales_by_payment_method || [],
+        top_products_sold: data.top_products_sold || [],
+        team_ranking: data.team_ranking || [],
       } as DashboardSummary;
-    },
-  });
-}
-
-export function useMonthlyTrend() {
-  return useQuery<{ month: string; orders: number; revenue: number; expenses: number; profit: number }[]>({
-    queryKey: ["dashboard-monthly-trend"],
-    queryFn: async () => {
-      const from = new Date(Date.now() - 180 * 86400000).toISOString();
-      const to = new Date().toISOString();
-      const { data, error } = await db.rpc("dashboard_summary", { _from: from, _to: to });
-      if (error) throw error;
-      return (data as DashboardSummary)?.monthly_trend || [];
     },
   });
 }
