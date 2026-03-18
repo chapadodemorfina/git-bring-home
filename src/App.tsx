@@ -109,6 +109,7 @@ import PdvPage from "./modules/sales/pages/PdvPage";
 import CashRegisterPage from "./modules/cash-register/pages/CashRegisterPage";
 import CommissionsPage from "./modules/commissions/pages/CommissionsPage";
 import MessageHistoryPage from "./modules/messaging/pages/MessageHistoryPage";
+import ReceivablesPage from "./modules/receivables/pages/ReceivablesPage";
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
