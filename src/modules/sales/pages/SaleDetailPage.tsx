@@ -33,6 +33,18 @@ export default function SaleDetailPage() {
   const { data: payments } = useSalePayments(id);
   const { data: returns } = useSaleReturns(id);
 
+  // Fetch customer phone for WhatsApp
+  const { data: customerData } = useQuery({
+    queryKey: ["sale-customer-phone", sale?.customer_id],
+    enabled: !!sale?.customer_id,
+    queryFn: async () => {
+      const sdb = supabase as any;
+      const { data } = await sdb.from("customers").select("phone, whatsapp").eq("id", sale!.customer_id).single();
+      return data as { phone: string | null; whatsapp: string | null } | null;
+    },
+  });
+  const customerPhone = customerData?.whatsapp || customerData?.phone || null;
+
   const cancelSale = useCancelSale();
   const completeSale = useCompleteSale();
   const addPayment = useAddSalePayment();
