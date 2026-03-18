@@ -1,4 +1,4 @@
-import { createPdf, addHeader, addField, savePdf, formatCurrency, formatDateTime } from "@/lib/pdf-utils";
+import { formatCurrency, formatDateTime, type CompanyInfo } from "@/lib/pdf-utils";
 import type { Sale, SaleItem, SalePayment } from "@/modules/sales/types";
 import { paymentMethodLabels, saleStatusLabels } from "@/modules/sales/types";
 import jsPDF from "jspdf";
@@ -11,17 +11,22 @@ export function generateSaleThermalReceiptPdf(
   sale: Sale,
   items: SaleItem[],
   payments: SalePayment[],
-  companyName: string,
+  company: CompanyInfo | string,
 ) {
-  // 80mm = ~226pt, typical printable width ~200pt (~70mm)
-  const pageWidth = 80; // mm
+  const pageWidth = 80;
   const margin = 4;
   const contentWidth = pageWidth - margin * 2;
+
+  const info: CompanyInfo = typeof company === "string"
+    ? { name: company, cnpj: "", address: "", phone: "", email: "", logoUrl: "" }
+    : company;
+
+  const companyName = info.name || "Assistência Técnica";
 
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
-    format: [pageWidth, 297], // tall enough, will trim
+    format: [pageWidth, 297],
   });
 
   doc.setFont("courier");
@@ -30,8 +35,30 @@ export function generateSaleThermalReceiptPdf(
   // Company name centered
   doc.setFontSize(10);
   doc.setFont("courier", "bold");
-  doc.text(companyName || "i9 Solutions", pageWidth / 2, y, { align: "center" });
-  y += 5;
+  doc.text(companyName, pageWidth / 2, y, { align: "center" });
+  y += 4;
+
+  // Company details
+  if (info.cnpj) {
+    doc.setFontSize(7);
+    doc.setFont("courier", "normal");
+    doc.text(`CNPJ: ${info.cnpj}`, pageWidth / 2, y, { align: "center" });
+    y += 3;
+  }
+  if (info.phone) {
+    doc.setFontSize(7);
+    doc.text(`Tel: ${info.phone}`, pageWidth / 2, y, { align: "center" });
+    y += 3;
+  }
+  if (info.address) {
+    doc.setFontSize(6);
+    const addrLines = doc.splitTextToSize(info.address, contentWidth);
+    addrLines.forEach((line: string) => {
+      doc.text(line, pageWidth / 2, y, { align: "center" });
+      y += 2.5;
+    });
+    y += 1;
+  }
 
   doc.setFontSize(8);
   doc.setFont("courier", "normal");
@@ -72,7 +99,6 @@ export function generateSaleThermalReceiptPdf(
   doc.setFont("courier", "normal");
 
   items.forEach((item) => {
-    // Product name (may wrap)
     const nameLines = doc.splitTextToSize(item.product_name_snapshot, 36);
     doc.text(nameLines, margin, y);
     const lineOffset = Math.max(0, (nameLines.length - 1)) * 3;
@@ -134,7 +160,7 @@ export function generateSaleThermalReceiptPdf(
   doc.setFontSize(7);
   doc.text("Obrigado pela preferência!", pageWidth / 2, y, { align: "center" });
   y += 3;
-  doc.text(companyName || "i9 Solutions", pageWidth / 2, y, { align: "center" });
+  doc.text(companyName, pageWidth / 2, y, { align: "center" });
 
   doc.save(`cupom-${sale.sale_number}.pdf`);
 }

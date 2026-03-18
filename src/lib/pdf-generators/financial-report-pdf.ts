@@ -1,6 +1,7 @@
 import {
   createPdf, addHeader, addSection, addTable, savePdf,
   formatCurrency, formatDate,
+  type CompanyInfo,
 } from "@/lib/pdf-utils";
 
 interface FinancialEntry {
@@ -21,11 +22,11 @@ const statusMap: Record<string, string> = { pending: "Pendente", partial: "Parci
 
 export function generateFinancialReportPdf(
   entries: FinancialEntry[],
-  companyName: string,
+  company: CompanyInfo | string,
   periodLabel?: string
 ) {
   const doc = createPdf("landscape");
-  let y = addHeader(doc, companyName, "Relatório Financeiro", periodLabel || "Todos os lançamentos");
+  let y = addHeader(doc, company, "Relatório Financeiro", periodLabel || "Todos os lançamentos");
 
   // Summary
   const revenue = entries.filter(e => e.entry_type === "revenue").reduce((s, e) => s + e.amount, 0);
@@ -79,9 +80,9 @@ export function generateFinancialReportPdf(
     {
       columnStyles: {
         0: { cellWidth: 50 },
-        6: { halign: "right" },
-        7: { halign: "right" },
-        8: { halign: "right" },
+        6: { halign: "right" as const },
+        7: { halign: "right" as const },
+        8: { halign: "right" as const },
       },
     }
   );
@@ -98,5 +99,5 @@ export function generateFinancialReportPdf(
   doc.text(formatCurrency(totalPending), pw - 14, y, { align: "right" });
   doc.setFont("helvetica", "normal");
 
-  savePdf(doc, `Relatorio_Financeiro_${formatDate(new Date().toISOString()).replace(/\//g, "-")}`);
+  savePdf(doc, `Relatorio_Financeiro_${formatDate(new Date().toISOString()).replace(/\//g, "-")}`, company);
 }
