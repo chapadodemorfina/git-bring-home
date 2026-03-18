@@ -137,7 +137,7 @@ export default function ServiceOrderDetailPage() {
           <Button variant="outline" onClick={handlePrintLabel} disabled={generateLink.isPending}>
             <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Etiqueta"}
           </Button>
-          {(order.status === "ready_for_pickup" || order.status === "completed") && (
+          {(order.status === "ready_for_pickup" || order.status === "delivered") && (
             <WhatsAppSendButton
               customerId={order.customer_id}
               customerPhone={order.customer_phone}
