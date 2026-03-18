@@ -119,7 +119,8 @@ export default function SaleDetailPage() {
               </Button>
               <Button size="sm" onClick={() => completeSale.mutate(sale.id)}>
                 <Plus className="mr-2 h-4 w-4" /> Concluir
-            </Button>
+              </Button>
+            </>
           )}
           {(sale.status === "completed" || sale.status === "partially_refunded") && canManage && (
             <Button variant="outline" size="sm" onClick={() => setShowReturn(true)}>
