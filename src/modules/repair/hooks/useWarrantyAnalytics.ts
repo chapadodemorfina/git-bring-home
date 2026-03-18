@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { executePaginatedQuery, type PaginationParams } from "@/hooks/usePaginatedQuery";
 import type { PaginatedResult } from "@/components/ui/data-pagination";
+import type { WarrantyItem, WarrantyReturn, WarrantyRule } from "../types";
 
 const db = supabase as any;
 
@@ -12,10 +13,13 @@ export interface WarrantyAnalytics {
   expired_warranties: number;
   voided_warranties: number;
   total_returns: number;
+  open_returns: number;
   return_rate: number;
+  expiring_soon: number;
   returns_by_cause: { cause: string; count: number }[];
   returns_by_outcome: { outcome: string; count: number }[];
   top_returning_devices: { device: string; count: number }[];
+  returns_by_technician: { technician: string; count: number }[];
   recent_returns: {
     id: string;
     warranty_number: string;
@@ -25,6 +29,9 @@ export interface WarrantyAnalytics {
     status: string;
     customer_name: string;
     created_at: string;
+    technical_analysis: string | null;
+    resolved_at: string | null;
+    new_service_order_id: string | null;
   }[];
 }
 
@@ -34,10 +41,13 @@ const defaultAnalytics: WarrantyAnalytics = {
   expired_warranties: 0,
   voided_warranties: 0,
   total_returns: 0,
+  open_returns: 0,
   return_rate: 0,
+  expiring_soon: 0,
   returns_by_cause: [],
   returns_by_outcome: [],
   top_returning_devices: [],
+  returns_by_technician: [],
   recent_returns: [],
 };
 
@@ -51,44 +61,120 @@ export function useWarrantyAnalytics(from?: string, to?: string) {
       const { data, error } = await db.rpc("warranty_analytics", params);
       if (error) throw error;
       if (!data) return defaultAnalytics;
-      return {
-        ...defaultAnalytics,
-        ...data,
-        returns_by_cause: data.returns_by_cause || [],
-        returns_by_outcome: data.returns_by_outcome || [],
-        top_returning_devices: data.top_returning_devices || [],
-        recent_returns: data.recent_returns || [],
-      } as WarrantyAnalytics;
+      return { ...defaultAnalytics, ...data } as WarrantyAnalytics;
     },
   });
 }
 
-export function useAllWarranties() {
-  return useQuery({
-    queryKey: ["all-warranties"],
-    queryFn: async () => {
-      const { data, error } = await db
-        .from("warranties")
-        .select("*, service_orders(order_number, customer_id, device_id, customers(full_name), devices(brand, model))")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return (data || []) as any[];
-    },
-  });
-}
-
-export function useWarrantiesPaginated(search?: string, page: number = 1) {
+export function useWarrantiesPaginated(search?: string, page: number = 1, statusFilter?: string, typeFilter?: string) {
   return useQuery<PaginatedResult<any>>({
-    queryKey: ["warranties-paginated", search, page],
+    queryKey: ["warranties-paginated", search, page, statusFilter, typeFilter],
     queryFn: async () => {
       const params: PaginationParams = { page, search };
-      return executePaginatedQuery<any>(params, {
+      const result = await executePaginatedQuery<any>(params, {
         table: "warranties",
         select: "*, service_orders(order_number, customer_id, device_id, customers(full_name), devices(brand, model))",
         searchColumns: ["warranty_number"],
         defaultSort: { column: "created_at", ascending: false },
       });
+      
+      // Client-side filter for status/type since executePaginatedQuery doesn't support custom filters
+      let items = result.items;
+      if (statusFilter) {
+        const now = new Date();
+        items = items.filter((w: any) => {
+          if (statusFilter === "active") return !w.is_void && new Date(w.end_date) >= now;
+          if (statusFilter === "expired") return !w.is_void && new Date(w.end_date) < now;
+          if (statusFilter === "voided") return w.is_void;
+          return true;
+        });
+      }
+      if (typeFilter) {
+        items = items.filter((w: any) => w.warranty_type === typeFilter);
+      }
+      return { ...result, items };
+    },
+  });
+}
+
+export function useWarrantyDetail(warrantyId: string | undefined) {
+  return useQuery({
+    queryKey: ["warranty-detail", warrantyId],
+    enabled: !!warrantyId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("warranties")
+        .select("*, service_orders(order_number, customer_id, device_id, reported_issue, status, customers(full_name, phone, email), devices(brand, model, serial_number, device_type))")
+        .eq("id", warrantyId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useWarrantyItems(warrantyId: string | undefined) {
+  return useQuery({
+    queryKey: ["warranty-items", warrantyId],
+    enabled: !!warrantyId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("warranty_items")
+        .select("*")
+        .eq("warranty_id", warrantyId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data || []) as WarrantyItem[];
+    },
+  });
+}
+
+export function useWarrantyReturnsList(search?: string, page: number = 1, statusFilter?: string) {
+  return useQuery<PaginatedResult<any>>({
+    queryKey: ["warranty-returns-list", search, page, statusFilter],
+    queryFn: async () => {
+      const params: PaginationParams = { page, search };
+      const result = await executePaginatedQuery<any>(params, {
+        table: "warranty_returns",
+        select: "*, warranties(warranty_number, customer_id, service_order_id, service_orders(order_number, customers(full_name)))",
+        searchColumns: ["reason"],
+        defaultSort: { column: "created_at", ascending: false },
+      });
+      let items = result.items;
+      if (statusFilter) {
+        items = items.filter((r: any) => r.status === statusFilter);
+      }
+      return { ...result, items };
+    },
+  });
+}
+
+export function useWarrantyReturnDetail(returnId: string | undefined) {
+  return useQuery({
+    queryKey: ["warranty-return-detail", returnId],
+    enabled: !!returnId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("warranty_returns")
+        .select("*, warranties(warranty_number, coverage_description, start_date, end_date, service_order_id, service_orders(order_number, customers(full_name)))")
+        .eq("id", returnId!)
+        .single();
+      if (error) throw error;
+      return data as WarrantyReturn & { warranties: any };
+    },
+  });
+}
+
+export function useWarrantyRules() {
+  return useQuery({
+    queryKey: ["warranty-rules"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("warranty_rules")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data || []) as WarrantyRule[];
     },
   });
 }
@@ -107,13 +193,41 @@ export function useVoidWarranty() {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["all-warranties"] });
-      qc.invalidateQueries({ queryKey: ["warranty"] });
+      qc.invalidateQueries({ queryKey: ["warranties-paginated"] });
+      qc.invalidateQueries({ queryKey: ["warranty-detail"] });
       qc.invalidateQueries({ queryKey: ["warranty-analytics"] });
       toast({ title: "Garantia anulada com sucesso" });
     },
     onError: (error: Error) => {
       toast({ title: "Erro ao anular garantia", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+export function useResolveReturn() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ returnId, outcome, technicalAnalysis }: {
+      returnId: string; outcome: string; technicalAnalysis?: string;
+    }) => {
+      const { data, error } = await db.rpc("resolve_warranty_return", {
+        _return_id: returnId,
+        _outcome: outcome,
+        _technical_analysis: technicalAnalysis || null,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["warranty-returns-list"] });
+      qc.invalidateQueries({ queryKey: ["warranty-return-detail"] });
+      qc.invalidateQueries({ queryKey: ["warranty-analytics"] });
+      toast({ title: "Retorno resolvido com sucesso" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erro ao resolver retorno", description: error.message, variant: "destructive" });
     },
   });
 }
