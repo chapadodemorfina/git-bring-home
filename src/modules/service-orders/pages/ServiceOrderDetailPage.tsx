@@ -26,7 +26,7 @@ import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSma
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
-import { useCompanySettings, settingIsTrue } from "@/hooks/useCompanySettings";
+import { useCompanySettings, settingIsTrue, type CompanySettings } from "@/hooks/useCompanySettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
