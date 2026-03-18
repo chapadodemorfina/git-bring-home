@@ -280,30 +280,10 @@ export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
     terms.forEach((term) => { y = addTermsBlock(doc, y, term.title, term.content); });
   }
 
-  // ── CLOSING BLOCK (QR + Signatures) ──
+  // ── CLOSING BLOCK (Signatures) ──
   const showQr = displayOptions?.showQrCode !== false && !!qrCodeImageData;
-  const showSigs = displayOptions?.showSignatures !== false;
-  const isCompact = displayOptions?.mode !== "full";
 
-  const sigBlockH = showSigs ? 20 : 0;
-  const qrBlockH = showQr ? 36 : 0;
-  const closingH = qrBlockH + sigBlockH;
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const remaining = pageHeight - y - 16;
-
-  // In compact mode: skip QR if it would force a page break but signatures alone fit
-  const skipQrToFitOnePage = isCompact && showQr && remaining < closingH && remaining >= sigBlockH;
-
-  if (closingH > 0 && !skipQrToFitOnePage && remaining < closingH) {
-    doc.addPage();
-    y = addContinuationHeader(doc, order.order_number, order.customer_name || "—");
-  }
-
-  if (showQr && !skipQrToFitOnePage) {
-    y = addQrCodeBlock(doc, y, qrCodeImageData, "Acompanhe seu reparo pelo QR Code");
-  }
-
-  // ── ASSINATURAS ──
+  // Build signature list
   const sigList: { name: string; role: string; imageData?: string }[] = [];
   if (showSigs) {
     (signatures || []).forEach((s) => {
@@ -319,47 +299,32 @@ export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
     } else if (sigList.length === 1) {
       sigList.push({ name: "", role: sigList[0].role === "Cliente" ? "Técnico" : "Cliente", imageData: undefined });
     }
+  }
+
+  // Reset bottom reserve to normal before adding final signature
+  setBottomReserve(18);
+
+  // Check if full signature fits on current page
+  const sigBlockH = showSigs ? 20 : 0;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const remaining = pageHeight - y - 18; // 18 = footer
+
+  if (showSigs && sigBlockH > 0 && remaining < sigBlockH) {
+    doc.addPage();
+    y = addContinuationHeader(doc, order.order_number, order.customer_name || "—");
+  }
+
+  // ── FULL SIGNATURE on last page ──
+  if (showSigs) {
     y = addSignatureBlock(doc, y, sigList as any);
   }
 
-  // ── ADD BLANK SIGNATURES TO ALL PREVIOUS PAGES (when multi-page) ──
+  // ── ADD COMPACT INITIALS to all intermediate pages ──
   const totalPages = doc.getNumberOfPages();
   if (showSigs && totalPages > 1) {
-    const pageH = doc.internal.pageSize.getHeight();
-    const pageW = doc.internal.pageSize.getWidth();
-    const mLeft = 16;
-    const contentW = pageW - mLeft * 2;
-    const blankSigs = sigList.map(s => ({ name: "", role: s.role }));
-    const sigCount = Math.max(blankSigs.length, 2);
-    const gap = 6;
-    const slotW = (contentW - (sigCount - 1) * gap) / sigCount;
-    const cardH = 18;
-
+    const roles = sigList.map(s => s.role);
     for (let p = 1; p < totalPages; p++) {
-      doc.setPage(p);
-      const sigY = pageH - 12 - cardH; // just above footer
-
-      blankSigs.forEach((sig, i) => {
-        const x = mLeft + i * (slotW + gap);
-        const centerX = x + slotW / 2;
-
-        // Card background
-        doc.setFillColor(248, 250, 252);
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.12);
-        doc.roundedRect(x, sigY, slotW, cardH, 1.2, 1.2, "FD");
-
-        // Signature line
-        doc.setDrawColor(100, 116, 139);
-        doc.setLineWidth(0.15);
-        doc.line(x + 6, sigY + 10.5, x + slotW - 6, sigY + 10.5);
-
-        // Role label
-        doc.setFontSize(5.5);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(30, 64, 175);
-        doc.text(sig.role, centerX, sigY + 17, { align: "center" });
-      });
+      addCompactInitials(doc, p, roles);
     }
     // Return to last page
     doc.setPage(totalPages);
