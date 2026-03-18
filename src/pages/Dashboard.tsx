@@ -87,7 +87,7 @@ export default function Dashboard() {
           preset={preset}
           onPresetChange={setPreset}
           summary={summary}
-          companyName={companyName || "i9 Solutions"}
+          companyName={companyName || ""}
         />
       </div>
 

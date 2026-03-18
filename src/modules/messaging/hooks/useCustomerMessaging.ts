@@ -153,7 +153,7 @@ export function useSendCustomerMessage() {
 
 // ── Hook: Auto-send (non-blocking, fire-and-forget) ──
 export function useAutoSendMessage() {
-  const companyName = useCompanyName("i9 Solutions");
+  const companyName = useCompanyName();
 
   return async (params: {
     customerId?: string | null;

@@ -28,7 +28,7 @@ export default function WhatsAppSendButton({
   variant = "outline", size = "sm", className,
 }: Props) {
   const { toast } = useToast();
-  const companyName = useCompanyName("i9 Solutions");
+  const companyName = useCompanyName();
   const sendMessage = useSendCustomerMessage();
   const [showPreview, setShowPreview] = useState(false);
   const [previewText, setPreviewText] = useState("");
