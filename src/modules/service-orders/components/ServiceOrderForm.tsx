@@ -106,18 +106,24 @@ export default function ServiceOrderForm({ initialData }: Props) {
                       onDeviceCreated={(id) => field.onChange(id)}
                     />
                   </div>
-                  <Select value={field.value || ""} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Selecione um dispositivo (opcional)" /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {customerDevices?.map((d) => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {deviceTypeLabels[d.device_type]} — {d.brand} {d.model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {customerDevices && customerDevices.length > 0 ? (
+                    <Select value={field.value || ""} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Selecione um dispositivo" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {customerDevices.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {deviceTypeLabels[d.device_type]} — {d.brand} {d.model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-sm text-muted-foreground border border-dashed rounded-md p-3 text-center">
+                      Nenhum dispositivo cadastrado. Clique em <strong>"Novo Dispositivo"</strong> acima para cadastrar.
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )} />
