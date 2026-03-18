@@ -26,7 +26,8 @@ export default function FinanceListPage() {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const companyName = useCompanyName("i9 Solutions");
+  const companySettings = useCompanySettings();
+  const companyName = companySettings.company_name;
 
   const entryType = tab === "all" ? null : (tab as FinancialEntryType);
   const { data, isLoading } = useFinancialEntriesPaginated(entryType, filterStatus as FinancialEntryStatus | null, search, page);
