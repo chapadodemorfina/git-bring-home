@@ -24,20 +24,20 @@ export interface PdfTheme {
 }
 
 const THEME: PdfTheme = {
-  primary: [30, 64, 175],       // Deep professional blue
+  primary: [30, 64, 175],
   primaryLight: [219, 234, 254],
   primaryDark: [23, 37, 84],
-  headerBg: [241, 245, 249],
+  headerBg: [245, 247, 250],
   textColor: [15, 23, 42],
   mutedText: [100, 116, 139],
-  accent: [99, 102, 241],       // Indigo accent
+  accent: [99, 102, 241],
   success: [21, 128, 61],
   successLight: [220, 252, 231],
   danger: [185, 28, 28],
   dangerLight: [254, 226, 226],
   warning: [161, 98, 7],
   warningLight: [254, 249, 195],
-  cardBg: [248, 250, 252],
+  cardBg: [249, 250, 251],
   divider: [226, 232, 240],
   white: [255, 255, 255],
 };
@@ -57,17 +57,13 @@ export interface CompanyInfo {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────
-function getPageWidth(doc: jsPDF) { return doc.internal.pageSize.getWidth(); }
-function getPageHeight(doc: jsPDF) { return doc.internal.pageSize.getHeight(); }
-const MARGIN = 14;
-function contentWidth(doc: jsPDF) { return getPageWidth(doc) - MARGIN * 2; }
+function pw(doc: jsPDF) { return doc.internal.pageSize.getWidth(); }
+function ph(doc: jsPDF) { return doc.internal.pageSize.getHeight(); }
+const M = 14; // margin
+function cw(doc: jsPDF) { return pw(doc) - M * 2; }
 
-/** Ensure enough vertical space; returns updated y (after page break if needed) */
 function ensureSpace(doc: jsPDF, y: number, needed: number): number {
-  if (y + needed > getPageHeight(doc) - 22) {
-    doc.addPage();
-    return 18;
-  }
+  if (y + needed > ph(doc) - 22) { doc.addPage(); return 18; }
   return y;
 }
 
@@ -85,7 +81,7 @@ export function addHeader(
   title: string,
   subtitle?: string
 ): number {
-  const pw = getPageWidth(doc);
+  const pageW = pw(doc);
   const t = THEME;
 
   const info: CompanyInfo = typeof company === "string"
@@ -94,89 +90,89 @@ export function addHeader(
 
   const companyName = info.name || "Assistência Técnica";
 
-  // ── Top accent bar ──
+  // ── Thin top accent ──
   doc.setFillColor(...t.primaryDark);
-  doc.rect(0, 0, pw, 3, "F");
+  doc.rect(0, 0, pageW, 2.5, "F");
 
-  // ── Header background band ──
-  doc.setFillColor(...t.headerBg);
-  doc.rect(0, 3, pw, 28, "F");
-
-  // ── Company name (large, bold) ──
-  doc.setFontSize(18);
+  // ── Company name ──
+  doc.setFontSize(17);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...t.primaryDark);
-  doc.text(companyName, MARGIN, 14);
+  doc.text(companyName, M, 12);
 
-  // ── Company details (CNPJ · Tel · Email) ──
-  const details: string[] = [];
-  if (info.cnpj) details.push(`CNPJ: ${info.cnpj}`);
-  if (info.phone) details.push(`Tel: ${info.phone}`);
-  if (info.email) details.push(info.email);
+  // ── Company meta line ──
+  const meta: string[] = [];
+  if (info.cnpj) meta.push(`CNPJ: ${info.cnpj}`);
+  if (info.phone) meta.push(`Tel: ${info.phone}`);
+  if (info.email) meta.push(info.email);
 
-  let detailY = 19;
-  if (details.length > 0) {
-    doc.setFontSize(7.5);
+  let metaY = 16;
+  if (meta.length > 0) {
+    doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...t.mutedText);
-    doc.text(details.join("  ·  "), MARGIN, detailY);
-    detailY += 4;
+    doc.text(meta.join("  ·  "), M, metaY);
+    metaY += 3.5;
   }
-
   if (info.address) {
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
     doc.setTextColor(...t.mutedText);
-    doc.text(info.address, MARGIN, detailY);
+    doc.text(info.address, M, metaY);
+    metaY += 3.5;
   }
 
-  // ── Right side: generation timestamp ──
+  // ── Right: generation date ──
   const dateStr = format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR });
-  doc.setFontSize(7);
+  doc.setFontSize(6.5);
   doc.setTextColor(...t.mutedText);
-  doc.text(`Emitido em ${dateStr}`, pw - MARGIN, 14, { align: "right" });
+  doc.text(`Emitido em ${dateStr}`, pageW - M, 12, { align: "right" });
 
-  // ── Title row (below header band) ──
-  const titleY = 38;
+  // ── Divider ──
+  const divY = Math.max(metaY + 1, 22);
+  doc.setDrawColor(...t.divider);
+  doc.setLineWidth(0.3);
+  doc.line(M, divY, pageW - M, divY);
+
+  // ── Title bar ──
+  const titleY = divY + 4;
   doc.setFillColor(...t.primary);
-  doc.rect(MARGIN, titleY - 5, contentWidth(doc), 12, "F");
+  doc.roundedRect(M, titleY - 3, cw(doc), 10, 1.5, 1.5, "F");
 
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...t.white);
-  doc.text(title, MARGIN + 4, titleY + 1);
+  doc.text(title, M + 4, titleY + 3);
 
   if (subtitle) {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(subtitle, pw - MARGIN - 4, titleY + 1, { align: "right" });
+    doc.text(subtitle, pageW - M - 4, titleY + 3, { align: "right" });
   }
 
-  return titleY + 12;
+  return titleY + 11;
 }
 
-// ─── Section Title (card-style) ──────────────────────────────
+// ─── Section Title ───────────────────────────────────────────
 export function addSection(doc: jsPDF, title: string, y: number): number {
-  y = ensureSpace(doc, y, 14);
+  y = ensureSpace(doc, y, 12);
 
-  const pw = getPageWidth(doc);
-
-  // Section background strip
-  doc.setFillColor(...THEME.primaryLight);
-  doc.rect(MARGIN, y - 3, contentWidth(doc), 8, "F");
-
-  // Left accent bar
+  // Left accent pip + text (no full-width bar)
   doc.setFillColor(...THEME.primary);
-  doc.rect(MARGIN, y - 3, 2, 8, "F");
+  doc.roundedRect(M, y - 2, 1.5, 6, 0.5, 0.5, "F");
 
-  doc.setFontSize(9.5);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...THEME.primaryDark);
-  doc.text(title.toUpperCase(), MARGIN + 5, y + 2);
+  doc.text(title.toUpperCase(), M + 4, y + 2);
+
+  // Subtle line
+  doc.setDrawColor(...THEME.divider);
+  doc.setLineWidth(0.15);
+  doc.line(M + 4, y + 4, pw(doc) - M, y + 4);
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...THEME.textColor);
-  return y + 9;
+  return y + 7;
 }
 
 // ─── Field (label + value) ────────────────────────────────────
@@ -189,7 +185,7 @@ export function addField(
   maxWidth = 80
 ): number {
   if (!value) return y;
-  doc.setFontSize(6.5);
+  doc.setFontSize(6);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...THEME.mutedText);
   doc.text(label.toUpperCase(), x, y);
@@ -201,7 +197,7 @@ export function addField(
   return y + 3.5 + lines.length * 3.8;
 }
 
-// ─── Highlighted Field (IMEI, serial, etc.) ───────────────────
+// ─── Highlighted Field (IMEI, serial) ─────────────────────────
 export function addHighlightedField(
   doc: jsPDF,
   label: string,
@@ -210,14 +206,12 @@ export function addHighlightedField(
   y: number,
   width = 80
 ): number {
-  // Gradient-like box effect
   doc.setFillColor(...THEME.primaryLight);
-  doc.roundedRect(x, y - 2, width, 11, 1.5, 1.5, "F");
   doc.setDrawColor(...THEME.primary);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(x, y - 2, width, 11, 1.5, 1.5, "S");
+  doc.setLineWidth(0.35);
+  doc.roundedRect(x, y - 2, width, 11, 1.5, 1.5, "FD");
 
-  doc.setFontSize(6);
+  doc.setFontSize(5.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...THEME.primary);
   doc.text(label.toUpperCase(), x + 3, y + 1);
@@ -232,6 +226,32 @@ export function addHighlightedField(
   return y + 12;
 }
 
+// ─── Text Card (for descriptions, notes, accessories) ─────────
+export function addTextCard(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  fontSize = 8.5
+): number {
+  y = ensureSpace(doc, y, 14);
+  doc.setFontSize(fontSize);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...THEME.textColor);
+  const lines = doc.splitTextToSize(text, maxWidth - 8);
+  const blockH = lines.length * (fontSize * 0.42) + 6;
+
+  // Card background
+  doc.setFillColor(...THEME.cardBg);
+  doc.setDrawColor(...THEME.divider);
+  doc.setLineWidth(0.15);
+  doc.roundedRect(x, y - 1, maxWidth, blockH, 1.5, 1.5, "FD");
+
+  doc.text(lines, x + 4, y + 3);
+  return y + blockH + 1;
+}
+
 // ─── Info Card Block ─────────────────────────────────────────
 export function addCard(
   doc: jsPDF,
@@ -243,7 +263,7 @@ export function addCard(
   doc.setFillColor(...THEME.cardBg);
   doc.setDrawColor(...THEME.divider);
   doc.setLineWidth(0.2);
-  doc.roundedRect(MARGIN, y, contentWidth(doc), height, 2, 2, "FD");
+  doc.roundedRect(M, y, cw(doc), height, 2, 2, "FD");
   return drawContent(y + 3);
 }
 
@@ -259,20 +279,20 @@ export function addTable(
     startY,
     head: [head],
     body,
-    margin: { left: MARGIN, right: MARGIN },
+    margin: { left: M, right: M },
     headStyles: {
       fillColor: THEME.primaryDark,
       textColor: [255, 255, 255],
       fontStyle: "bold",
-      fontSize: 7.5,
-      cellPadding: 2.5,
+      fontSize: 7,
+      cellPadding: 2,
     },
     bodyStyles: {
       fontSize: 7.5,
       textColor: THEME.textColor,
-      cellPadding: 2,
+      cellPadding: 1.8,
     },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
+    alternateRowStyles: { fillColor: [249, 250, 251] },
     styles: {
       lineWidth: 0.1,
       lineColor: THEME.divider,
@@ -284,58 +304,52 @@ export function addTable(
   return (doc as any).lastAutoTable?.finalY || startY + 20;
 }
 
-// ─── Total Box (premium look) ─────────────────────────────────
+// ─── Total Box ────────────────────────────────────────────────
 export function addTotalBox(
   doc: jsPDF,
   y: number,
   lines: { label: string; value: string; bold?: boolean; color?: [number, number, number] }[]
 ): number {
-  const pw = getPageWidth(doc);
-  const boxWidth = 85;
-  const boxX = pw - MARGIN - boxWidth;
-  const lineH = 5.5;
-  const boxHeight = lines.length * lineH + 8;
+  const pageW = pw(doc);
+  const boxWidth = 82;
+  const boxX = pageW - M - boxWidth;
+  const lineH = 5;
+  const boxHeight = lines.length * lineH + 7;
 
   y = ensureSpace(doc, y, boxHeight + 2);
 
-  // Shadow effect
-  doc.setFillColor(230, 230, 230);
-  doc.roundedRect(boxX + 0.5, y + 0.5, boxWidth, boxHeight, 2, 2, "F");
+  // Subtle shadow
+  doc.setFillColor(235, 235, 235);
+  doc.roundedRect(boxX + 0.4, y + 0.4, boxWidth, boxHeight, 1.5, 1.5, "F");
 
-  // Main box
   doc.setFillColor(...THEME.white);
   doc.setDrawColor(...THEME.divider);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(boxX, y, boxWidth, boxHeight, 2, 2, "FD");
+  doc.setLineWidth(0.2);
+  doc.roundedRect(boxX, y, boxWidth, boxHeight, 1.5, 1.5, "FD");
 
-  // Top accent
-  doc.setFillColor(...THEME.primary);
-  doc.rect(boxX, y, boxWidth, 1.5, "F");
-
-  let ly = y + 6;
+  let ly = y + 5;
   lines.forEach((line, i) => {
-    const isLast = i === lines.length - 1 && line.bold;
-    if (isLast) {
-      // Highlight background for total
+    const isTotal = i === lines.length - 1 && line.bold;
+    if (isTotal) {
       doc.setFillColor(...THEME.primaryLight);
-      doc.rect(boxX + 1, ly - 3.5, boxWidth - 2, lineH + 1, "F");
+      doc.rect(boxX + 1, ly - 3, boxWidth - 2, lineH, "F");
     }
-    doc.setFontSize(line.bold ? 10 : 8);
+    doc.setFontSize(line.bold ? 9.5 : 7.5);
     doc.setFont("helvetica", line.bold ? "bold" : "normal");
     doc.setTextColor(...(line.color || THEME.textColor));
-    doc.text(line.label, boxX + 5, ly);
-    doc.text(line.value, boxX + boxWidth - 5, ly, { align: "right" });
+    doc.text(line.label, boxX + 4, ly);
+    doc.text(line.value, boxX + boxWidth - 4, ly, { align: "right" });
     ly += lineH;
   });
 
-  return y + boxHeight + 3;
+  return y + boxHeight + 2;
 }
 
-// ─── Professional Footer ──────────────────────────────────────
+// ─── Footer ──────────────────────────────────────────────────
 export function addFooter(doc: jsPDF, company?: CompanyInfo | string) {
   const pageCount = doc.getNumberOfPages();
-  const pw = getPageWidth(doc);
-  const ph = getPageHeight(doc);
+  const pageW = pw(doc);
+  const pageH = ph(doc);
 
   const companyName = typeof company === "string"
     ? company
@@ -346,45 +360,27 @@ export function addFooter(doc: jsPDF, company?: CompanyInfo | string) {
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
 
-    // Footer divider
-    doc.setDrawColor(...THEME.primary);
-    doc.setLineWidth(0.4);
-    doc.line(MARGIN, ph - 16, pw - MARGIN, ph - 16);
+    doc.setDrawColor(...THEME.divider);
+    doc.setLineWidth(0.3);
+    doc.line(M, pageH - 16, pageW - M, pageH - 16);
 
-    // Row 1: Company | Date | Page
-    doc.setFontSize(6.5);
+    doc.setFontSize(6);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...THEME.mutedText);
 
     if (companyName) {
       doc.setFont("helvetica", "bold");
-      doc.text(companyName, MARGIN, ph - 12);
+      doc.text(companyName, M, pageH - 12);
       doc.setFont("helvetica", "normal");
     }
 
-    doc.text(
-      `Gerado em ${dateStr}`,
-      pw / 2,
-      ph - 12,
-      { align: "center" }
-    );
+    doc.text(`Gerado em ${dateStr}`, pageW / 2, pageH - 12, { align: "center" });
+    doc.text(`Página ${i} de ${pageCount}`, pageW - M, pageH - 12, { align: "right" });
 
-    doc.text(
-      `Página ${i} de ${pageCount}`,
-      pw - MARGIN,
-      ph - 12,
-      { align: "right" }
-    );
-
-    // Row 2: Developer credit
-    doc.setFontSize(5.5);
-    doc.setTextColor(160, 170, 185);
-    doc.text(
-      DEVELOPER_CREDIT,
-      pw / 2,
-      ph - 8,
-      { align: "center" }
-    );
+    // Developer credit
+    doc.setFontSize(5);
+    doc.setTextColor(170, 178, 190);
+    doc.text(DEVELOPER_CREDIT, pageW / 2, pageH - 8, { align: "center" });
   }
 }
 
@@ -432,7 +428,7 @@ export function addChecklistTable(
     {
       columnStyles: {
         0: { cellWidth: 55 },
-        1: { cellWidth: 22, halign: "center" as const },
+        1: { cellWidth: 20, halign: "center" as const },
         2: { cellWidth: "auto" as any },
       },
       didParseCell: (data: any) => {
@@ -453,70 +449,63 @@ export function addChecklistTable(
   );
 }
 
-// ─── Signature Block (premium) ────────────────────────────────
+// ─── Signature Block ─────────────────────────────────────────
 export function addSignatureBlock(
   doc: jsPDF,
   y: number,
   signatures: { name: string; role: string; imageData?: string }[]
 ): number {
-  const pw = getPageWidth(doc);
-  y = ensureSpace(doc, y, 50);
-
-  // Section label
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...THEME.primaryDark);
-  doc.text("ASSINATURAS", pw / 2, y, { align: "center" });
-  y += 4;
+  const pageW = pw(doc);
+  y = ensureSpace(doc, y, 40);
 
   const sigCount = Math.max(signatures.length, 2);
-  const gap = 12;
-  const slotWidth = (contentWidth(doc) - (sigCount - 1) * gap) / sigCount;
+  const gap = 10;
+  const slotWidth = (cw(doc) - (sigCount - 1) * gap) / sigCount;
 
   signatures.forEach((sig, i) => {
-    const x = MARGIN + i * (slotWidth + gap);
+    const x = M + i * (slotWidth + gap);
     const centerX = x + slotWidth / 2;
 
-    // Signature box
+    // Signature card
     doc.setFillColor(...THEME.cardBg);
     doc.setDrawColor(...THEME.divider);
-    doc.setLineWidth(0.2);
-    doc.roundedRect(x, y, slotWidth, 32, 1.5, 1.5, "FD");
+    doc.setLineWidth(0.15);
+    doc.roundedRect(x, y, slotWidth, 26, 1.5, 1.5, "FD");
 
     // Signature image
     if (sig.imageData) {
       try {
-        const imgW = Math.min(slotWidth - 10, 55);
-        doc.addImage(sig.imageData, "PNG", centerX - imgW / 2, y + 2, imgW, 16);
-      } catch { /* skip broken image */ }
+        const imgW = Math.min(slotWidth - 12, 50);
+        doc.addImage(sig.imageData, "PNG", centerX - imgW / 2, y + 1, imgW, 12);
+      } catch { /* skip */ }
     }
 
-    // Signature line
-    doc.setDrawColor(...THEME.textColor);
-    doc.setLineWidth(0.3);
-    doc.line(x + 6, y + 21, x + slotWidth - 6, y + 21);
+    // Line
+    doc.setDrawColor(...THEME.mutedText);
+    doc.setLineWidth(0.25);
+    doc.line(x + 8, y + 15, x + slotWidth - 8, y + 15);
 
     // Name
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...THEME.textColor);
-    doc.text(sig.name || "________________________________", centerX, y + 25, { align: "center" });
+    doc.text(sig.name || "________________________________", centerX, y + 19, { align: "center" });
 
-    // Role
-    doc.setFontSize(6.5);
+    // Role badge
+    doc.setFontSize(6);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(...THEME.mutedText);
-    doc.text(sig.role, centerX, y + 29, { align: "center" });
+    doc.setTextColor(...THEME.primary);
+    doc.text(sig.role, centerX, y + 23, { align: "center" });
   });
 
-  return y + 36;
+  return y + 29;
 }
 
 // ─── Watermark ────────────────────────────────────────────────
 export function addWatermark(doc: jsPDF, text: string) {
   const pageCount = doc.getNumberOfPages();
-  const pw = getPageWidth(doc);
-  const ph = getPageHeight(doc);
+  const pageW = pw(doc);
+  const pageH = ph(doc);
 
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
@@ -524,7 +513,7 @@ export function addWatermark(doc: jsPDF, text: string) {
     doc.setFontSize(60);
     doc.setTextColor(200, 200, 200);
     doc.setFont("helvetica", "bold");
-    doc.text(text, pw / 2, ph / 2, { align: "center", angle: 45 });
+    doc.text(text, pageW / 2, pageH / 2, { align: "center", angle: 45 });
     doc.restoreGraphicsState();
   }
 }
@@ -538,91 +527,87 @@ export function addQrCodeBlock(
 ): number {
   if (!qrImageData) return y;
 
-  const pw = getPageWidth(doc);
-  y = ensureSpace(doc, y, 42);
+  const pageW = pw(doc);
+  y = ensureSpace(doc, y, 50);
 
-  const centerX = pw / 2;
-  const qrSize = 30;
+  const centerX = pageW / 2;
+  const qrSize = 35;
+  const boxW = 70;
+  const boxH = qrSize + 18;
 
-  // Container box
-  const boxW = 60;
+  // Container card
   doc.setFillColor(...THEME.cardBg);
   doc.setDrawColor(...THEME.divider);
   doc.setLineWidth(0.2);
-  doc.roundedRect(centerX - boxW / 2, y - 2, boxW, qrSize + 14, 2, 2, "FD");
+  doc.roundedRect(centerX - boxW / 2, y, boxW, boxH, 2, 2, "FD");
 
   try {
-    doc.addImage(qrImageData, "PNG", centerX - qrSize / 2, y + 1, qrSize, qrSize);
+    doc.addImage(qrImageData, "PNG", centerX - qrSize / 2, y + 3, qrSize, qrSize);
   } catch {
     return y;
   }
 
+  // Label
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...THEME.mutedText);
-  doc.text(label, centerX, y + qrSize + 6, { align: "center" });
+  doc.setTextColor(...THEME.primaryDark);
+  doc.text(label, centerX, y + qrSize + 7, { align: "center" });
 
-  return y + qrSize + 14;
+  // Subtitle
+  doc.setFontSize(5.5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...THEME.mutedText);
+  doc.text("Escaneie para acompanhar o status do reparo", centerX, y + qrSize + 11, { align: "center" });
+
+  return y + boxH + 3;
 }
 
-// ─── Terms Block (premium) ────────────────────────────────────
+// ─── Terms Block ──────────────────────────────────────────────
 export function addTermsBlock(
   doc: jsPDF,
   y: number,
   title: string,
   content: string
 ): number {
-  const maxWidth = contentWidth(doc) - 8;
-  y = ensureSpace(doc, y, 20);
+  const maxW = cw(doc) - 6;
+  y = ensureSpace(doc, y, 18);
 
-  // Section header
   y = addSection(doc, title, y);
-
-  // Terms card
-  const pw = getPageWidth(doc);
-  doc.setFillColor(252, 252, 253);
-  doc.setDrawColor(...THEME.divider);
-  doc.setLineWidth(0.15);
 
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...THEME.mutedText);
 
-  const lines = doc.splitTextToSize(content, maxWidth);
+  const lines = doc.splitTextToSize(content, maxW);
   const lineH = 2.8;
-  const ph = getPageHeight(doc);
+  const pageH = ph(doc);
   const footerMargin = 22;
 
   let currentLine = 0;
   while (currentLine < lines.length) {
-    const available = Math.floor((ph - y - footerMargin) / lineH);
-    if (available < 3) {
-      doc.addPage();
-      y = 18;
-      continue;
-    }
+    const available = Math.floor((pageH - y - footerMargin) / lineH);
+    if (available < 3) { doc.addPage(); y = 18; continue; }
     const chunk = lines.slice(currentLine, currentLine + available);
     const blockH = chunk.length * lineH + 4;
 
+    // Terms card
     doc.setFillColor(252, 252, 253);
     doc.setDrawColor(...THEME.divider);
-    doc.roundedRect(MARGIN, y - 2, contentWidth(doc), blockH, 1, 1, "FD");
+    doc.setLineWidth(0.1);
+    doc.roundedRect(M, y - 1, cw(doc), blockH, 1, 1, "FD");
+
     doc.setTextColor(...THEME.mutedText);
-    doc.text(chunk, MARGIN + 4, y + 2);
+    doc.text(chunk, M + 3, y + 2);
 
     currentLine += chunk.length;
-    if (currentLine < lines.length) {
-      doc.addPage();
-      y = 18;
-    } else {
-      y += blockH + 2;
-    }
+    if (currentLine < lines.length) { doc.addPage(); y = 18; }
+    else { y += blockH + 1; }
   }
 
   return y;
 }
 
-// ─── Descriptive text block ───────────────────────────────────
+// ─── Legacy text block alias ──────────────────────────────────
 export function addTextBlock(
   doc: jsPDF,
   text: string,
@@ -631,13 +616,7 @@ export function addTextBlock(
   maxWidth: number,
   fontSize = 8.5
 ): number {
-  y = ensureSpace(doc, y, 12);
-  doc.setFontSize(fontSize);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...THEME.textColor);
-  const lines = doc.splitTextToSize(text, maxWidth);
-  doc.text(lines, x, y);
-  return y + lines.length * (fontSize * 0.42) + 3;
+  return addTextCard(doc, text, x, y, maxWidth, fontSize);
 }
 
 export { autoTable };
