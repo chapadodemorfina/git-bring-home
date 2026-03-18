@@ -108,7 +108,7 @@ import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
 import PdvPage from "./modules/sales/pages/PdvPage";
 import CashRegisterPage from "./modules/cash-register/pages/CashRegisterPage";
 import CommissionsPage from "./modules/commissions/pages/CommissionsPage";
-
+import MessageHistoryPage from "./modules/messaging/pages/MessageHistoryPage";
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
