@@ -26,7 +26,7 @@ import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSma
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useCompanySettings, settingIsTrue } from "@/hooks/useCompanySettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -217,6 +217,12 @@ export default function ServiceOrderDetailPage() {
       })),
       qrCodeImageData,
       trackingUrl,
+      displayOptions: {
+        showQrCode: settingIsTrue(companySettings.pdf_show_qrcode),
+        showSignatures: settingIsTrue(companySettings.pdf_show_signatures),
+        showTerms: settingIsTrue(companySettings.pdf_show_terms),
+        mode: (companySettings.pdf_mode as "compact" | "full") || "compact",
+      },
     });
   };
 

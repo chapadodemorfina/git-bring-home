@@ -44,6 +44,13 @@ interface SignatureData { signer_name: string; signer_role: string; signature_da
 interface TermData { title: string; content: string; }
 interface ChecklistItem { label: string; checked: boolean; notes?: string; }
 
+export interface PdfDisplayOptions {
+  showQrCode?: boolean;
+  showSignatures?: boolean;
+  showTerms?: boolean;
+  mode?: "compact" | "full";
+}
+
 export interface ServiceOrderPdfOptions {
   order: ServiceOrderData;
   statusHistory?: StatusEntry[];
@@ -57,6 +64,7 @@ export interface ServiceOrderPdfOptions {
   exitChecklist?: ChecklistItem[];
   qrCodeImageData?: string | null;
   trackingUrl?: string | null;
+  displayOptions?: PdfDisplayOptions;
 }
 
 // ─── Maps ─────────────────────────────────────────────────────
@@ -90,7 +98,7 @@ function parsePhysicalCondition(raw: string | null | undefined): ChecklistItem[]
 // ─── Main Generator ───────────────────────────────────────────
 export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const { order, statusHistory, company, diagnostic, quoteData, quoteItems,
-          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData } = opts;
+          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions } = opts;
 
   const doc = createPdf();
   const col1 = 16;
@@ -255,43 +263,49 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   }
 
   // ── TERMOS E GARANTIA ──
-  if (terms && terms.length > 0) {
+  const showTerms = displayOptions?.showTerms !== false;
+  if (showTerms && terms && terms.length > 0) {
     terms.forEach((term) => { y = addTermsBlock(doc, y, term.title, term.content); });
   }
 
   // ── CLOSING BLOCK (QR + Signatures) ──
-  const hasQr = !!qrCodeImageData;
-  const sigBlockH = 20;
-  const qrBlockH = hasQr ? 36 : 0;
+  const showQr = displayOptions?.showQrCode !== false && !!qrCodeImageData;
+  const showSigs = displayOptions?.showSignatures !== false;
+  const isCompact = displayOptions?.mode !== "full";
+
+  const sigBlockH = showSigs ? 20 : 0;
+  const qrBlockH = showQr ? 36 : 0;
   const closingH = qrBlockH + sigBlockH;
   const pageHeight = doc.internal.pageSize.getHeight();
-  const remaining = pageHeight - y - 16; // 16mm for footer
+  const remaining = pageHeight - y - 16;
 
-  // For short OS: skip QR if it would force a page break but signatures alone fit
-  const skipQrToFitOnePage = hasQr && remaining < closingH && remaining >= sigBlockH;
+  // In compact mode: skip QR if it would force a page break but signatures alone fit
+  const skipQrToFitOnePage = isCompact && showQr && remaining < closingH && remaining >= sigBlockH;
 
-  if (!skipQrToFitOnePage && remaining < closingH) {
+  if (closingH > 0 && !skipQrToFitOnePage && remaining < closingH) {
     doc.addPage();
     y = addContinuationHeader(doc, order.order_number, order.customer_name || "—");
   }
 
-  if (hasQr && !skipQrToFitOnePage) {
+  if (showQr && !skipQrToFitOnePage) {
     y = addQrCodeBlock(doc, y, qrCodeImageData, "Acompanhe seu reparo pelo QR Code");
   }
 
   // ── ASSINATURAS ──
-  const sigList = (signatures || []).map((s) => ({
-    name: s.signer_name,
-    role: s.signer_role === "customer" ? "Cliente" : s.signer_role === "technician" ? "Técnico" : s.signer_role,
-    imageData: s.signature_data,
-  }));
-  if (sigList.length === 0) {
-    sigList.push({ name: "", role: "Cliente", imageData: undefined });
-    sigList.push({ name: "", role: "Técnico", imageData: undefined });
-  } else if (sigList.length === 1) {
-    sigList.push({ name: "", role: sigList[0].role === "Cliente" ? "Técnico" : "Cliente", imageData: undefined });
+  if (showSigs) {
+    const sigList = (signatures || []).map((s) => ({
+      name: s.signer_name,
+      role: s.signer_role === "customer" ? "Cliente" : s.signer_role === "technician" ? "Técnico" : s.signer_role,
+      imageData: s.signature_data,
+    }));
+    if (sigList.length === 0) {
+      sigList.push({ name: "", role: "Cliente", imageData: undefined });
+      sigList.push({ name: "", role: "Técnico", imageData: undefined });
+    } else if (sigList.length === 1) {
+      sigList.push({ name: "", role: sigList[0].role === "Cliente" ? "Técnico" : "Cliente", imageData: undefined });
+    }
+    y = addSignatureBlock(doc, y, sigList as any);
   }
-  y = addSignatureBlock(doc, y, sigList as any);
 
   // ── SAVE ──
   savePdf(doc, `OS_${order.order_number}`, company);
