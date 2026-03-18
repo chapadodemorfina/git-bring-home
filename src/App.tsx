@@ -99,6 +99,12 @@ import PortalWarrantiesPage from "./modules/portal/pages/PortalWarrantiesPage";
 import PortalLogisticsPage from "./modules/portal/pages/PortalLogisticsPage";
 import PortalSupportPage from "./modules/portal/pages/PortalSupportPage";
 
+// Sales Module
+import SalesListPage from "./modules/sales/pages/SalesListPage";
+import SaleCreatePage from "./modules/sales/pages/SaleCreatePage";
+import SaleDetailPage from "./modules/sales/pages/SaleDetailPage";
+import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
+
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
