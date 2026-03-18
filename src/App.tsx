@@ -226,7 +226,9 @@ const App = () => (
               <Route path="/quotes/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician"]}><QuoteEditPage /></RoleGuard></ProtectedPage>} />
 
               {/* Warranties */}
-              <Route path="/warranties" element={<ProtectedPage><WarrantiesPage /></ProtectedPage>} />
+              <Route path="/warranties" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "bench_technician", "front_desk", "finance"]}><WarrantiesPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/warranties/returns" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "bench_technician", "front_desk", "finance"]}><WarrantyReturnsPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/warranties/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "bench_technician", "front_desk", "finance"]}><WarrantyDetailPage /></RoleGuard></ProtectedPage>} />
 
               {/* Logistics */}
               <Route path="/logistics" element={<ProtectedPage><LogisticsListPage /></ProtectedPage>} />
