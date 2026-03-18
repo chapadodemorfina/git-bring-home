@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useSale, useSaleItems, useSalePayments, useSaleReturns, useCancelSale, useCompleteSale, useAddSalePayment, useProcessReturn } from "../hooks/useSales";
 import { saleStatusLabels, saleStatusColors, paymentStatusLabels, paymentMethodLabels, SalePaymentMethod } from "../types";
 import { useAuth } from "@/contexts/AuthContext";
