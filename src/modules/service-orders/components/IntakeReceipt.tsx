@@ -75,7 +75,7 @@ const IntakeReceipt = forwardRef<HTMLDivElement, Props>(({ order, trackingUrl },
       {order.physical_condition && (
         <div className="border rounded p-3 mb-4">
           <p className="font-bold mb-1">Condição Física</p>
-          <p>{order.physical_condition}</p>
+          <p>{formatPhysicalCondition(order.physical_condition)}</p>
         </div>
       )}
 
