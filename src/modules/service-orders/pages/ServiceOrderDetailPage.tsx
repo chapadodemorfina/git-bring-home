@@ -475,10 +475,10 @@ export default function ServiceOrderDetailPage() {
         />
       </div>
 
-      {/* Hidden QR code for PDF export */}
+      {/* Hidden QR code canvas for PDF export */}
       {trackingUrl && (
-        <div className="hidden">
-          <svg data-qr-pdf style={{ display: "none" }} />
+        <div data-qr-pdf style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+          <QRCodeCanvas value={trackingUrl} size={200} level="M" />
         </div>
       )}
     </div>
