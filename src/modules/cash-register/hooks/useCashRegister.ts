@@ -205,24 +205,28 @@ export function useCashRegisterSummary(registerId: string | undefined) {
   });
 }
 
-// ── Open cash register ──
+// ── Open cash register (per-operator: each user can have their own) ──
 export function useOpenCashRegisterMutation() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
     mutationFn: async (payload: { initial_amount: number; notes?: string }) => {
-      // Check if there's already an open register
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error("Usuário não autenticado");
+
+      // Check if this user already has an open register
       const { data: existing } = await db
         .from("cash_registers")
         .select("id")
         .eq("status", "open")
+        .eq("opened_by", userId)
         .limit(1);
-      if (existing && existing.length > 0) throw new Error("Já existe um caixa aberto");
+      if (existing && existing.length > 0) throw new Error("Você já possui um caixa aberto");
 
       const { data, error } = await db
         .from("cash_registers")
         .insert({
-          opened_by: (await supabase.auth.getUser()).data.user?.id,
+          opened_by: userId,
           initial_amount: payload.initial_amount,
           notes: payload.notes || null,
         })

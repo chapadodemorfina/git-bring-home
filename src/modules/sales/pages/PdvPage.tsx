@@ -225,6 +225,10 @@ export default function PdvPage() {
       return;
     }
     if (!user) return;
+    if (!openCashRegister) {
+      toast({ title: "Caixa não aberto", description: "Abra o caixa antes de finalizar vendas.", variant: "destructive" });
+      return;
+    }
 
     const received = parseFloat(amountReceived) || 0;
     const payAmount = paymentMethod === "cash" && received > total ? total : (received || total);
