@@ -289,6 +289,9 @@ export default function ServiceOrderDetailPage() {
             customerPhone={order.customer_phone}
             customerName={order.customer_name || "Cliente"}
           />
+
+          {/* WhatsApp Message History */}
+          <MessageHistoryPanel referenceType="service_order" referenceId={order.id} />
         </div>
       </div>
 

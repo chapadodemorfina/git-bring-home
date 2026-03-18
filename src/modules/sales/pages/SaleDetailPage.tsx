@@ -295,6 +295,9 @@ export default function SaleDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* WhatsApp Message History */}
+          <MessageHistoryPanel referenceType="sale" referenceId={sale.id} />
         </div>
       </div>
 
