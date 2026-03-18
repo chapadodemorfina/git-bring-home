@@ -28,6 +28,7 @@ const mainItems = [
   { title: "Comissões", url: "/collection-points/commissions", icon: DollarSign },
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
   { title: "Vendas", url: "/sales", icon: ShoppingBag },
+  { title: "Frente de Caixa", url: "/pdv", icon: MonitorSmartphone },
   { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
 ];
