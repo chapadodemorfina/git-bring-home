@@ -172,6 +172,7 @@ export default function ServiceOrderDetailPage() {
 
     const company = {
       name: companySettings.company_name,
+      legalName: companySettings.company_legal_name,
       cnpj: companySettings.company_cnpj,
       address: companySettings.company_address,
       phone: companySettings.company_phone,
