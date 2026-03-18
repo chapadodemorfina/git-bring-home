@@ -310,15 +310,44 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
     y = addSignatureBlock(doc, y, sigList as any);
   }
 
-  // ── ADD SIGNATURES TO ALL PAGES (when multi-page) ──
+  // ── ADD BLANK SIGNATURES TO ALL PREVIOUS PAGES (when multi-page) ──
   const totalPages = doc.getNumberOfPages();
   if (showSigs && totalPages > 1) {
     const pageH = doc.internal.pageSize.getHeight();
-    // Add signature block to all pages except the last (which already has it)
+    const pageW = doc.internal.pageSize.getWidth();
+    const mLeft = 16;
+    const contentW = pageW - mLeft * 2;
+    const blankSigs = sigList.map(s => ({ name: "", role: s.role }));
+    const sigCount = Math.max(blankSigs.length, 2);
+    const gap = 6;
+    const slotW = (contentW - (sigCount - 1) * gap) / sigCount;
+    const cardH = 18;
+
     for (let p = 1; p < totalPages; p++) {
       doc.setPage(p);
-      const sigY = pageH - 16 - 18; // position just above footer area
-      addSignatureBlock(doc, sigY, sigList.map(s => ({ ...s, imageData: undefined })));
+      const sigY = pageH - 12 - cardH; // just above footer
+
+      blankSigs.forEach((sig, i) => {
+        const x = mLeft + i * (slotW + gap);
+        const centerX = x + slotW / 2;
+
+        // Card background
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.12);
+        doc.roundedRect(x, sigY, slotW, cardH, 1.2, 1.2, "FD");
+
+        // Signature line
+        doc.setDrawColor(100, 116, 139);
+        doc.setLineWidth(0.15);
+        doc.line(x + 6, sigY + 10.5, x + slotW - 6, sigY + 10.5);
+
+        // Role label
+        doc.setFontSize(5.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(30, 64, 175);
+        doc.text(sig.role, centerX, sigY + 17, { align: "center" });
+      });
     }
     // Return to last page
     doc.setPage(totalPages);
