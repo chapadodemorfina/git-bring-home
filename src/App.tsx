@@ -110,6 +110,12 @@ import CashRegisterPage from "./modules/cash-register/pages/CashRegisterPage";
 import CommissionsPage from "./modules/commissions/pages/CommissionsPage";
 import MessageHistoryPage from "./modules/messaging/pages/MessageHistoryPage";
 import ReceivablesPage from "./modules/receivables/pages/ReceivablesPage";
+// Quotes Module
+import QuotesListPage from "./modules/quotes/pages/QuotesListPage";
+import QuoteCreatePage from "./modules/quotes/pages/QuoteCreatePage";
+import QuoteDetailPage from "./modules/quotes/pages/QuoteDetailPage";
+import QuoteEditPage from "./modules/quotes/pages/QuoteEditPage";
+
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
@@ -210,6 +216,12 @@ const App = () => (
 
               {/* Message History */}
               <Route path="/message-history" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><MessageHistoryPage /></RoleGuard></ProtectedPage>} />
+
+              {/* Quotes */}
+              <Route path="/quotes" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician", "finance"]}><QuotesListPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician"]}><QuoteCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician", "finance"]}><QuoteDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician"]}><QuoteEditPage /></RoleGuard></ProtectedPage>} />
 
               {/* Warranties */}
               <Route path="/warranties" element={<ProtectedPage><WarrantiesPage /></ProtectedPage>} />
