@@ -3783,6 +3783,7 @@ export type Database = {
         }[]
       }
       detect_suspicious_activity: { Args: { _days?: number }; Returns: Json }
+      expire_stale_commercial_quotes: { Args: never; Returns: number }
       expire_stale_quotes: { Args: never; Returns: number }
       finance_summary: { Args: never; Returns: Json }
       generate_public_tracking_token: {
@@ -3872,6 +3873,7 @@ export type Database = {
         Returns: Json
       }
       public_track_order: { Args: { _token: string }; Returns: Json }
+      quotes_summary: { Args: never; Returns: Json }
       receivables_summary: { Args: never; Returns: Json }
       recover_scrap_part: {
         Args: { _recovered_part_id: string }
