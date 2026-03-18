@@ -144,7 +144,7 @@ export default function MessageHistoryPage() {
           </div>
           {data && (
             <div className="p-4 border-t">
-              <DataPagination page={data.page} totalPages={data.totalPages} total={data.total} onPageChange={setPage} />
+              <DataPagination page={data.page} pageSize={data.pageSize} total={data.total} onPageChange={setPage} />
             </div>
           )}
         </CardContent>
