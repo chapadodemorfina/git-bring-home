@@ -22,9 +22,11 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft, Plus, Trash2, Send, CheckCircle, XCircle, Copy,
-  Pencil, Wrench, Package, Zap, Clock, FileText,
+  Pencil, Wrench, Package, Zap, Clock, FileText, FileDown,
 } from "lucide-react";
 import { format } from "date-fns";
+import { generateQuotePdf } from "@/lib/pdf-generators/quote-pdf";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
