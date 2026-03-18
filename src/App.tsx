@@ -105,6 +105,7 @@ import SaleCreatePage from "./modules/sales/pages/SaleCreatePage";
 import SaleDetailPage from "./modules/sales/pages/SaleDetailPage";
 import SaleEditPage from "./modules/sales/pages/SaleEditPage";
 import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
+import PdvPage from "./modules/sales/pages/PdvPage";
 
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
