@@ -1,8 +1,9 @@
 import {
   createPdf, addHeader, addSection, addField, addHighlightedField,
   addTable, addTotalBox, addChecklistTable, addSignatureBlock,
-  addTermsBlock, addQrCodeBlock, savePdf, addTextCard,
-  addContinuationHeader, fetchImageAsDataUrl,
+  addTermsBlock, savePdf, addTextCard,
+  addContinuationHeader, fetchImageAsDataUrl, addCompactInitials,
+  setBottomReserve,
   formatCurrency, formatDateTime,
   type CompanyInfo,
   DEFAULT_THEME,
