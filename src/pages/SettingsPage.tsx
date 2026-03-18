@@ -15,6 +15,7 @@ import {
   Loader2, Save, Building2, MapPin, Phone, FileText,
   Shield, Settings2, Palette
 } from "lucide-react";
+import { LogoUpload } from "@/components/settings/LogoUpload";
 
 const db = supabase as any;
 
