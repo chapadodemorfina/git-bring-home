@@ -604,6 +604,18 @@ export default function CashRegisterPage() {
               {showHistoryDetail.closing_notes && (
                 <div><span className="text-muted-foreground">Observações (fechamento):</span> <p>{showHistoryDetail.closing_notes}</p></div>
               )}
+              <Separator />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  if (showHistoryDetail) {
+                    printClosingReport(showHistoryDetail.id, showHistoryDetail, null);
+                  }
+                }}
+              >
+                <Printer className="h-4 w-4 mr-2" /> Imprimir Relatório de Fechamento
+              </Button>
             </div>
           )}
         </DialogContent>
