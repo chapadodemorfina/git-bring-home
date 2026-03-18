@@ -3,7 +3,7 @@
  * Desenvolvido por Alvo Sistemas e Gestão
  */
 import {
-  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle,
+  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -27,6 +27,7 @@ const mainItems = [
   { title: "Pontos de Coleta", url: "/collection-points", icon: MapPin },
   { title: "Comissões", url: "/collection-points/commissions", icon: DollarSign },
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
+  { title: "Vendas", url: "/sales", icon: ShoppingBag },
   { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
 ];

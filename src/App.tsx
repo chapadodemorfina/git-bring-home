@@ -99,6 +99,12 @@ import PortalWarrantiesPage from "./modules/portal/pages/PortalWarrantiesPage";
 import PortalLogisticsPage from "./modules/portal/pages/PortalLogisticsPage";
 import PortalSupportPage from "./modules/portal/pages/PortalSupportPage";
 
+// Sales Module
+import SalesListPage from "./modules/sales/pages/SalesListPage";
+import SaleCreatePage from "./modules/sales/pages/SaleCreatePage";
+import SaleDetailPage from "./modules/sales/pages/SaleDetailPage";
+import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
+
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
@@ -184,6 +190,12 @@ const App = () => (
               <Route path="/collection-points/:id" element={<ProtectedPage><CollectionPointDetailPage /></ProtectedPage>} />
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><CollectionPointEditPage /></ProtectedPage>} />
               <Route path="/collection-points/commissions" element={<ProtectedPage><CommissionManagementPage /></ProtectedPage>} />
+
+              {/* Sales */}
+              <Route path="/sales" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><SalesListPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/sales/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><SaleDetailPage /></RoleGuard></ProtectedPage>} />
 
               {/* Warranties */}
               <Route path="/warranties" element={<ProtectedPage><WarrantiesPage /></ProtectedPage>} />
