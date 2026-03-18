@@ -264,6 +264,13 @@ export default function PdvPage() {
         }
       }
 
+      // Auto-generate commissions
+      try {
+        await generateCommissions.mutateAsync(result.id);
+      } catch {
+        // non-blocking
+      }
+
       setLastSaleId(result.id);
       setLastSaleNumber(result.sale_number || "");
       setShowSuccessDialog(true);
