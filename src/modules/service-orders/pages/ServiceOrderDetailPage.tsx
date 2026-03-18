@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatures } from "../hooks/useServiceOrders";
 import { statusLabels, statusColors, priorityLabels, priorityColors, channelLabels, statusTransitions } from "../types";
@@ -63,34 +64,13 @@ function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   printWindow.print();
 }
 
-// Generate QR code as data URL for PDF
-function generateQrDataUrl(url: string): Promise<string | null> {
+// Generate QR code as data URL for PDF using hidden canvas element
+function generateQrDataUrl(_url: string): Promise<string | null> {
   return new Promise((resolve) => {
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = 200;
-      canvas.height = 200;
-
-      // We'll use qrcode.react's rendering via a temporary element
-      // For simplicity, create a simple SVG-to-canvas approach
-      // Actually, let's just render it from the existing QRCodeSVG in the DOM
-      const qrEl = document.querySelector("[data-qr-pdf]");
-      if (qrEl) {
-        const svgData = new XMLSerializer().serializeToString(qrEl);
-        const img = new Image();
-        img.onload = () => {
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, 200, 200);
-            ctx.drawImage(img, 0, 0, 200, 200);
-            resolve(canvas.toDataURL("image/png"));
-          } else {
-            resolve(null);
-          }
-        };
-        img.onerror = () => resolve(null);
-        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+      const canvas = document.querySelector("[data-qr-pdf] canvas") as HTMLCanvasElement | null;
+      if (canvas) {
+        resolve(canvas.toDataURL("image/png"));
       } else {
         resolve(null);
       }
@@ -496,10 +476,10 @@ export default function ServiceOrderDetailPage() {
         />
       </div>
 
-      {/* Hidden QR code for PDF export */}
+      {/* Hidden QR code canvas for PDF export */}
       {trackingUrl && (
-        <div className="hidden">
-          <svg data-qr-pdf style={{ display: "none" }} />
+        <div data-qr-pdf style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+          <QRCodeCanvas value={trackingUrl} size={200} level="M" />
         </div>
       )}
     </div>
