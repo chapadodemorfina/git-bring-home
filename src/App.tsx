@@ -110,6 +110,12 @@ import CashRegisterPage from "./modules/cash-register/pages/CashRegisterPage";
 import CommissionsPage from "./modules/commissions/pages/CommissionsPage";
 import MessageHistoryPage from "./modules/messaging/pages/MessageHistoryPage";
 import ReceivablesPage from "./modules/receivables/pages/ReceivablesPage";
+// Quotes Module
+import QuotesListPage from "./modules/quotes/pages/QuotesListPage";
+import QuoteCreatePage from "./modules/quotes/pages/QuoteCreatePage";
+import QuoteDetailPage from "./modules/quotes/pages/QuoteDetailPage";
+import QuoteEditPage from "./modules/quotes/pages/QuoteEditPage";
+
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
