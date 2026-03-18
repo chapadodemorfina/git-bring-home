@@ -1984,6 +1984,244 @@ export type Database = {
           },
         ]
       }
+      sale_items: {
+        Row: {
+          cost_price_snapshot: number
+          created_at: string
+          discount_amount: number
+          id: string
+          product_id: string | null
+          product_name_snapshot: string
+          quantity: number
+          sale_id: string
+          sku_snapshot: string | null
+          total_amount: number
+          unit_price: number
+        }
+        Insert: {
+          cost_price_snapshot?: number
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          product_id?: string | null
+          product_name_snapshot: string
+          quantity?: number
+          sale_id: string
+          sku_snapshot?: string | null
+          total_amount?: number
+          unit_price?: number
+        }
+        Update: {
+          cost_price_snapshot?: number
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          product_id?: string | null
+          product_name_snapshot?: string
+          quantity?: number
+          sale_id?: string
+          sku_snapshot?: string | null
+          total_amount?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          installments: number | null
+          notes: string | null
+          paid_at: string
+          payment_method: Database["public"]["Enums"]["sale_payment_method"]
+          reference: string | null
+          sale_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          installments?: number | null
+          notes?: string | null
+          paid_at?: string
+          payment_method?: Database["public"]["Enums"]["sale_payment_method"]
+          reference?: string | null
+          sale_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          installments?: number | null
+          notes?: string | null
+          paid_at?: string
+          payment_method?: Database["public"]["Enums"]["sale_payment_method"]
+          reference?: string | null
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_returns: {
+        Row: {
+          amount_refunded: number
+          created_at: string
+          id: string
+          processed_by: string | null
+          product_id: string | null
+          quantity: number
+          reason: string
+          returned_at: string
+          sale_id: string
+          sale_item_id: string | null
+        }
+        Insert: {
+          amount_refunded?: number
+          created_at?: string
+          id?: string
+          processed_by?: string | null
+          product_id?: string | null
+          quantity?: number
+          reason: string
+          returned_at?: string
+          sale_id: string
+          sale_item_id?: string | null
+        }
+        Update: {
+          amount_refunded?: number
+          created_at?: string
+          id?: string
+          processed_by?: string | null
+          product_id?: string | null
+          quantity?: number
+          reason?: string
+          returned_at?: string
+          sale_id?: string
+          sale_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "sale_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: false
+            referencedRelation: "sale_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          customer_id: string | null
+          discount_amount: number
+          id: string
+          notes: string | null
+          payment_status: Database["public"]["Enums"]["sale_payment_status"]
+          sale_number: string
+          seller_user_id: string
+          status: Database["public"]["Enums"]["sale_status"]
+          subtotal: number
+          surcharge_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["sale_payment_status"]
+          sale_number: string
+          seller_user_id: string
+          status?: Database["public"]["Enums"]["sale_status"]
+          subtotal?: number
+          surcharge_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          discount_amount?: number
+          id?: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["sale_payment_status"]
+          sale_number?: string
+          seller_user_id?: string
+          status?: Database["public"]["Enums"]["sale_status"]
+          subtotal?: number
+          surcharge_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrap_carcass_details: {
         Row: {
           aesthetic_state: string | null
@@ -3146,6 +3384,11 @@ export type Database = {
       }
       can_delete_product: { Args: { _product_id: string }; Returns: Json }
       can_delete_supplier: { Args: { _supplier_id: string }; Returns: Json }
+      cancel_sale: {
+        Args: { _reason?: string; _sale_id: string }
+        Returns: Json
+      }
+      complete_sale: { Args: { _sale_id: string }; Returns: Json }
       consume_part: {
         Args: {
           _notes?: string
@@ -3243,6 +3486,17 @@ export type Database = {
       is_technician_for_so: { Args: { _so_id: string }; Returns: boolean }
       mark_overdue_entries: { Args: never; Returns: number }
       process_notification_events: { Args: never; Returns: Json }
+      process_sale_return: {
+        Args: {
+          _amount_refunded: number
+          _product_id: string
+          _quantity: number
+          _reason: string
+          _sale_id: string
+          _sale_item_id: string
+        }
+        Returns: Json
+      }
       public_approve_reject_quote: {
         Args: { _decision: string; _quote_id: string; _token: string }
         Returns: Json
@@ -3275,6 +3529,10 @@ export type Database = {
         Returns: Json
       }
       run_consistency_checks: { Args: never; Returns: Json }
+      sales_dashboard_summary: {
+        Args: { _from: string; _to: string }
+        Returns: Json
+      }
       scrap_dashboard_summary: { Args: never; Returns: Json }
       void_warranty: {
         Args: { _reason: string; _warranty_id: string }
@@ -3387,6 +3645,25 @@ export type Database = {
       quote_status: "draft" | "sent" | "approved" | "rejected" | "expired"
       repair_complexity: "simple" | "moderate" | "complex" | "specialized"
       repair_viability: "repairable" | "not_repairable" | "uncertain"
+      sale_payment_method:
+        | "cash"
+        | "pix"
+        | "credit_card"
+        | "debit_card"
+        | "bank_transfer"
+        | "other"
+      sale_payment_status:
+        | "pending"
+        | "partial"
+        | "paid"
+        | "refunded"
+        | "cancelled"
+      sale_status:
+        | "draft"
+        | "completed"
+        | "cancelled"
+        | "partially_refunded"
+        | "refunded"
       scrap_category:
         | "aparelho_completo"
         | "placa"
@@ -3662,6 +3939,28 @@ export const Constants = {
       quote_status: ["draft", "sent", "approved", "rejected", "expired"],
       repair_complexity: ["simple", "moderate", "complex", "specialized"],
       repair_viability: ["repairable", "not_repairable", "uncertain"],
+      sale_payment_method: [
+        "cash",
+        "pix",
+        "credit_card",
+        "debit_card",
+        "bank_transfer",
+        "other",
+      ],
+      sale_payment_status: [
+        "pending",
+        "partial",
+        "paid",
+        "refunded",
+        "cancelled",
+      ],
+      sale_status: [
+        "draft",
+        "completed",
+        "cancelled",
+        "partially_refunded",
+        "refunded",
+      ],
       scrap_category: [
         "aparelho_completo",
         "placa",
