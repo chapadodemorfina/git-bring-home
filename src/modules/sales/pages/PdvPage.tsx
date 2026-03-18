@@ -104,6 +104,7 @@ export default function PdvPage() {
   const createSale = useCreateSale();
   const { data: openCashRegister } = useOpenCashRegister();
   const addCashMovement = useAddCashMovement();
+  const generateCommissions = useGenerateSaleCommissions();
 
   // ── State ──
   const [search, setSearch] = useState("");
