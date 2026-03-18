@@ -212,10 +212,7 @@ export default function ServiceOrderDetailPage() {
         signer_role: s.signer_role,
         signature_data: s.signature_data,
       })),
-      terms: (terms || []).map((t) => ({
-        title: t.title,
-        content: t.content,
-      })),
+      terms: buildPdfTerms(companySettings, terms),
       qrCodeImageData,
       trackingUrl,
       displayOptions: {
