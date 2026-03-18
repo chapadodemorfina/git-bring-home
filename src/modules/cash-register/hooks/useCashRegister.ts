@@ -62,11 +62,33 @@ export const movementTypeColors: Record<CashMovementType, string> = {
   adjustment: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
 };
 
-// ── Get current open cash register for user ──
+// ── Get current open cash register for user (per-operator) ──
 export function useOpenCashRegister() {
   return useQuery<CashRegister | null>({
     queryKey: ["cash-register-open"],
     queryFn: async () => {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return null;
+
+      // First try to find the operator's own open register
+      const { data: own, error: ownErr } = await db
+        .from("cash_registers")
+        .select("*, profiles!cash_registers_opened_by_fkey(full_name)")
+        .eq("status", "open")
+        .eq("opened_by", userId)
+        .order("opened_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (ownErr) throw ownErr;
+      if (own) {
+        return {
+          ...own,
+          opened_by_name: own.profiles?.full_name || null,
+          profiles: undefined,
+        } as CashRegister;
+      }
+
+      // Fallback: check if there's any open register (global mode)
       const { data, error } = await db
         .from("cash_registers")
         .select("*, profiles!cash_registers_opened_by_fkey(full_name)")
