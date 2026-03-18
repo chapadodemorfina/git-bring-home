@@ -141,6 +141,39 @@ export default function CashRegisterPage() {
     setShowMovement(true);
   };
 
+  const printClosingReport = async (registerId: string, registerData: any, summaryData: any) => {
+    const db2 = supabase as any;
+    // Fetch movements for this register
+    const { data: movs } = await db2
+      .from("cash_register_movements")
+      .select("*, profiles!cash_register_movements_created_by_fkey(full_name)")
+      .eq("cash_register_id", registerId)
+      .order("created_at", { ascending: true });
+
+    const movRows = (movs || []).map((m: any) => ({
+      ...m,
+      created_by_name: m.profiles?.full_name || null,
+    }));
+
+    // If no summary provided, calculate from movements
+    const sum = summaryData || (() => {
+      const ms = movRows;
+      return {
+        cash_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "cash").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        pix_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "pix").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        credit_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "credit_card").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        debit_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "debit_card").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        withdrawals: ms.filter((m: any) => m.movement_type === "withdrawal").reduce((s: number, m: any) => s + Math.abs(Number(m.amount)), 0),
+        reinforcements: ms.filter((m: any) => m.movement_type === "reinforcement").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        expenses: ms.filter((m: any) => m.movement_type === "expense").reduce((s: number, m: any) => s + Math.abs(Number(m.amount)), 0),
+        total_in: ms.filter((m: any) => m.amount > 0).reduce((s: number, m: any) => s + Number(m.amount), 0),
+        total_out: ms.filter((m: any) => m.amount < 0).reduce((s: number, m: any) => s + Math.abs(Number(m.amount)), 0),
+      };
+    })();
+
+    generateCashRegisterClosingPdf(registerData, sum, movRows, "i9 Solution");
+  };
+
   if (loadingRegister) {
     return (
       <div className="flex items-center justify-center h-64">
