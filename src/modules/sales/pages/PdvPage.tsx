@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateSale } from "../hooks/useSales";
 import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
+import { useGenerateSaleCommissions } from "@/modules/commissions/hooks/useCommissions";
 import { useToast } from "@/hooks/use-toast";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
 import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
@@ -103,6 +104,7 @@ export default function PdvPage() {
   const createSale = useCreateSale();
   const { data: openCashRegister } = useOpenCashRegister();
   const addCashMovement = useAddCashMovement();
+  const generateCommissions = useGenerateSaleCommissions();
 
   // ── State ──
   const [search, setSearch] = useState("");
@@ -260,6 +262,13 @@ export default function PdvPage() {
         } catch {
           // non-blocking: movement registration failure shouldn't block the sale
         }
+      }
+
+      // Auto-generate commissions
+      try {
+        await generateCommissions.mutateAsync(result.id);
+      } catch {
+        // non-blocking
       }
 
       setLastSaleId(result.id);

@@ -417,6 +417,110 @@ export type Database = {
           },
         ]
       }
+      commission_entries: {
+        Row: {
+          base_amount: number
+          commission_amount: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          reference_date: string | null
+          role: string
+          rule_id: string | null
+          source_id: string
+          source_label: string | null
+          source_type: string
+          status: Database["public"]["Enums"]["commission_entry_status"] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          base_amount?: number
+          commission_amount?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_date?: string | null
+          role: string
+          rule_id?: string | null
+          source_id: string
+          source_label?: string | null
+          source_type: string
+          status?: Database["public"]["Enums"]["commission_entry_status"] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          base_amount?: number
+          commission_amount?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_date?: string | null
+          role?: string
+          rule_id?: string | null
+          source_id?: string
+          source_label?: string | null
+          source_type?: string
+          status?: Database["public"]["Enums"]["commission_entry_status"] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_entries_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "commission_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_rules: {
+        Row: {
+          base_type: string
+          created_at: string | null
+          fixed_amount: number | null
+          id: string
+          is_active: boolean | null
+          label: string
+          notes: string | null
+          percentage: number | null
+          role: string
+          source_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          base_type: string
+          created_at?: string | null
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          notes?: string | null
+          percentage?: number | null
+          role: string
+          source_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          base_type?: string
+          created_at?: string | null
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          notes?: string | null
+          percentage?: number | null
+          role?: string
+          source_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       customer_addresses: {
         Row: {
           city: string | null
@@ -3494,6 +3598,10 @@ export type Database = {
         }
         Returns: Json
       }
+      commission_summary: {
+        Args: { _from?: string; _to?: string }
+        Returns: Json
+      }
       complete_sale: { Args: { _sale_id: string }; Returns: Json }
       consume_part: {
         Args: {
@@ -3528,6 +3636,8 @@ export type Database = {
         Args: { _service_order_id: string }
         Returns: Json
       }
+      generate_sale_commissions: { Args: { _sale_id: string }; Returns: number }
+      generate_so_commissions: { Args: { _so_id: string }; Returns: number }
       get_cached_dashboard_kpis: { Args: never; Returns: Json }
       get_cached_inventory_usage: { Args: never; Returns: Json }
       get_cached_partner_performance: { Args: never; Returns: Json }
@@ -3693,6 +3803,7 @@ export type Database = {
         | "expense"
         | "adjustment"
       cash_register_status: "open" | "closed"
+      commission_entry_status: "pending" | "approved" | "paid" | "cancelled"
       commission_type: "percentage" | "fixed_per_order" | "fixed_per_device"
       customer_type: "individual" | "business"
       device_type:
@@ -3989,6 +4100,7 @@ export const Constants = {
         "adjustment",
       ],
       cash_register_status: ["open", "closed"],
+      commission_entry_status: ["pending", "approved", "paid", "cancelled"],
       commission_type: ["percentage", "fixed_per_order", "fixed_per_device"],
       customer_type: ["individual", "business"],
       device_type: [

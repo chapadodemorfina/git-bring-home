@@ -3,7 +3,7 @@
  * Desenvolvido por Alvo Sistemas e Gestão
  */
 import {
-  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone, Landmark,
+  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone, Landmark, Percent,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -25,7 +25,8 @@ const mainItems = [
   { title: "Estoque & Peças", url: "/inventory", icon: Package },
   { title: "Sucata & Reaproveitamento", url: "/inventory/scrap", icon: Recycle },
   { title: "Pontos de Coleta", url: "/collection-points", icon: MapPin },
-  { title: "Comissões", url: "/collection-points/commissions", icon: DollarSign },
+  { title: "Comissões Parceiros", url: "/collection-points/commissions", icon: DollarSign },
+  { title: "Comissões Equipe", url: "/commissions", icon: Percent },
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
   { title: "Vendas", url: "/sales", icon: ShoppingBag },
   { title: "Frente de Caixa", url: "/pdv", icon: MonitorSmartphone },
