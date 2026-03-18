@@ -110,10 +110,15 @@ export default function SaleDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Comprovante</Button>
+          <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> A4</Button>
+          <Button variant="outline" size="sm" onClick={handleThermalPrint}><Receipt className="mr-2 h-4 w-4" /> Cupom 80mm</Button>
           {sale.status === "draft" && (
-            <Button size="sm" onClick={() => completeSale.mutate(sale.id)}>
-              <Plus className="mr-2 h-4 w-4" /> Concluir
+            <>
+              <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </Button>
+              <Button size="sm" onClick={() => completeSale.mutate(sale.id)}>
+                <Plus className="mr-2 h-4 w-4" /> Concluir
             </Button>
           )}
           {(sale.status === "completed" || sale.status === "partially_refunded") && canManage && (
