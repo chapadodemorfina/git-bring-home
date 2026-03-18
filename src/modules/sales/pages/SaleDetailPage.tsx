@@ -91,6 +91,11 @@ export default function SaleDetailPage() {
     generateSaleReceiptPdf(sale, items, payments || [], companyName);
   };
 
+  const handleThermalPrint = () => {
+    if (!sale || !items) return;
+    generateSaleThermalReceiptPdf(sale, items, payments || [], companyName);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
