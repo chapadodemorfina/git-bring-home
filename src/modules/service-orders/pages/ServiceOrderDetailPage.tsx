@@ -14,6 +14,8 @@ import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarra
 import DeviceLocationPanel from "../components/DeviceLocationPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
 import CustomerCommunicationPanel from "../components/CustomerCommunicationPanel";
+import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
+import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
 import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
