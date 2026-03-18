@@ -69,6 +69,8 @@ export default function ApprovalControls({ quote, serviceOrderId }: Props) {
       decidedByName: decidedByName || undefined,
       reason: reason || undefined,
     });
+    // Auto-send WhatsApp notification
+    sendApprovalWhatsApp();
     setApproveOpen(false);
     resetForm();
   };
