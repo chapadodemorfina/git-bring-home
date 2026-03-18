@@ -2,6 +2,7 @@ import {
   createPdf, addHeader, addSection, addField, addHighlightedField,
   addTable, addTotalBox, addChecklistTable, addSignatureBlock,
   addTermsBlock, addQrCodeBlock, savePdf, addTextCard,
+  addContinuationHeader,
   formatCurrency, formatDateTime,
   type CompanyInfo,
   DEFAULT_THEME,
