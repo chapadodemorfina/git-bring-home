@@ -360,7 +360,35 @@ export default function ServiceOrderDetailPage() {
               {order.physical_condition && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">Condição Física</p>
-                  <p className="text-sm">{order.physical_condition}</p>
+                  <div className="text-sm space-y-0.5">
+                    {(() => {
+                      try {
+                        const items = typeof order.physical_condition === "string"
+                          ? JSON.parse(order.physical_condition)
+                          : order.physical_condition;
+                        if (!Array.isArray(items)) return <p>{String(order.physical_condition)}</p>;
+                        const labelMap: Record<string, string> = {
+                          screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
+                          charging: "Carregamento", battery: "Bateria", speakers: "Alto-falantes",
+                          camera: "Câmera", connectivity: "Rede/Wi-Fi", biometrics: "Biometria",
+                        };
+                        const statusMap: Record<string, string> = {
+                          ok: "OK", damaged: "Danificado", not_working: "Não funciona", scratched: "Arranhado",
+                          cracked: "Trincado", missing: "Ausente", not_tested: "Não testado",
+                        };
+                        return items.map((item: any) => (
+                          <p key={item.id} className="flex items-center gap-1.5">
+                            <span className={`inline-block w-2 h-2 rounded-full ${item.status === "ok" ? "bg-green-500" : item.status === "damaged" ? "bg-red-500" : "bg-yellow-500"}`} />
+                            <span className="font-medium">{labelMap[item.id] || item.id}:</span>
+                            <span>{statusMap[item.status] || item.status}</span>
+                            {item.notes && <span className="text-muted-foreground">({item.notes})</span>}
+                          </p>
+                        ));
+                      } catch {
+                        return <p>{String(order.physical_condition)}</p>;
+                      }
+                    })()}
+                  </div>
                 </div>
               )}
               {order.accessories_received && (
