@@ -1,9 +1,18 @@
-import { createPdf, addHeader, addSection, addField, addTable, savePdf, formatCurrency } from "@/lib/pdf-utils";
+import {
+  createPdf, addHeader, addSection, addField, addTable, savePdf,
+  formatCurrency,
+  type CompanyInfo,
+} from "@/lib/pdf-utils";
+import { statusLabels } from "@/modules/service-orders/types";
 import type { DashboardSummary } from "@/hooks/useDashboardData";
 
-export function generateDashboardReportPdf(summary: DashboardSummary, companyName: string, dateLabel: string) {
+export function generateDashboardReportPdf(
+  summary: DashboardSummary,
+  company: CompanyInfo | string,
+  dateLabel: string
+) {
   const doc = createPdf("landscape");
-  let y = addHeader(doc, companyName, "Relatório Executivo do Dashboard", dateLabel);
+  let y = addHeader(doc, company, "Relatório Executivo do Dashboard", dateLabel);
 
   // KPIs section
   y = addSection(doc, "Indicadores Principais", y);
@@ -31,12 +40,17 @@ export function generateDashboardReportPdf(summary: DashboardSummary, companyNam
   addField(doc, "Taxa Aprovação", `${approvalRate}%`, col3, y - 8);
   addField(doc, "Tempo Médio (h)", summary.avg_turnaround_hours ? `${Math.round(summary.avg_turnaround_hours)}h` : "—", col4, y - 8);
 
-  // Status breakdown
+  // Status breakdown — translate keys
   y += 6;
   y = addSection(doc, "OS por Status", y);
   const statusEntries = Object.entries(summary.orders_by_status || {});
   if (statusEntries.length > 0) {
-    y = addTable(doc, y, ["Status", "Quantidade"], statusEntries.map(([s, c]) => [s, c]));
+    y = addTable(doc, y, ["Status", "Quantidade"],
+      statusEntries.map(([s, c]) => [
+        statusLabels[s as keyof typeof statusLabels] || s,
+        c,
+      ])
+    );
   }
 
   // Technician productivity
@@ -64,5 +78,5 @@ export function generateDashboardReportPdf(summary: DashboardSummary, companyNam
     ]));
   }
 
-  savePdf(doc, `relatorio-dashboard-${new Date().toISOString().slice(0, 10)}`);
+  savePdf(doc, `relatorio-dashboard-${new Date().toISOString().slice(0, 10)}`, company);
 }

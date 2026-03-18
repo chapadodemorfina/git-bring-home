@@ -1,4 +1,8 @@
-import { createPdf, addHeader, addTable, addField, savePdf, formatCurrency, formatDateTime } from "@/lib/pdf-utils";
+import {
+  createPdf, addHeader, addTable, addField, addTotalBox, savePdf,
+  formatCurrency, formatDateTime,
+  type CompanyInfo,
+} from "@/lib/pdf-utils";
 import type { Sale, SaleItem, SalePayment } from "@/modules/sales/types";
 import { paymentMethodLabels, saleStatusLabels } from "@/modules/sales/types";
 
@@ -6,10 +10,10 @@ export function generateSaleReceiptPdf(
   sale: Sale,
   items: SaleItem[],
   payments: SalePayment[],
-  companyName: string,
+  company: CompanyInfo | string,
 ) {
   const doc = createPdf("portrait");
-  let y = addHeader(doc, companyName, "Comprovante de Venda", `Venda ${sale.sale_number}`);
+  let y = addHeader(doc, company, "Comprovante de Venda", `Venda ${sale.sale_number}`);
 
   // Sale info
   y = addField(doc, "Número", sale.sale_number, 14, y) + 2;
@@ -33,16 +37,19 @@ export function generateSaleReceiptPdf(
 
   y += 6;
 
-  // Totals
-  y = addField(doc, "Subtotal", formatCurrency(sale.subtotal), 14, y) + 2;
-  if (Number(sale.discount_amount) > 0) y = addField(doc, "Desconto", `- ${formatCurrency(sale.discount_amount)}`, 14, y) + 2;
-  if (Number(sale.surcharge_amount) > 0) y = addField(doc, "Acréscimo", `+ ${formatCurrency(sale.surcharge_amount)}`, 14, y) + 2;
-  
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Total: ${formatCurrency(sale.total_amount)}`, 14, y + 4);
-  doc.setFont("helvetica", "normal");
-  y += 10;
+  // Totals box
+  const totalLines: any[] = [
+    { label: "Subtotal", value: formatCurrency(sale.subtotal) },
+  ];
+  if (Number(sale.discount_amount) > 0) {
+    totalLines.push({ label: "Desconto", value: `- ${formatCurrency(sale.discount_amount)}`, color: [220, 38, 38] });
+  }
+  if (Number(sale.surcharge_amount) > 0) {
+    totalLines.push({ label: "Acréscimo", value: `+ ${formatCurrency(sale.surcharge_amount)}` });
+  }
+  totalLines.push({ label: "TOTAL", value: formatCurrency(sale.total_amount), bold: true, color: [37, 99, 235] });
+
+  y = addTotalBox(doc, y, totalLines);
 
   // Payments
   if (payments.length > 0) {
@@ -56,5 +63,5 @@ export function generateSaleReceiptPdf(
     );
   }
 
-  savePdf(doc, `venda-${sale.sale_number}`);
+  savePdf(doc, `venda-${sale.sale_number}`, company);
 }

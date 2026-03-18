@@ -16,6 +16,7 @@ import {
 } from "../hooks/useCashRegister";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateCashRegisterClosingPdf } from "@/lib/pdf-generators/cash-register-closing-pdf";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curren
 
 export default function CashRegisterPage() {
   const { user } = useAuth();
+  const companySettings = useCompanySettings();
   const [tab, setTab] = useState("current");
   const [movPage, setMovPage] = useState(1);
   const [histPage, setHistPage] = useState(1);
@@ -171,7 +173,11 @@ export default function CashRegisterPage() {
       };
     })();
 
-    generateCashRegisterClosingPdf(registerData, sum, movRows, "i9 Solution");
+    const cs = companySettings;
+    generateCashRegisterClosingPdf(registerData, sum, movRows, {
+      name: cs.company_name, cnpj: cs.company_cnpj, address: cs.company_address,
+      phone: cs.company_phone, email: cs.company_email, logoUrl: cs.company_logo_url,
+    });
   };
 
   if (loadingRegister) {

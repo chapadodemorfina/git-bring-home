@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSale, useSaleItems, useSalePayments, useSaleReturns, useCancelSale, useCompleteSale, useAddSalePayment, useProcessReturn } from "../hooks/useSales";
 import { saleStatusLabels, saleStatusColors, paymentStatusLabels, paymentMethodLabels, SalePaymentMethod } from "../types";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCompanyName } from "@/hooks/useCompanyName";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,8 @@ export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { hasRole } = useAuth();
-  const companyName = useCompanyName();
+  const companySettings = useCompanySettings();
+  const companyName = companySettings.company_name;
 
   const { data: sale, isLoading } = useSale(id);
   const { data: items } = useSaleItems(id);

@@ -36,7 +36,7 @@ export function DashboardFilters({ dateRange, onDateRangeChange, preset, onPrese
   const handleExport = () => {
     if (!summary) return;
     const dateLabel = `Período: ${format(dateRange.from, "dd/MM/yyyy")} a ${format(dateRange.to, "dd/MM/yyyy")}`;
-    generateDashboardReportPdf(summary, companyName || "i9 Solutions", dateLabel);
+    generateDashboardReportPdf(summary, companyName || "", dateLabel);
   };
 
   return (

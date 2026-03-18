@@ -19,14 +19,15 @@ import { Plus, DollarSign, Search, FileDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateFinancialReportPdf } from "@/lib/pdf-generators/financial-report-pdf";
-import { useCompanyName } from "@/hooks/useCompanyName";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 export default function FinanceListPage() {
   const [tab, setTab] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const companyName = useCompanyName("i9 Solutions");
+  const companySettings = useCompanySettings();
+  const companyName = companySettings.company_name;
 
   const entryType = tab === "all" ? null : (tab as FinancialEntryType);
   const { data, isLoading } = useFinancialEntriesPaginated(entryType, filterStatus as FinancialEntryStatus | null, search, page);

@@ -1,26 +1,36 @@
 import {
-  createPdf, addHeader, addSection, addField, addTable, savePdf,
+  createPdf, addHeader, addSection, addField, addHighlightedField,
+  addTable, addTotalBox, addChecklistTable, addSignatureBlock,
+  addTermsBlock, addQrCodeBlock, savePdf,
   formatCurrency, formatDate, formatDateTime,
+  type CompanyInfo,
+  DEFAULT_THEME,
 } from "@/lib/pdf-utils";
 import { statusLabels } from "@/modules/service-orders/types";
 
+// ─── Interfaces ───────────────────────────────────────────────
 interface ServiceOrderData {
   order_number: string;
   status: string;
   priority: string;
   intake_channel: string;
   created_at: string;
+  updated_at?: string;
   expected_deadline?: string | null;
   customer_name?: string;
   customer_phone?: string | null;
+  customer_document?: string | null;
   device_label?: string;
   device_serial?: string | null;
   device_imei?: string | null;
   device_color?: string | null;
+  device_brand?: string | null;
+  device_model?: string | null;
   reported_issue?: string | null;
   physical_condition?: string | null;
   accessories_received?: string | null;
   intake_notes?: string | null;
+  internal_notes?: string | null;
   technician_name?: string;
   collection_point_name?: string | null;
 }
@@ -32,6 +42,67 @@ interface StatusEntry {
   created_at: string;
 }
 
+interface DiagnosticData {
+  technical_findings?: string | null;
+  probable_cause?: string | null;
+  repair_complexity?: string;
+  repair_viability?: string | null;
+  estimated_repair_hours?: number | null;
+  estimated_cost?: number | null;
+  not_repairable_reason?: string | null;
+}
+
+interface QuoteItem {
+  description: string;
+  item_type: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
+interface QuoteData {
+  quote_number?: string;
+  total_amount?: number;
+  discount_amount?: number;
+  analysis_fee?: number;
+  labor_cost?: number;
+  parts_cost?: number;
+  notes?: string | null;
+}
+
+interface SignatureData {
+  signer_name: string;
+  signer_role: string;
+  signature_data: string;
+}
+
+interface TermData {
+  title: string;
+  content: string;
+}
+
+interface ChecklistItem {
+  label: string;
+  checked: boolean;
+  notes?: string;
+}
+
+export interface ServiceOrderPdfOptions {
+  order: ServiceOrderData;
+  statusHistory?: StatusEntry[];
+  company: CompanyInfo;
+  diagnostic?: DiagnosticData | null;
+  quoteData?: QuoteData | null;
+  quoteItems?: QuoteItem[];
+  signatures?: SignatureData[];
+  terms?: TermData[];
+  entryChecklist?: ChecklistItem[];
+  exitChecklist?: ChecklistItem[];
+  qrCodeImageData?: string | null;
+  trackingUrl?: string | null;
+}
+
+// ─── Maps ─────────────────────────────────────────────────────
 const priorityMap: Record<string, string> = {
   low: "Baixa", normal: "Normal", high: "Alta", urgent: "Urgente",
 };
@@ -39,85 +110,222 @@ const channelMap: Record<string, string> = {
   front_desk: "Balcão", collection_point: "Ponto de Coleta", whatsapp: "WhatsApp",
   phone: "Telefone", email: "E-mail", website: "Website",
 };
+const complexityMap: Record<string, string> = {
+  simple: "Simples", moderate: "Moderada", complex: "Complexa", specialized: "Especializada",
+};
+const viabilityMap: Record<string, string> = {
+  repairable: "Reparável", not_repairable: "Não Reparável", uncertain: "Incerto",
+};
 
-function formatPhysicalCondition(raw: string | null | undefined): string {
-  if (!raw) return "";
+// ─── Physical Condition Parser ────────────────────────────────
+const CHECKLIST_NAME_MAP: Record<string, string> = {
+  screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
+  charging: "Porta de Carga", battery: "Bateria", speakers: "Alto-falante/Mic",
+  camera: "Câmera", connectivity: "Wi-Fi/Bluetooth", biometrics: "Biometria/Face ID",
+};
+const CHECKLIST_STATUS_MAP: Record<string, string> = {
+  ok: "OK", damaged: "Danificado", scratched: "Arranhado", cracked: "Trincado",
+  missing: "Ausente", na: "N/A",
+};
+
+function parsePhysicalCondition(raw: string | null | undefined): ChecklistItem[] | null {
+  if (!raw) return null;
   try {
     const items = JSON.parse(raw);
     if (Array.isArray(items)) {
-      const nameMap: Record<string, string> = {
-        screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
-        charging: "Porta de Carga", battery: "Bateria", speakers: "Alto-falante/Mic",
-        camera: "Câmera", connectivity: "Wi-Fi/Bluetooth", biometrics: "Biometria/Face ID",
-      };
-      const statusMap: Record<string, string> = {
-        ok: "OK", damaged: "Danificado", scratched: "Arranhado", cracked: "Trincado",
-        missing: "Ausente", na: "N/A",
-      };
-      return items
-        .map((item: any) => {
-          const label = nameMap[item.id] || nameMap[item.name] || item.id || item.name || "";
-          const status = statusMap[item.status] || item.status || "";
-          const notes = item.notes ? ` (${item.notes})` : "";
-          return `${label}: ${status}${notes}`;
-        })
-        .join(" | ");
+      return items.map((item: any) => ({
+        label: CHECKLIST_NAME_MAP[item.id] || CHECKLIST_NAME_MAP[item.name] || item.id || item.name || "",
+        checked: item.status === "ok" || item.status === "na",
+        notes: [
+          CHECKLIST_STATUS_MAP[item.status] || item.status || "",
+          item.notes || "",
+        ].filter(Boolean).join(" — "),
+      }));
     }
-  } catch {
-    // not JSON, return as-is
-  }
-  return raw;
+  } catch { /* not JSON */ }
+  return null;
 }
 
-export function generateServiceOrderPdf(
-  order: ServiceOrderData,
-  statusHistory: StatusEntry[],
-  companyName: string
-) {
-  const doc = createPdf();
-  let y = addHeader(doc, companyName, `Ordem de Serviço: ${order.order_number}`, 
-    `Status: ${statusLabels[order.status as keyof typeof statusLabels] || order.status}`);
+// ─── Main Generator ───────────────────────────────────────────
+export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
+  const { order, statusHistory, company, diagnostic, quoteData, quoteItems,
+          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData } = opts;
 
-  // Customer & Device section
-  y = addSection(doc, "Dados do Cliente e Dispositivo", y);
+  const doc = createPdf();
   const col1 = 14;
   const col2 = 110;
 
-  y = addField(doc, "Cliente", order.customer_name, col1, y);
-  addField(doc, "Telefone", order.customer_phone, col2, y - 8);
+  // ── HEADER ──
+  let y = addHeader(doc, company, `Ordem de Serviço: ${order.order_number}`,
+    `Status: ${statusLabels[order.status as keyof typeof statusLabels] || order.status}`);
 
-  y = addField(doc, "Dispositivo", order.device_label, col1, y + 2);
-  if (order.device_serial) addField(doc, "Serial", order.device_serial, col2, y - 8);
-  if (order.device_imei) y = addField(doc, "IMEI", order.device_imei, col1, y + 2);
-  if (order.device_color) addField(doc, "Cor", order.device_color, col2, y - 8);
-
-  y += 4;
-
-  // Order info
-  y = addSection(doc, "Informações da OS", y);
-  y = addField(doc, "Prioridade", priorityMap[order.priority] || order.priority, col1, y);
+  // ── 1. INFORMAÇÕES DA OS ──
+  y = addSection(doc, "Informações da Ordem de Serviço", y);
+  y = addField(doc, "Nº da OS", order.order_number, col1, y);
+  addField(doc, "Prioridade", priorityMap[order.priority] || order.priority, col2, y - 8);
+  y = addField(doc, "Data de Abertura", formatDateTime(order.created_at), col1, y + 2);
   addField(doc, "Canal de Entrada", channelMap[order.intake_channel] || order.intake_channel, col2, y - 8);
-  y = addField(doc, "Data de Criação", formatDateTime(order.created_at), col1, y + 2);
-  if (order.expected_deadline) addField(doc, "Prazo Estimado", formatDateTime(order.expected_deadline), col2, y - 8);
-  if (order.technician_name) y = addField(doc, "Técnico", order.technician_name, col1, y + 2);
-  if (order.collection_point_name) addField(doc, "Ponto de Coleta", order.collection_point_name, col2, y - 8);
-
+  if (order.expected_deadline) {
+    y = addField(doc, "Prazo Estimado", formatDateTime(order.expected_deadline), col1, y + 2);
+  }
+  if (order.technician_name) {
+    addField(doc, "Técnico Responsável", order.technician_name, col2, y - 8);
+  }
+  if (order.collection_point_name) {
+    y = addField(doc, "Ponto de Coleta", order.collection_point_name, col1, y + 2);
+  }
   y += 4;
 
-  // Problem details
-  if (order.reported_issue || order.physical_condition || order.accessories_received) {
-    y = addSection(doc, "Detalhes do Serviço", y);
-    if (order.reported_issue) y = addField(doc, "Problema Relatado", order.reported_issue, col1, y, 170);
-    if (order.physical_condition) y = addField(doc, "Condição Física", formatPhysicalCondition(order.physical_condition), col1, y + 2, 170);
-    if (order.accessories_received) y = addField(doc, "Acessórios", order.accessories_received, col1, y + 2, 170);
-    if (order.intake_notes) y = addField(doc, "Observações", order.intake_notes, col1, y + 2, 170);
+  // ── 2. DADOS DO CLIENTE ──
+  y = addSection(doc, "Dados do Cliente", y);
+  y = addField(doc, "Nome", order.customer_name, col1, y);
+  if (order.customer_document) {
+    addField(doc, "CPF/CNPJ", order.customer_document, col2, y - 8);
+  }
+  if (order.customer_phone) {
+    y = addField(doc, "Telefone", order.customer_phone, col1, y + 2);
+  }
+  y += 4;
+
+  // ── 3. DADOS DO APARELHO ──
+  if (order.device_label || order.device_brand) {
+    y = addSection(doc, "Dados do Aparelho", y);
+    if (order.device_brand) y = addField(doc, "Marca", order.device_brand, col1, y);
+    if (order.device_model) addField(doc, "Modelo", order.device_model, col2, y - 8);
+    if (order.device_serial) y = addField(doc, "Nº de Série", order.device_serial, col1, y + 2);
+    if (order.device_color) addField(doc, "Cor", order.device_color, col2, y - 8);
+
+    // IMEI with highlight
+    if (order.device_imei) {
+      y += 2;
+      y = addHighlightedField(doc, "IMEI", order.device_imei, col1, y, 90);
+    }
+    y += 2;
+  }
+
+  // ── 4. ESTADO DO APARELHO (Physical Condition Checklist) ──
+  const conditionItems = parsePhysicalCondition(order.physical_condition);
+  if (conditionItems && conditionItems.length > 0) {
+    y = addChecklistTable(doc, y, conditionItems, "Estado Físico do Aparelho");
+    y += 4;
+  } else if (order.physical_condition) {
+    y = addSection(doc, "Estado Físico do Aparelho", y);
+    y = addField(doc, "Condição", order.physical_condition, col1, y, 170);
     y += 4;
   }
 
-  // Status History
-  if (statusHistory?.length) {
+  // Accessories
+  if (order.accessories_received) {
+    y = addSection(doc, "Acessórios Entregues", y);
+    y = addField(doc, "Itens", order.accessories_received, col1, y, 170);
+    y += 4;
+  }
+
+  // ── 5. DESCRIÇÃO DO PROBLEMA ──
+  if (order.reported_issue) {
+    y = addSection(doc, "Descrição do Problema", y);
+    doc.setFontSize(9);
+    doc.setTextColor(...DEFAULT_THEME.textColor);
+    const lines = doc.splitTextToSize(order.reported_issue, 170);
+    doc.text(lines, col1, y);
+    y += lines.length * 4 + 4;
+  }
+
+  // ── CHECKLIST DE ENTRADA ──
+  if (entryChecklist && entryChecklist.length > 0) {
+    y = addChecklistTable(doc, y, entryChecklist, "Checklist de Entrada");
+    y += 4;
+  }
+
+  // ── 6. DIAGNÓSTICO TÉCNICO ──
+  if (diagnostic) {
+    y = addSection(doc, "Diagnóstico Técnico", y);
+    if (diagnostic.technical_findings) {
+      y = addField(doc, "Achados Técnicos", diagnostic.technical_findings, col1, y, 170);
+    }
+    if (diagnostic.probable_cause) {
+      y = addField(doc, "Causa Provável", diagnostic.probable_cause, col1, y + 2, 170);
+    }
+    if (diagnostic.repair_complexity) {
+      y = addField(doc, "Complexidade", complexityMap[diagnostic.repair_complexity] || diagnostic.repair_complexity, col1, y + 2);
+    }
+    if (diagnostic.repair_viability) {
+      addField(doc, "Viabilidade", viabilityMap[diagnostic.repair_viability] || diagnostic.repair_viability, col2, y - 8);
+    }
+    if (diagnostic.estimated_repair_hours) {
+      y = addField(doc, "Horas Estimadas", `${diagnostic.estimated_repair_hours}h`, col1, y + 2);
+    }
+    if (diagnostic.not_repairable_reason) {
+      y = addField(doc, "Motivo Inviabilidade", diagnostic.not_repairable_reason, col1, y + 2, 170);
+    }
+    y += 4;
+  }
+
+  // ── 7. SERVIÇOS EXECUTADOS / ORÇAMENTO ──
+  if (quoteItems && quoteItems.length > 0) {
+    y = addSection(doc, "Serviços e Peças", y);
+    y = addTable(doc, y,
+      ["Descrição", "Tipo", "Qtd", "Valor Un.", "Total"],
+      quoteItems.map((item) => [
+        item.description,
+        item.item_type === "labor" ? "Mão de obra" : item.item_type === "part" ? "Peça" : "Serviço",
+        String(item.quantity),
+        formatCurrency(item.unit_price),
+        formatCurrency(item.total_price),
+      ]),
+      {
+        columnStyles: {
+          0: { cellWidth: 70 },
+          3: { halign: "right" as const },
+          4: { halign: "right" as const },
+        },
+      }
+    );
+    y += 2;
+  }
+
+  // ── 8. RESUMO FINANCEIRO ──
+  if (quoteData && (quoteData.total_amount || 0) > 0) {
+    const totalLines: { label: string; value: string; bold?: boolean; color?: [number, number, number] }[] = [];
+
+    if (quoteData.parts_cost) totalLines.push({ label: "Peças", value: formatCurrency(quoteData.parts_cost) });
+    if (quoteData.labor_cost) totalLines.push({ label: "Mão de Obra", value: formatCurrency(quoteData.labor_cost) });
+    if (quoteData.analysis_fee && quoteData.analysis_fee > 0) {
+      totalLines.push({ label: "Taxa de Análise", value: formatCurrency(quoteData.analysis_fee) });
+    }
+    if (quoteData.discount_amount && quoteData.discount_amount > 0) {
+      totalLines.push({ label: "Desconto", value: `- ${formatCurrency(quoteData.discount_amount)}`, color: DEFAULT_THEME.danger });
+    }
+    totalLines.push({
+      label: "TOTAL",
+      value: formatCurrency(quoteData.total_amount),
+      bold: true,
+      color: DEFAULT_THEME.primary,
+    });
+
+    y = addTotalBox(doc, y, totalLines);
+  }
+
+  // ── CHECKLIST DE SAÍDA ──
+  if (exitChecklist && exitChecklist.length > 0) {
+    y = addChecklistTable(doc, y, exitChecklist, "Checklist de Saída");
+    y += 4;
+  }
+
+  // ── NOTAS INTERNAS ──
+  if (order.intake_notes) {
+    y = addSection(doc, "Observações", y);
+    doc.setFontSize(8);
+    doc.setTextColor(...DEFAULT_THEME.textColor);
+    const lines = doc.splitTextToSize(order.intake_notes, 170);
+    doc.text(lines, col1, y);
+    y += lines.length * 3.5 + 4;
+  }
+
+  // ── HISTÓRICO DE STATUS ──
+  if (statusHistory && statusHistory.length > 0) {
     y = addSection(doc, "Histórico de Status", y);
-    y = addTable(doc, y, ["Data/Hora", "De", "Para", "Observações"], 
+    y = addTable(doc, y, ["Data/Hora", "De", "Para", "Observações"],
       statusHistory.map((h) => [
         formatDateTime(h.created_at),
         h.from_status ? (statusLabels[h.from_status as keyof typeof statusLabels] || h.from_status) : "—",
@@ -125,7 +333,39 @@ export function generateServiceOrderPdf(
         h.notes || "—",
       ])
     );
+    y += 4;
   }
 
-  savePdf(doc, `OS_${order.order_number}`);
+  // ── 5. TERMOS E GARANTIA ──
+  if (terms && terms.length > 0) {
+    terms.forEach((term) => {
+      y = addTermsBlock(doc, y, term.title, term.content);
+    });
+  }
+
+  // ── QR CODE ──
+  if (qrCodeImageData) {
+    y = addQrCodeBlock(doc, y, qrCodeImageData, "Acompanhe seu reparo pelo QR Code");
+  }
+
+  // ── 6. ASSINATURAS ──
+  const sigList = (signatures || []).map((s) => ({
+    name: s.signer_name,
+    role: s.signer_role === "customer" ? "Cliente" : s.signer_role === "technician" ? "Técnico" : s.signer_role,
+    imageData: s.signature_data,
+  }));
+
+  // Always show at least client + technician slots
+  if (sigList.length === 0) {
+    sigList.push({ name: "", role: "Cliente", imageData: undefined });
+    sigList.push({ name: "", role: "Técnico", imageData: undefined });
+  } else if (sigList.length === 1) {
+    const missingRole = sigList[0].role === "Cliente" ? "Técnico" : "Cliente";
+    sigList.push({ name: "", role: missingRole, imageData: undefined });
+  }
+
+  y = addSignatureBlock(doc, y, sigList as any);
+
+  // ── SAVE ──
+  savePdf(doc, `OS_${order.order_number}`, company);
 }

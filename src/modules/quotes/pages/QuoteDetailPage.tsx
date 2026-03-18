@@ -22,9 +22,11 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft, Plus, Trash2, Send, CheckCircle, XCircle, Copy,
-  Pencil, Wrench, Package, Zap, Clock, FileText,
+  Pencil, Wrench, Package, Zap, Clock, FileText, FileDown,
 } from "lucide-react";
 import { format } from "date-fns";
+import { generateQuotePdf } from "@/lib/pdf-generators/quote-pdf";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 const fmt = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -32,6 +34,7 @@ const fmt = (v: number) =>
 export default function QuoteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const companySettings = useCompanySettings();
   const { data: quote, isLoading } = useCommercialQuote(id);
   const { data: items } = useQuoteItems(id);
   const { data: history } = useQuoteHistory(id);
@@ -64,6 +67,40 @@ export default function QuoteDetailPage() {
     await changeStatus.mutateAsync({ id: id!, status: "rejected", reason: rejectReason });
     setRejectOpen(false);
     setRejectReason("");
+  };
+
+  const handleExportPdf = () => {
+    if (!quote || !items) return;
+    const cs = companySettings;
+    const laborCost = items.filter(i => i.item_type === "labor").reduce((s, i) => s + Number(i.total_price), 0);
+    const partsCost = items.filter(i => i.item_type === "part").reduce((s, i) => s + Number(i.total_price), 0);
+    generateQuotePdf(
+      {
+        quote_number: quote.quote_number,
+        status: quote.status,
+        total_amount: Number(quote.total_amount),
+        labor_cost: laborCost,
+        parts_cost: partsCost,
+        analysis_fee: 0,
+        expires_at: quote.valid_until,
+        notes: quote.description || null,
+        created_at: quote.created_at,
+        order_number: quote.service_orders?.order_number,
+        customer_name: quote.customers?.full_name,
+        device_label: undefined,
+      },
+      items.map(i => ({
+        description: i.description,
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price),
+        total_price: Number(i.total_price),
+        item_type: i.item_type,
+      })),
+      {
+        name: cs.company_name, cnpj: cs.company_cnpj, address: cs.company_address,
+        phone: cs.company_phone, email: cs.company_email, logoUrl: cs.company_logo_url,
+      }
+    );
   };
 
   const partItems = items?.filter((i) => i.item_type === "part") || [];
@@ -158,6 +195,9 @@ export default function QuoteDetailPage() {
               </Button>
             </>
           )}
+          <Button variant="outline" size="sm" onClick={handleExportPdf}>
+            <FileDown className="mr-1 h-4 w-4" /> PDF
+          </Button>
           <Button variant="outline" size="sm" onClick={async () => {
             const r = await duplicateQuote.mutateAsync(id!);
             navigate(`/quotes/${r.id}`);

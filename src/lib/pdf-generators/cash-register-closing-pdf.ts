@@ -1,6 +1,7 @@
 import {
-  createPdf, addHeader, addSection, addTable, savePdf,
+  createPdf, addHeader, addSection, addTable, addSignatureBlock, savePdf,
   formatCurrency, formatDateTime,
+  type CompanyInfo,
 } from "@/lib/pdf-utils";
 
 interface ClosingData {
@@ -49,10 +50,10 @@ export function generateCashRegisterClosingPdf(
   register: ClosingData,
   summary: Summary,
   movements: MovementRow[],
-  companyName: string,
+  company: CompanyInfo | string,
 ) {
   const doc = createPdf("portrait");
-  let y = addHeader(doc, companyName, "Relatório de Fechamento de Caixa",
+  let y = addHeader(doc, company, "Relatório de Fechamento de Caixa",
     `Operador: ${register.opened_by_name || "—"}`);
 
   // Period info
@@ -143,11 +144,18 @@ export function generateCashRegisterClosingPdf(
       ]),
       {
         columnStyles: {
-          4: { halign: "right" },
+          4: { halign: "right" as const },
         },
       }
     );
   }
 
-  savePdf(doc, `Fechamento_Caixa_${formatDateTime(register.closed_at || register.opened_at).replace(/[\/: ]/g, "-")}`);
+  // Operator signature
+  y += 10;
+  y = addSignatureBlock(doc, y, [
+    { name: register.opened_by_name || "", role: "Operador de Caixa" },
+    { name: "", role: "Supervisor" },
+  ]);
+
+  savePdf(doc, `Fechamento_Caixa_${formatDateTime(register.closed_at || register.opened_at).replace(/[\/: ]/g, "-")}`, company);
 }
