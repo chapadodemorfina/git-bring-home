@@ -624,6 +624,62 @@ export type Database = {
           },
         ]
       }
+      customer_message_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          delivery_status: string
+          error_message: string | null
+          event_type: string
+          id: string
+          message_text: string
+          phone: string
+          reference_id: string
+          reference_type: string
+          sent_automatically: boolean
+          template_key: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          delivery_status?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          message_text: string
+          phone: string
+          reference_id: string
+          reference_type: string
+          sent_automatically?: boolean
+          template_key?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          delivery_status?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          message_text?: string
+          phone?: string
+          reference_id?: string
+          reference_type?: string
+          sent_automatically?: boolean
+          template_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_message_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
