@@ -115,8 +115,19 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
 
   // ── 2. DADOS DO CLIENTE ──
   y = addSection(doc, "Dados do Cliente", y);
-  y = addField(doc, "Nome", order.customer_name, col1, y);
-  if (order.customer_document) addField(doc, "CPF/CNPJ", order.customer_document, col2, y - 6.5);
+  // Bold customer name for emphasis
+  if (order.customer_name) {
+    doc.setFontSize(5.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(100, 116, 139);
+    doc.text("NOME", col1, y);
+    doc.setFontSize(9.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(15, 23, 42);
+    doc.text(order.customer_name, col1, y + 3);
+    if (order.customer_document) addField(doc, "CPF/CNPJ", order.customer_document, col2, y);
+    y = y + 3 + 3.5;
+  }
   if (order.customer_phone) y = addField(doc, "Telefone", order.customer_phone, col1, y);
 
   // ── 3. DADOS DO APARELHO ──
