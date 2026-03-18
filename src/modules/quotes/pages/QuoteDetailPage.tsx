@@ -34,6 +34,7 @@ const fmt = (v: number) =>
 export default function QuoteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const companySettings = useCompanySettings();
   const { data: quote, isLoading } = useCommercialQuote(id);
   const { data: items } = useQuoteItems(id);
   const { data: history } = useQuoteHistory(id);
