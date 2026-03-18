@@ -94,9 +94,28 @@ export default function CashRegisterPage() {
 
   const handleClose = () => {
     if (!openRegister) return;
+    const registerSnapshot = { ...openRegister };
+    const summarySnapshot = summary ? { ...summary } : null;
     closeMut.mutate(
       { register_id: openRegister.id, counted_amount: parseFloat(countedAmount) || 0, closing_notes: closeNotes || undefined },
-      { onSuccess: () => { setShowClose(false); setCountedAmount(""); setCloseNotes(""); } }
+      {
+        onSuccess: async (result: any) => {
+          setShowClose(false);
+          setCountedAmount("");
+          setCloseNotes("");
+          // Auto-print closing report
+          try {
+            await printClosingReport(registerSnapshot.id, {
+              ...registerSnapshot,
+              closed_at: new Date().toISOString(),
+              expected_amount: result?.expected_amount ?? null,
+              counted_amount: result?.counted_amount ?? null,
+              difference_amount: result?.difference ?? null,
+              closing_notes: closeNotes || null,
+            }, summarySnapshot);
+          } catch { /* non-blocking */ }
+        },
+      }
     );
   };
 
