@@ -7,6 +7,34 @@ import { useCompanyName } from "@/hooks/useCompanyName";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+const CHECKLIST_NAME_MAP: Record<string, string> = {
+  screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
+  charging: "Porta de Carga", battery: "Bateria", speakers: "Alto-falante/Mic",
+  camera: "Câmera", connectivity: "Wi-Fi/Bluetooth", biometrics: "Biometria/Face ID",
+};
+const CHECKLIST_STATUS_MAP: Record<string, string> = {
+  ok: "OK", damaged: "Danificado", scratched: "Arranhado", cracked: "Trincado",
+  missing: "Ausente", na: "N/A",
+};
+
+function formatPhysicalCondition(raw: string | null | undefined): string {
+  if (!raw) return "—";
+  try {
+    const items = JSON.parse(raw);
+    if (Array.isArray(items)) {
+      return items
+        .map((item: any) => {
+          const label = CHECKLIST_NAME_MAP[item.id] || item.id || "";
+          const status = CHECKLIST_STATUS_MAP[item.status] || item.status || "";
+          const notes = item.notes ? ` (${item.notes})` : "";
+          return `${label}: ${status}${notes}`;
+        })
+        .join(" · ");
+    }
+  } catch { /* not JSON */ }
+  return raw;
+}
+
 interface Props {
   order: ServiceOrder;
   trackingUrl?: string | null;
