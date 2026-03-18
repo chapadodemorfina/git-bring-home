@@ -253,7 +253,7 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   }
 
   if (hasQr) {
-    y = addQrCodeBlock(doc, qrCodeImageData, y, "Acompanhe seu reparo pelo QR Code");
+    y = addQrCodeBlock(doc, y, qrCodeImageData, "Acompanhe seu reparo pelo QR Code");
   }
 
   // ── ASSINATURAS ──
