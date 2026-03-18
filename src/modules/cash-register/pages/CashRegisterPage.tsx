@@ -49,6 +49,7 @@ const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curren
 
 export default function CashRegisterPage() {
   const { user } = useAuth();
+  const companySettings = useCompanySettings();
   const [tab, setTab] = useState("current");
   const [movPage, setMovPage] = useState(1);
   const [histPage, setHistPage] = useState(1);
