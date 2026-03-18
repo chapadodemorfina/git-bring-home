@@ -66,7 +66,11 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
       internal_notes: "",
       is_active: true,
     });
-    queryClient.invalidateQueries({ queryKey: ["devices-by-customer", customerId] });
+    // Wait for the devices list to refresh before setting the value
+    await queryClient.invalidateQueries({ queryKey: ["devices-by-customer", customerId] });
+    await queryClient.refetchQueries({ queryKey: ["devices-by-customer", customerId] });
+    // Small delay to ensure React re-renders with new options
+    await new Promise((r) => setTimeout(r, 100));
     onDeviceCreated(device.id);
     setOpen(false);
     form.reset();
