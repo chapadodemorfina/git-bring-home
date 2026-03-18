@@ -11,7 +11,7 @@ export function generateSaleThermalReceiptPdf(
   sale: Sale,
   items: SaleItem[],
   payments: SalePayment[],
-  company: CompanyInfo | string,
+  company: CompanyInfo | string = "",
 ) {
   const pageWidth = 80;
   const margin = 4;

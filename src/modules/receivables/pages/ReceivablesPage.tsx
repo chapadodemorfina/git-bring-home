@@ -305,7 +305,7 @@ function NewReceivableDialog({ onClose }: { onClose: () => void }) {
 /* ── WhatsApp Charge Button ── */
 function WhatsAppChargeButton({ receivable }: { receivable: AccountReceivable }) {
   const autoSend = useAutoSendMessage();
-  const companyName = useCompanyName("i9 Solutions");
+  const companyName = useCompanyName();
   const [sending, setSending] = useState(false);
 
   const handleSend = async () => {

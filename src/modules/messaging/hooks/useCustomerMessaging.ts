@@ -116,7 +116,7 @@ async function sendCustomerMessage(params: {
 export function useSendCustomerMessage() {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const companyName = useCompanyName("i9 Solutions");
+  const companyName = useCompanyName();
 
   return useMutation({
     mutationFn: async (params: {
@@ -153,7 +153,7 @@ export function useSendCustomerMessage() {
 
 // ── Hook: Auto-send (non-blocking, fire-and-forget) ──
 export function useAutoSendMessage() {
-  const companyName = useCompanyName("i9 Solutions");
+  const companyName = useCompanyName();
 
   return async (params: {
     customerId?: string | null;

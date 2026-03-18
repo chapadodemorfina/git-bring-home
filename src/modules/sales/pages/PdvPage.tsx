@@ -321,7 +321,7 @@ export default function PdvPage() {
     const { data: items } = await db.from("sale_items").select("*").eq("sale_id", lastSaleId);
     const { data: payments } = await db.from("sale_payments").select("*").eq("sale_id", lastSaleId);
     if (sale && items) {
-      generateSaleThermalReceiptPdf(sale, items, payments || [], "i9 Solution");
+      generateSaleThermalReceiptPdf(sale, items, payments || []);
     }
     setShowSuccessDialog(false);
     clearCart();
