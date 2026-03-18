@@ -49,6 +49,7 @@ const DEVELOPER_CREDIT = "Desenvolvido por Alvo Sistemas e Gestão";
 // ─── Company Info interface ───────────────────────────────────
 export interface CompanyInfo {
   name: string;
+  legalName?: string;
   cnpj: string;
   address: string;
   phone: string;
