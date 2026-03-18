@@ -16,6 +16,7 @@ import {
 } from "../hooks/useCashRegister";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateCashRegisterClosingPdf } from "@/lib/pdf-generators/cash-register-closing-pdf";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
