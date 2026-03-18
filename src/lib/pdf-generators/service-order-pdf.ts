@@ -103,82 +103,73 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
     statusLabels[order.status as keyof typeof statusLabels] || order.status
   );
 
-  y += 1;
-
   // ── 1. INFORMAÇÕES DA OS ──
   y = addSection(doc, "Informações da Ordem de Serviço", y);
   y = addField(doc, "Nº da OS", order.order_number, col1, y);
-  addField(doc, "Prioridade", priorityMap[order.priority] || order.priority, col2, y - 7);
+  addField(doc, "Prioridade", priorityMap[order.priority] || order.priority, col2, y - 6.5);
   y = addField(doc, "Data de Abertura", formatDateTime(order.created_at), col1, y);
-  addField(doc, "Canal de Entrada", channelMap[order.intake_channel] || order.intake_channel, col2, y - 7);
+  addField(doc, "Canal de Entrada", channelMap[order.intake_channel] || order.intake_channel, col2, y - 6.5);
   if (order.expected_deadline) y = addField(doc, "Prazo Estimado", formatDateTime(order.expected_deadline), col1, y);
-  if (order.technician_name) addField(doc, "Técnico Responsável", order.technician_name, col2, y - 7);
+  if (order.technician_name) addField(doc, "Técnico Responsável", order.technician_name, col2, y - 6.5);
   if (order.collection_point_name) y = addField(doc, "Ponto de Coleta", order.collection_point_name, col1, y);
-  y += 1;
 
   // ── 2. DADOS DO CLIENTE ──
   y = addSection(doc, "Dados do Cliente", y);
   y = addField(doc, "Nome", order.customer_name, col1, y);
-  if (order.customer_document) addField(doc, "CPF/CNPJ", order.customer_document, col2, y - 7);
+  if (order.customer_document) addField(doc, "CPF/CNPJ", order.customer_document, col2, y - 6.5);
   if (order.customer_phone) y = addField(doc, "Telefone", order.customer_phone, col1, y);
-  y += 1;
 
   // ── 3. DADOS DO APARELHO ──
   if (order.device_label || order.device_brand) {
     y = addSection(doc, "Dados do Aparelho", y);
     if (order.device_brand) {
       y = addField(doc, "Marca", order.device_brand, col1, y);
-      if (order.device_model) addField(doc, "Modelo", order.device_model, col2, y - 7);
+      if (order.device_model) addField(doc, "Modelo", order.device_model, col2, y - 6.5);
     }
     if (order.device_serial) {
       y = addField(doc, "Nº de Série", order.device_serial, col1, y);
-      if (order.device_color) addField(doc, "Cor", order.device_color, col2, y - 7);
+      if (order.device_color) addField(doc, "Cor", order.device_color, col2, y - 6.5);
     }
     if (order.device_imei) {
-      y += 1;
       y = addHighlightedField(doc, "IMEI", order.device_imei, col1, y, 90);
     }
-    y += 1;
   }
 
   // ── 4. ESTADO FÍSICO ──
   const conditionItems = parsePhysicalCondition(order.physical_condition);
   if (conditionItems && conditionItems.length > 0) {
     y = addChecklistTable(doc, y, conditionItems, "Estado Físico do Aparelho");
-    y += 1;
   } else if (order.physical_condition) {
     y = addSection(doc, "Estado Físico do Aparelho", y);
-    y = addTextCard(doc, order.physical_condition, col1, y, CW, 8);
+    y = addTextCard(doc, order.physical_condition, col1, y, CW);
   }
 
   // ── Acessórios ──
   if (order.accessories_received) {
     y = addSection(doc, "Acessórios Entregues", y);
-    y = addTextCard(doc, order.accessories_received, col1, y, CW, 8);
+    y = addTextCard(doc, order.accessories_received, col1, y, CW);
   }
 
   // ── 5. DESCRIÇÃO DO PROBLEMA ──
   if (order.reported_issue) {
     y = addSection(doc, "Problema Relatado", y);
-    y = addTextCard(doc, order.reported_issue, col1, y, CW, 8.5);
+    y = addTextCard(doc, order.reported_issue, col1, y, CW);
   }
 
   // ── CHECKLIST DE ENTRADA ──
   if (entryChecklist && entryChecklist.length > 0) {
     y = addChecklistTable(doc, y, entryChecklist, "Checklist de Entrada");
-    y += 1;
   }
 
   // ── 6. DIAGNÓSTICO TÉCNICO ──
   if (diagnostic) {
     y = addSection(doc, "Diagnóstico Técnico", y);
-    if (diagnostic.technical_findings) y = addTextCard(doc, `Achados: ${diagnostic.technical_findings}`, col1, y, CW, 8);
-    if (diagnostic.probable_cause) y = addTextCard(doc, `Causa provável: ${diagnostic.probable_cause}`, col1, y, CW, 8);
+    if (diagnostic.technical_findings) y = addTextCard(doc, `Achados: ${diagnostic.technical_findings}`, col1, y, CW);
+    if (diagnostic.probable_cause) y = addTextCard(doc, `Causa provável: ${diagnostic.probable_cause}`, col1, y, CW);
     if (diagnostic.repair_complexity) y = addField(doc, "Complexidade", complexityMap[diagnostic.repair_complexity] || diagnostic.repair_complexity, col1, y);
-    if (diagnostic.repair_viability) addField(doc, "Viabilidade", viabilityMap[diagnostic.repair_viability] || diagnostic.repair_viability, col2, y - 7);
+    if (diagnostic.repair_viability) addField(doc, "Viabilidade", viabilityMap[diagnostic.repair_viability] || diagnostic.repair_viability, col2, y - 6.5);
     if (diagnostic.estimated_repair_hours) y = addField(doc, "Horas Estimadas", `${diagnostic.estimated_repair_hours}h`, col1, y);
-    if (diagnostic.not_repairable_reason) y = addTextCard(doc, `Motivo inviabilidade: ${diagnostic.not_repairable_reason}`, col1, y, CW, 8);
-    y += 1;
+    if (diagnostic.not_repairable_reason) y = addTextCard(doc, `Motivo inviabilidade: ${diagnostic.not_repairable_reason}`, col1, y, CW);
   }
 
   // ── 7. SERVIÇOS E PEÇAS ──
@@ -195,7 +186,6 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
       ]),
       { columnStyles: { 0: { cellWidth: 65 }, 3: { halign: "right" as const }, 4: { halign: "right" as const } } }
     );
-    y += 1;
   }
 
   // ── 8. RESUMO FINANCEIRO ──
@@ -212,13 +202,12 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   // ── CHECKLIST DE SAÍDA ──
   if (exitChecklist && exitChecklist.length > 0) {
     y = addChecklistTable(doc, y, exitChecklist, "Checklist de Saída");
-    y += 1;
   }
 
   // ── OBSERVAÇÕES ──
   if (order.intake_notes) {
     y = addSection(doc, "Observações", y);
-    y = addTextCard(doc, order.intake_notes, col1, y, CW, 8);
+    y = addTextCard(doc, order.intake_notes, col1, y, CW);
   }
 
   // ── HISTÓRICO DE STATUS ──
@@ -232,7 +221,6 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
         h.notes || "—",
       ])
     );
-    y += 1;
   }
 
   // ── TERMOS E GARANTIA ──
@@ -242,14 +230,12 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
 
   // ── CLOSING BLOCK (QR + Signatures) ──
   const hasQr = !!qrCodeImageData;
-  const closingH = (hasQr ? 48 : 0) + 26; // QR ~48mm + signatures ~26mm
+  const closingH = (hasQr ? 36 : 0) + 20; // QR ~36mm + signatures ~20mm
   const pageHeight = doc.internal.pageSize.getHeight();
-  const remaining = pageHeight - y - 20;
+  const remaining = pageHeight - y - 16; // 16mm for footer
 
-  // Decide: fit on current page or start intentional page 2
-  const needsNewPage = remaining < closingH;
-
-  if (needsNewPage) {
+  // Only create page 2 if closing block truly doesn't fit
+  if (remaining < closingH) {
     doc.addPage();
     y = addContinuationHeader(doc, order.order_number, order.customer_name || "—");
   }
