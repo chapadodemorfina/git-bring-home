@@ -199,7 +199,7 @@ export default function ServiceOrderDetailPage() {
       qrCodeImageData = await generateQrDataUrl(trackingUrl);
     }
 
-    generateServiceOrderPdf({
+    await generateServiceOrderPdf({
       order,
       statusHistory: statusHistory || [],
       company,

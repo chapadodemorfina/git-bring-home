@@ -76,11 +76,30 @@ export function createPdf(orientation: "portrait" | "landscape" = "portrait") {
 }
 
 // ─── Premium Header ──────────────────────────────────────────
+/** Convert an image URL to a base64 data URL for jsPDF embedding */
+export async function fetchImageAsDataUrl(url: string): Promise<string | null> {
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 export function addHeader(
   doc: jsPDF,
   company: CompanyInfo | string,
   title: string,
-  subtitle?: string
+  subtitle?: string,
+  logoDataUrl?: string | null
 ): number {
   const pageW = pw(doc);
   const t = THEME;
@@ -95,11 +114,21 @@ export function addHeader(
   doc.setFillColor(...t.primaryDark);
   doc.rect(0, 0, pageW, 2, "F");
 
+  // ── Logo (if available) ──
+  const logoSize = 14;
+  let textStartX = M;
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, "PNG", M, 4, logoSize, logoSize);
+      textStartX = M + logoSize + 3;
+    } catch { /* skip logo on error */ }
+  }
+
   // ── Company name (prominent) ──
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...t.primaryDark);
-  doc.text(companyName, M, 12);
+  doc.text(companyName, textStartX, 12);
 
   // ── Company meta (single formatted line) ──
   const meta: string[] = [];
@@ -114,20 +143,20 @@ export function addHeader(
     doc.setFontSize(6.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...t.mutedText);
-    doc.text(info.legalName, M, metaY);
+    doc.text(info.legalName, textStartX, metaY);
     metaY += 3;
   }
   if (meta.length > 0) {
     doc.setFontSize(6.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...t.mutedText);
-    doc.text(meta.join("  ·  "), M, metaY);
+    doc.text(meta.join("  ·  "), textStartX, metaY);
     metaY += 3;
   }
   if (info.address) {
     doc.setFontSize(6.5);
     doc.setTextColor(...t.mutedText);
-    doc.text(info.address, M, metaY);
+    doc.text(info.address, textStartX, metaY);
     metaY += 3;
   }
 

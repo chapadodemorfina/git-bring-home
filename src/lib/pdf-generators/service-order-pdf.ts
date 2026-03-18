@@ -2,7 +2,7 @@ import {
   createPdf, addHeader, addSection, addField, addHighlightedField,
   addTable, addTotalBox, addChecklistTable, addSignatureBlock,
   addTermsBlock, addQrCodeBlock, savePdf, addTextCard,
-  addContinuationHeader,
+  addContinuationHeader, fetchImageAsDataUrl,
   formatCurrency, formatDateTime,
   type CompanyInfo,
   DEFAULT_THEME,
@@ -96,7 +96,7 @@ function parsePhysicalCondition(raw: string | null | undefined): ChecklistItem[]
 }
 
 // ─── Main Generator ───────────────────────────────────────────
-export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
+export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const { order, statusHistory, company, diagnostic, quoteData, quoteItems,
           signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions } = opts;
 
@@ -105,10 +105,14 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const col2 = 110;
   const CW = 165; // content width for text cards
 
+  // ── Fetch logo ──
+  const logoDataUrl = company.logoUrl ? await fetchImageAsDataUrl(company.logoUrl) : null;
+
   // ── HEADER ──
   let y = addHeader(doc, company,
     `Ordem de Serviço: ${order.order_number}`,
-    statusLabels[order.status as keyof typeof statusLabels] || order.status
+    statusLabels[order.status as keyof typeof statusLabels] || order.status,
+    logoDataUrl
   );
 
   // ── 1. INFORMAÇÕES DA OS ──
