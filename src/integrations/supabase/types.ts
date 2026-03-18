@@ -3301,9 +3301,11 @@ export type Database = {
           end_date: string
           id: string
           is_void: boolean
+          quote_id: string | null
           service_order_id: string
           start_date: string
           terms: string | null
+          updated_at: string
           void_reason: string | null
           warranty_number: string
           warranty_type: string
@@ -3316,9 +3318,11 @@ export type Database = {
           end_date?: string
           id?: string
           is_void?: boolean
+          quote_id?: string | null
           service_order_id: string
           start_date?: string
           terms?: string | null
+          updated_at?: string
           void_reason?: string | null
           warranty_number?: string
           warranty_type?: string
@@ -3331,9 +3335,11 @@ export type Database = {
           end_date?: string
           id?: string
           is_void?: boolean
+          quote_id?: string | null
           service_order_id?: string
           start_date?: string
           terms?: string | null
+          updated_at?: string
           void_reason?: string | null
           warranty_number?: string
           warranty_type?: string
@@ -3347,6 +3353,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "warranties_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "repair_quotes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "warranties_service_order_id_fkey"
             columns: ["service_order_id"]
             isOneToOne: false
@@ -3355,47 +3368,101 @@ export type Database = {
           },
         ]
       }
+      warranty_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          item_type: string
+          quantity: number
+          reference_id: string | null
+          warranty_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          item_type: string
+          quantity?: number
+          reference_id?: string | null
+          warranty_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          item_type?: string
+          quantity?: number
+          reference_id?: string | null
+          warranty_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warranty_items_warranty_id_fkey"
+            columns: ["warranty_id"]
+            isOneToOne: false
+            referencedRelation: "warranties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       warranty_returns: {
         Row: {
           created_at: string
           created_by: string | null
+          customer_id: string | null
           id: string
           new_service_order_id: string | null
           original_service_order_id: string
           outcome: string | null
           reason: string
+          resolved_at: string | null
           return_cause: string | null
           status: string
+          technical_analysis: string | null
           updated_at: string
           warranty_id: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           id?: string
           new_service_order_id?: string | null
           original_service_order_id: string
           outcome?: string | null
           reason: string
+          resolved_at?: string | null
           return_cause?: string | null
           status?: string
+          technical_analysis?: string | null
           updated_at?: string
           warranty_id: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           id?: string
           new_service_order_id?: string | null
           original_service_order_id?: string
           outcome?: string | null
           reason?: string
+          resolved_at?: string | null
           return_cause?: string | null
           status?: string
+          technical_analysis?: string | null
           updated_at?: string
           warranty_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "warranty_returns_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "warranty_returns_new_service_order_id_fkey"
             columns: ["new_service_order_id"]
@@ -3418,6 +3485,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      warranty_rules: {
+        Row: {
+          applies_to: string
+          created_at: string
+          device_type: string | null
+          id: string
+          is_active: boolean
+          name: string
+          service_category: string | null
+          warranty_days: number
+        }
+        Insert: {
+          applies_to?: string
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          service_category?: string | null
+          warranty_days?: number
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          service_category?: string | null
+          warranty_days?: number
+        }
+        Relationships: []
       }
       whatsapp_ai_actions: {
         Row: {
@@ -3907,6 +4007,14 @@ export type Database = {
           _product_id: string
           _quantity?: number
           _service_order_id: string
+        }
+        Returns: Json
+      }
+      resolve_warranty_return: {
+        Args: {
+          _outcome: string
+          _return_id: string
+          _technical_analysis?: string
         }
         Returns: Json
       }

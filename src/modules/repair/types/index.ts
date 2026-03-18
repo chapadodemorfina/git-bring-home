@@ -26,12 +26,27 @@ export interface Warranty {
   id: string;
   service_order_id: string;
   warranty_number: string;
+  warranty_type: string;
+  customer_id: string | null;
+  quote_id: string | null;
   start_date: string;
   end_date: string;
   coverage_description: string | null;
   terms: string | null;
   is_void: boolean;
+  void_reason: string | null;
   created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WarrantyItem {
+  id: string;
+  warranty_id: string;
+  item_type: "part" | "service";
+  reference_id: string | null;
+  description: string;
+  quantity: number;
   created_at: string;
 }
 
@@ -40,11 +55,27 @@ export interface WarrantyReturn {
   warranty_id: string;
   original_service_order_id: string;
   new_service_order_id: string | null;
+  customer_id: string | null;
   reason: string;
+  return_cause: string | null;
+  technical_analysis: string | null;
+  outcome: string | null;
   status: string;
+  resolved_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface WarrantyRule {
+  id: string;
+  name: string;
+  device_type: string | null;
+  service_category: string | null;
+  warranty_days: number;
+  applies_to: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 export const repairServiceSchema = z.object({
@@ -81,3 +112,33 @@ export const warrantyReturnSchema = z.object({
 });
 
 export type WarrantyReturnFormData = z.infer<typeof warrantyReturnSchema>;
+
+export const warrantyTypeLabels: Record<string, string> = {
+  service: "Serviço",
+  part: "Peças",
+  mixed: "Misto",
+  repair_warranty: "Reparo",
+};
+
+export const returnOutcomeLabels: Record<string, string> = {
+  pending: "Pendente",
+  covered: "Coberto",
+  not_covered: "Não Coberto",
+  partial: "Parcial",
+};
+
+export const returnStatusLabels: Record<string, string> = {
+  open: "Aberto",
+  in_analysis: "Em Análise",
+  resolved: "Resolvido",
+  cancelled: "Cancelado",
+};
+
+export const returnCauses = [
+  { value: "same_issue", label: "Mesmo defeito" },
+  { value: "different_issue", label: "Defeito diferente" },
+  { value: "misuse", label: "Mau uso" },
+  { value: "water_damage", label: "Dano por líquido" },
+  { value: "physical_damage", label: "Dano físico" },
+  { value: "manufacturing_defect", label: "Defeito de fabricação" },
+];
