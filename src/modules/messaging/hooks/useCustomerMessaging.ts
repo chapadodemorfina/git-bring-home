@@ -116,7 +116,7 @@ async function sendCustomerMessage(params: {
 export function useSendCustomerMessage() {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const companyName = useCompanyName("i9 Solutions");
+  const companyName = useCompanyName();
 
   return useMutation({
     mutationFn: async (params: {
