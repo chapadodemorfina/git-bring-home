@@ -100,7 +100,9 @@ export default function SettingsPage() {
             <Field label="Nome da Empresa" value={v.company_name} onChange={(val) => set("company_name", val)} placeholder="Minha Empresa" />
             <Field label="Razão Social" value={v.company_legal_name} onChange={(val) => set("company_legal_name", val)} placeholder="Empresa Ltda" />
             <Field label="CNPJ" value={v.company_cnpj} onChange={(val) => set("company_cnpj", val)} placeholder="00.000.000/0001-00" />
-            <Field label="URL do Logo" value={v.company_logo_url} onChange={(val) => set("company_logo_url", val)} placeholder="https://..." />
+            <div>
+              <LogoUpload currentUrl={v.company_logo_url || ""} onUrlChange={(url) => set("company_logo_url", url)} />
+            </div>
           </div>
           <div className="flex items-end gap-4">
             <div className="space-y-2">
