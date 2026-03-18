@@ -105,6 +105,7 @@ import SaleCreatePage from "./modules/sales/pages/SaleCreatePage";
 import SaleDetailPage from "./modules/sales/pages/SaleDetailPage";
 import SaleEditPage from "./modules/sales/pages/SaleEditPage";
 import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
+import PdvPage from "./modules/sales/pages/PdvPage";
 
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
@@ -192,7 +193,8 @@ const App = () => (
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><CollectionPointEditPage /></ProtectedPage>} />
               <Route path="/collection-points/commissions" element={<ProtectedPage><CommissionManagementPage /></ProtectedPage>} />
 
-              {/* Sales */}
+              {/* Sales & PDV */}
+              <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><PdvPage /></RoleGuard></ProtectedRoute>} />
               <Route path="/sales" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><SalesListPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleCreatePage /></RoleGuard></ProtectedPage>} />
