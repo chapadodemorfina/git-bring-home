@@ -5,13 +5,37 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://moijoyqwapimforpijdc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaWpveXF3YXBpbWZvcnBpamRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NTYwMzgsImV4cCI6MjA4ODQzMjAzOH0.eOPsWZsp-j04MNiW1saNm9cWTN8giZ5H0L86GH3acNo";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+/**
+ * Multi-tenant header injection.
+ * The active tenant ID is sent as `x-tenant-id` on every request.
+ * PostgREST exposes it as current_setting('request.header.x-tenant-id', true).
+ * The DB function get_active_tenant_id() validates membership before returning it.
+ */
+const _tenantRef: { current: string | null } = { current: null };
+
+const tenantFetch: typeof fetch = (input, init) => {
+  const headers = new Headers(init?.headers);
+  if (_tenantRef.current) {
+    headers.set('x-tenant-id', _tenantRef.current);
+  }
+  return fetch(input, { ...init, headers });
+};
+
+export function setActiveTenantId(id: string | null) {
+  _tenantRef.current = id;
+}
+
+export function getActiveTenantId(): string | null {
+  return _tenantRef.current;
+}
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
+  global: {
+    fetch: tenantFetch,
+  },
 });
