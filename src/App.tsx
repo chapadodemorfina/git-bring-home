@@ -144,6 +144,7 @@ const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <TenantProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
