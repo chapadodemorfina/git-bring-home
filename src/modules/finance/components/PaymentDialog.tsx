@@ -136,7 +136,7 @@ export default function PaymentDialog({ entryId, remainingAmount, payments, open
 
           <div className="space-y-2">
             <Label>Referência</Label>
-            <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Nº comprovante, NSU..." />
+            <Input value={ref} onChange={(e) => setRef(e.target.value)} placeholder="Nº comprovante, NSU..." />
           </div>
           <div className="space-y-2">
             <Label>Observações</Label>
