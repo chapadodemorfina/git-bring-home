@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatures } from "../hooks/useServiceOrders";
 import { statusLabels, statusColors, priorityLabels, priorityColors, channelLabels, statusTransitions } from "../types";
