@@ -3277,6 +3277,77 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          tenant_id: string
+          tenant_role: Database["public"]["Enums"]["tenant_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          tenant_id: string
+          tenant_role?: Database["public"]["Enums"]["tenant_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          tenant_id?: string
+          tenant_role?: Database["public"]["Enums"]["tenant_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string | null
+          document: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       transport_events: {
         Row: {
           changed_by: string | null
@@ -3918,6 +3989,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_tenant: {
+        Args: { _document?: string; _name: string; _slug: string }
+        Returns: Json
+      }
       create_warranty_return: {
         Args: { _reason: string; _warranty_id: string }
         Returns: Json
@@ -3945,6 +4020,7 @@ export type Database = {
       }
       generate_sale_commissions: { Args: { _sale_id: string }; Returns: number }
       generate_so_commissions: { Args: { _so_id: string }; Returns: number }
+      get_active_tenant_id: { Args: never; Returns: string }
       get_cached_dashboard_kpis: { Args: never; Returns: Json }
       get_cached_inventory_usage: { Args: never; Returns: Json }
       get_cached_partner_performance: { Args: never; Returns: Json }
@@ -3978,6 +4054,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
       get_work_queues: {
         Args: {
           _collection_point_only?: boolean
@@ -4007,6 +4084,10 @@ export type Database = {
       is_cp_operator_for_so: { Args: { _so_id: string }; Returns: boolean }
       is_customer_for_so: { Args: { _so_id: string }; Returns: boolean }
       is_technician_for_so: { Args: { _so_id: string }; Returns: boolean }
+      is_tenant_admin: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
       mark_overdue_entries: { Args: never; Returns: number }
       mark_overdue_receivables: { Args: never; Returns: number }
       process_notification_events: { Args: never; Returns: Json }
@@ -4077,6 +4158,7 @@ export type Database = {
         Returns: Json
       }
       scrap_dashboard_summary: { Args: never; Returns: Json }
+      switch_tenant: { Args: { _tenant_id: string }; Returns: Json }
       void_warranty: {
         Args: { _reason: string; _warranty_id: string }
         Returns: Json
@@ -4252,6 +4334,7 @@ export type Database = {
         | "return"
         | "reserved"
         | "consumed"
+      tenant_role: "owner" | "admin" | "member"
       test_result: "pass" | "fail" | "abnormal" | "inconclusive" | "not_tested"
       transfer_status:
         | "pending_pickup"
@@ -4563,6 +4646,7 @@ export const Constants = {
         "reserved",
         "consumed",
       ],
+      tenant_role: ["owner", "admin", "member"],
       test_result: ["pass", "fail", "abnormal", "inconclusive", "not_tested"],
       transfer_status: [
         "pending_pickup",
