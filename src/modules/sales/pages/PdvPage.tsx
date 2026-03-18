@@ -241,13 +241,30 @@ export default function PdvPage() {
         finalize: true,
       });
 
+      // Auto-create cash register movement if register is open
+      if (openCashRegister) {
+        try {
+          await addCashMovement.mutateAsync({
+            cash_register_id: openCashRegister.id,
+            movement_type: "sale",
+            payment_method: paymentMethod,
+            amount: payAmount,
+            description: `Venda ${result.sale_number || ""}`.trim(),
+            reference_type: "sale",
+            reference_id: result.id,
+          });
+        } catch {
+          // non-blocking: movement registration failure shouldn't block the sale
+        }
+      }
+
       setLastSaleId(result.id);
       setLastSaleNumber(result.sale_number || "");
       setShowSuccessDialog(true);
     } catch {
       // error handled by mutation
     }
-  }, [cart, user, customerId, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast]);
+  }, [cart, user, customerId, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast, openCashRegister, addCashMovement]);
 
   // ── Post-sale actions ──
   const handleNewSale = useCallback(() => {
