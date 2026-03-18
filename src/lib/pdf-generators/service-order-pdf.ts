@@ -292,12 +292,15 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   }
 
   // ── ASSINATURAS ──
+  const sigList: { name: string; role: string; imageData?: string }[] = [];
   if (showSigs) {
-    const sigList = (signatures || []).map((s) => ({
-      name: s.signer_name,
-      role: s.signer_role === "customer" ? "Cliente" : s.signer_role === "technician" ? "Técnico" : s.signer_role,
-      imageData: s.signature_data,
-    }));
+    (signatures || []).forEach((s) => {
+      sigList.push({
+        name: s.signer_name,
+        role: s.signer_role === "customer" ? "Cliente" : s.signer_role === "technician" ? "Técnico" : s.signer_role,
+        imageData: s.signature_data,
+      });
+    });
     if (sigList.length === 0) {
       sigList.push({ name: "", role: "Cliente", imageData: undefined });
       sigList.push({ name: "", role: "Técnico", imageData: undefined });
@@ -305,6 +308,20 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
       sigList.push({ name: "", role: sigList[0].role === "Cliente" ? "Técnico" : "Cliente", imageData: undefined });
     }
     y = addSignatureBlock(doc, y, sigList as any);
+  }
+
+  // ── ADD SIGNATURES TO ALL PAGES (when multi-page) ──
+  const totalPages = doc.getNumberOfPages();
+  if (showSigs && totalPages > 1) {
+    const pageH = doc.internal.pageSize.getHeight();
+    // Add signature block to all pages except the last (which already has it)
+    for (let p = 1; p < totalPages; p++) {
+      doc.setPage(p);
+      const sigY = pageH - 16 - 18; // position just above footer area
+      addSignatureBlock(doc, sigY, sigList.map(s => ({ ...s, imageData: undefined })));
+    }
+    // Return to last page
+    doc.setPage(totalPages);
   }
 
   // ── SAVE ──
