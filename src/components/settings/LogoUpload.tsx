@@ -38,7 +38,7 @@ export function LogoUpload({ currentUrl, onUrlChange }: LogoUploadProps) {
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET)
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { cacheControl: "3600" });
 
       if (uploadError) throw uploadError;
 
