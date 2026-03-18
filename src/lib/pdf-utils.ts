@@ -63,8 +63,13 @@ function ph(doc: jsPDF) { return doc.internal.pageSize.getHeight(); }
 const M = 14; // margin
 function cw(doc: jsPDF) { return pw(doc) - M * 2; }
 
+// Default bottom reserve: 18mm for footer. Can be overridden for signature reserves.
+let _bottomReserve = 18;
+export function setBottomReserve(value: number) { _bottomReserve = value; }
+export function getBottomReserve() { return _bottomReserve; }
+
 function ensureSpace(doc: jsPDF, y: number, needed: number): number {
-  if (y + needed > ph(doc) - 18) { doc.addPage(); return 16; }
+  if (y + needed > ph(doc) - _bottomReserve) { doc.addPage(); return 16; }
   return y;
 }
 
