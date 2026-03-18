@@ -614,12 +614,12 @@ export function addTermsBlock(
 
   y = addSection(doc, title, y);
 
-  doc.setFontSize(6);
+  doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(...THEME.mutedText);
+  doc.setTextColor(70, 80, 95);
 
   const lines = doc.splitTextToSize(content, maxW);
-  const lineH = 2.5;
+  const lineH = 2.7;
   const pageH = ph(doc);
   const footerMargin = 18;
 

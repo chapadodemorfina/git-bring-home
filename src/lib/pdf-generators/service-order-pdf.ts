@@ -261,17 +261,21 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
 
   // ── CLOSING BLOCK (QR + Signatures) ──
   const hasQr = !!qrCodeImageData;
-  const closingH = (hasQr ? 36 : 0) + 20; // QR ~36mm + signatures ~20mm
+  const sigBlockH = 20;
+  const qrBlockH = hasQr ? 36 : 0;
+  const closingH = qrBlockH + sigBlockH;
   const pageHeight = doc.internal.pageSize.getHeight();
   const remaining = pageHeight - y - 16; // 16mm for footer
 
-  // Only create page 2 if closing block truly doesn't fit
-  if (remaining < closingH) {
+  // For short OS: skip QR if it would force a page break but signatures alone fit
+  const skipQrToFitOnePage = hasQr && remaining < closingH && remaining >= sigBlockH;
+
+  if (!skipQrToFitOnePage && remaining < closingH) {
     doc.addPage();
     y = addContinuationHeader(doc, order.order_number, order.customer_name || "—");
   }
 
-  if (hasQr) {
+  if (hasQr && !skipQrToFitOnePage) {
     y = addQrCodeBlock(doc, y, qrCodeImageData, "Acompanhe seu reparo pelo QR Code");
   }
 
