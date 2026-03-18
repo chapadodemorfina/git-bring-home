@@ -41,7 +41,7 @@ import {
   DollarSign, Lock, Unlock, ArrowDownCircle, ArrowUpCircle,
   Banknote, CreditCard, Smartphone, Receipt, TrendingDown,
   TrendingUp, AlertTriangle, CheckCircle2, Clock, History,
-  Loader2,
+  Loader2, Printer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
