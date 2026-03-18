@@ -217,6 +217,12 @@ const App = () => (
               {/* Message History */}
               <Route path="/message-history" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><MessageHistoryPage /></RoleGuard></ProtectedPage>} />
 
+              {/* Quotes */}
+              <Route path="/quotes" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician", "finance"]}><QuotesListPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician"]}><QuoteCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician", "finance"]}><QuoteDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician"]}><QuoteEditPage /></RoleGuard></ProtectedPage>} />
+
               {/* Warranties */}
               <Route path="/warranties" element={<ProtectedPage><WarrantiesPage /></ProtectedPage>} />
 
