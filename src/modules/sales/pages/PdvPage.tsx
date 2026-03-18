@@ -106,7 +106,7 @@ export default function PdvPage() {
   const { data: openCashRegister } = useOpenCashRegister();
   const addCashMovement = useAddCashMovement();
   const generateCommissions = useGenerateSaleCommissions();
-
+  const autoSend = useAutoSendMessage();
   // ── State ──
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
