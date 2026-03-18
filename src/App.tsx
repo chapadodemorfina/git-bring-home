@@ -109,6 +109,7 @@ import PdvPage from "./modules/sales/pages/PdvPage";
 import CashRegisterPage from "./modules/cash-register/pages/CashRegisterPage";
 import CommissionsPage from "./modules/commissions/pages/CommissionsPage";
 import MessageHistoryPage from "./modules/messaging/pages/MessageHistoryPage";
+import ReceivablesPage from "./modules/receivables/pages/ReceivablesPage";
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
 
@@ -224,6 +225,7 @@ const App = () => (
               <Route path="/finance/new" element={<ProtectedPage><FinanceCreatePage /></ProtectedPage>} />
               <Route path="/finance/:id" element={<ProtectedPage><FinanceDetailPage /></ProtectedPage>} />
               <Route path="/finance/:id/edit" element={<ProtectedPage><FinanceEditPage /></ProtectedPage>} />
+              <Route path="/financial/receivables" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance", "front_desk"]}><ReceivablesPage /></RoleGuard></ProtectedPage>} />
 
               {/* Customer Portal */}
               <Route path="/portal/login" element={<PortalLoginPage />} />

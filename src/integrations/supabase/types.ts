@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts_receivable: {
+        Row: {
+          amount_received: number
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          description: string
+          due_date: string | null
+          id: string
+          reference_id: string | null
+          reference_type: string
+          remaining_amount: number | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          amount_received?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description: string
+          due_date?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string
+          remaining_amount?: number | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_received?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string
+          due_date?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string
+          remaining_amount?: number | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_receivable_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           description: string | null
@@ -1949,6 +2005,47 @@ export type Database = {
           },
         ]
       }
+      receivable_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          paid_at: string
+          payment_method: string
+          receivable_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method?: string
+          receivable_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method?: string
+          receivable_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivable_payments_receivable_id_fkey"
+            columns: ["receivable_id"]
+            isOneToOne: false
+            referencedRelation: "accounts_receivable"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repair_parts_used: {
         Row: {
           consumed_by: string | null
@@ -3757,6 +3854,7 @@ export type Database = {
       is_customer_for_so: { Args: { _so_id: string }; Returns: boolean }
       is_technician_for_so: { Args: { _so_id: string }; Returns: boolean }
       mark_overdue_entries: { Args: never; Returns: number }
+      mark_overdue_receivables: { Args: never; Returns: number }
       process_notification_events: { Args: never; Returns: Json }
       process_sale_return: {
         Args: {
@@ -3774,6 +3872,7 @@ export type Database = {
         Returns: Json
       }
       public_track_order: { Args: { _token: string }; Returns: Json }
+      receivables_summary: { Args: never; Returns: Json }
       recover_scrap_part: {
         Args: { _recovered_part_id: string }
         Returns: Json
@@ -3787,6 +3886,15 @@ export type Database = {
           _payment_date?: string
           _payment_method?: string
           _reference?: string
+        }
+        Returns: Json
+      }
+      register_receivable_payment: {
+        Args: {
+          _amount: number
+          _notes?: string
+          _payment_method?: string
+          _receivable_id: string
         }
         Returns: Json
       }
