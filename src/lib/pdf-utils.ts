@@ -101,15 +101,6 @@ export function addHeader(
   doc.setTextColor(...t.primaryDark);
   doc.text(companyName, M, 12);
 
-  // ── Legal name (if different from trade name) ──
-  if (info.legalName && info.legalName !== info.name) {
-    doc.setFontSize(6.5);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...t.mutedText);
-    doc.text(info.legalName, M, 16);
-    metaY = 19;
-  }
-
   // ── Company meta (single formatted line) ──
   const meta: string[] = [];
   if (info.cnpj) meta.push(`CNPJ ${info.cnpj}`);
@@ -117,6 +108,15 @@ export function addHeader(
   if (info.email) meta.push(info.email);
 
   let metaY = 16;
+
+  // ── Legal name (if different from trade name) ──
+  if (info.legalName && info.legalName !== info.name) {
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...t.mutedText);
+    doc.text(info.legalName, M, metaY);
+    metaY += 3;
+  }
   if (meta.length > 0) {
     doc.setFontSize(6.5);
     doc.setFont("helvetica", "normal");
