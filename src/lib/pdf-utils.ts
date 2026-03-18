@@ -143,14 +143,14 @@ export function addHeader(
     doc.setFontSize(6.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...t.mutedText);
-    doc.text(info.legalName, M, metaY);
+    doc.text(info.legalName, textStartX, metaY);
     metaY += 3;
   }
   if (meta.length > 0) {
     doc.setFontSize(6.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...t.mutedText);
-    doc.text(meta.join("  ·  "), M, metaY);
+    doc.text(meta.join("  ·  "), textStartX, metaY);
     metaY += 3;
   }
   if (info.address) {
