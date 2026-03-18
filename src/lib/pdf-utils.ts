@@ -562,6 +562,34 @@ export function addSignatureBlock(
   return y + cardH + 1;
 }
 
+// ─── Compact Initials (for intermediate pages) ───────────────
+export function addCompactInitials(
+  doc: jsPDF,
+  pageNum: number,
+  roles: string[] = ["Cliente", "Técnico"]
+) {
+  doc.setPage(pageNum);
+  const pageW = pw(doc);
+  const pageH = ph(doc);
+  const initialsY = pageH - 28; // above footer area
+
+  const totalW = roles.length * 32 + (roles.length - 1) * 8;
+  let startX = pageW - M - totalW;
+
+  roles.forEach((role, i) => {
+    const x = startX + i * 40;
+    // Dotted line
+    doc.setDrawColor(...THEME.mutedText);
+    doc.setLineWidth(0.1);
+    doc.line(x, initialsY + 4, x + 28, initialsY + 4);
+    // Role label
+    doc.setFontSize(5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...THEME.mutedText);
+    doc.text(`Rubrica ${role}`, x + 14, initialsY + 7, { align: "center" });
+  });
+}
+
 // ─── Watermark ────────────────────────────────────────────────
 export function addWatermark(doc: jsPDF, text: string) {
   const pageCount = doc.getNumberOfPages();
