@@ -96,7 +96,7 @@ export function useCompanySettings(): CompanySettings {
   return data || DEFAULTS;
 }
 
-/** Helper to check boolean settings */
+/** Helper to check boolean settings — empty/undefined defaults to true (show) */
 export function settingIsTrue(value: string | undefined): boolean {
-  return value !== "false" && value !== "0" && value !== "";
+  return value !== "false" && value !== "0";
 }
