@@ -305,27 +305,42 @@ function NewReceivableDialog({ onClose }: { onClose: () => void }) {
 function WhatsAppChargeButton({ receivable }: { receivable: AccountReceivable }) {
   const autoSend = useAutoSendMessage();
   const companyName = useCompanyName("i9 Solutions");
+  const [sending, setSending] = useState(false);
 
   const handleSend = async () => {
     if (!receivable.customer_id) return;
-    const message = `Olá ${receivable.customer_name || "Cliente"},\n\nInformamos que existe um valor pendente:\n\n📋 *${receivable.description}*\n💰 Valor: *${formatCurrency(receivable.remaining_amount)}*\n📅 Vencimento: *${receivable.due_date ? format(new Date(receivable.due_date), "dd/MM/yyyy") : "A combinar"}*\n\nPara mais informações, entre em contato.\n\nAtenciosamente,\n${companyName}`;
-
+    setSending(true);
     try {
-      await autoSend.mutateAsync({
+      // Need phone — fetch customer
+      const { data: customer } = await (supabase as any).from("customers").select("whatsapp, phone").eq("id", receivable.customer_id).single();
+      const phone = customer?.whatsapp || customer?.phone;
+      if (!phone) return;
+
+      const message = `Olá ${receivable.customer_name || "Cliente"},\n\nInformamos que existe um valor pendente:\n\n📋 *${receivable.description}*\n💰 Valor: *${formatCurrency(receivable.remaining_amount)}*\n📅 Vencimento: *${receivable.due_date ? format(new Date(receivable.due_date), "dd/MM/yyyy") : "A combinar"}*\n\nPara mais informações, entre em contato.\n\nAtenciosamente,\n${companyName}`;
+
+      await autoSend({
         customerId: receivable.customer_id,
+        phone,
         eventType: "receivable_charge",
         referenceType: "receivable",
         referenceId: receivable.id,
         templateKey: "receivable_charge",
-        messageText: message,
+        variables: {
+          customer_name: receivable.customer_name || "Cliente",
+          description: receivable.description,
+          remaining_amount: formatCurrency(receivable.remaining_amount),
+          due_date: receivable.due_date ? format(new Date(receivable.due_date), "dd/MM/yyyy") : "A combinar",
+        },
       });
     } catch {
-      // toast handled by hook
+      // handled
+    } finally {
+      setSending(false);
     }
   };
 
   return (
-    <Button size="sm" variant="ghost" onClick={handleSend} disabled={!receivable.customer_id || autoSend.isPending} title={!receivable.customer_id ? "Sem cliente vinculado" : "Enviar cobrança via WhatsApp"}>
+    <Button size="sm" variant="ghost" onClick={handleSend} disabled={!receivable.customer_id || sending} title={!receivable.customer_id ? "Sem cliente vinculado" : "Enviar cobrança via WhatsApp"}>
       <MessageSquare className="h-3 w-3" />
     </Button>
   );
