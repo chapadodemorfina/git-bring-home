@@ -456,56 +456,56 @@ export function addChecklistTable(
   );
 }
 
-// ─── Signature Block ─────────────────────────────────────────
+// ─── Signature Block (compact) ────────────────────────────────
 export function addSignatureBlock(
   doc: jsPDF,
   y: number,
   signatures: { name: string; role: string; imageData?: string }[]
 ): number {
-  const pageW = pw(doc);
-  y = ensureSpace(doc, y, 40);
+  y = ensureSpace(doc, y, 28);
 
   const sigCount = Math.max(signatures.length, 2);
-  const gap = 10;
+  const gap = 8;
   const slotWidth = (cw(doc) - (sigCount - 1) * gap) / sigCount;
+  const cardH = 22;
 
   signatures.forEach((sig, i) => {
     const x = M + i * (slotWidth + gap);
     const centerX = x + slotWidth / 2;
 
-    // Signature card
+    // Card
     doc.setFillColor(...THEME.cardBg);
     doc.setDrawColor(...THEME.divider);
     doc.setLineWidth(0.15);
-    doc.roundedRect(x, y, slotWidth, 26, 1.5, 1.5, "FD");
+    doc.roundedRect(x, y, slotWidth, cardH, 1.5, 1.5, "FD");
 
     // Signature image
     if (sig.imageData) {
       try {
-        const imgW = Math.min(slotWidth - 12, 50);
-        doc.addImage(sig.imageData, "PNG", centerX - imgW / 2, y + 1, imgW, 12);
+        const imgW = Math.min(slotWidth - 14, 48);
+        doc.addImage(sig.imageData, "PNG", centerX - imgW / 2, y + 1, imgW, 10);
       } catch { /* skip */ }
     }
 
     // Line
     doc.setDrawColor(...THEME.mutedText);
-    doc.setLineWidth(0.25);
-    doc.line(x + 8, y + 15, x + slotWidth - 8, y + 15);
+    doc.setLineWidth(0.2);
+    doc.line(x + 8, y + 13, x + slotWidth - 8, y + 13);
 
     // Name
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...THEME.textColor);
-    doc.text(sig.name || "________________________________", centerX, y + 19, { align: "center" });
+    doc.text(sig.name || "________________________________", centerX, y + 17, { align: "center" });
 
-    // Role badge
+    // Role
     doc.setFontSize(6);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...THEME.primary);
-    doc.text(sig.role, centerX, y + 23, { align: "center" });
+    doc.text(sig.role, centerX, y + 20.5, { align: "center" });
   });
 
-  return y + 29;
+  return y + cardH + 2;
 }
 
 // ─── Watermark ────────────────────────────────────────────────
