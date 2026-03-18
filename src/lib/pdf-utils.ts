@@ -63,8 +63,13 @@ function ph(doc: jsPDF) { return doc.internal.pageSize.getHeight(); }
 const M = 14; // margin
 function cw(doc: jsPDF) { return pw(doc) - M * 2; }
 
+// Default bottom reserve: 18mm for footer. Can be overridden for signature reserves.
+let _bottomReserve = 18;
+export function setBottomReserve(value: number) { _bottomReserve = value; }
+export function getBottomReserve() { return _bottomReserve; }
+
 function ensureSpace(doc: jsPDF, y: number, needed: number): number {
-  if (y + needed > ph(doc) - 18) { doc.addPage(); return 16; }
+  if (y + needed > ph(doc) - _bottomReserve) { doc.addPage(); return 16; }
   return y;
 }
 
@@ -99,7 +104,8 @@ export function addHeader(
   company: CompanyInfo | string,
   title: string,
   subtitle?: string,
-  logoDataUrl?: string | null
+  logoDataUrl?: string | null,
+  qrCodeImageData?: string | null
 ): number {
   const pageW = pw(doc);
   const t = THEME;
@@ -160,11 +166,21 @@ export function addHeader(
     metaY += 3;
   }
 
-  // ── Right: generation date ──
+  // ── Right: QR Code + generation date ──
+  const qrSize = 20;
+  const rightEdge = pageW - M;
+
+  if (qrCodeImageData) {
+    try {
+      doc.addImage(qrCodeImageData, "PNG", rightEdge - qrSize, 3, qrSize, qrSize);
+    } catch { /* skip QR on error */ }
+  }
+
   const dateStr = format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR });
   doc.setFontSize(6);
   doc.setTextColor(...t.mutedText);
-  doc.text(`Emitido em ${dateStr}`, pageW - M, 12, { align: "right" });
+  const dateX = qrCodeImageData ? rightEdge - qrSize - 2 : rightEdge;
+  doc.text(`Emitido em ${dateStr}`, dateX, 12, { align: "right" });
 
   // ── Title row ──
   const titleY = Math.max(metaY + 1, 22);
@@ -544,6 +560,34 @@ export function addSignatureBlock(
   });
 
   return y + cardH + 1;
+}
+
+// ─── Compact Initials (for intermediate pages) ───────────────
+export function addCompactInitials(
+  doc: jsPDF,
+  pageNum: number,
+  roles: string[] = ["Cliente", "Técnico"]
+) {
+  doc.setPage(pageNum);
+  const pageW = pw(doc);
+  const pageH = ph(doc);
+  const initialsY = pageH - 28; // above footer area
+
+  const totalW = roles.length * 32 + (roles.length - 1) * 8;
+  let startX = pageW - M - totalW;
+
+  roles.forEach((role, i) => {
+    const x = startX + i * 40;
+    // Dotted line
+    doc.setDrawColor(...THEME.mutedText);
+    doc.setLineWidth(0.1);
+    doc.line(x, initialsY + 4, x + 28, initialsY + 4);
+    // Role label
+    doc.setFontSize(5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...THEME.mutedText);
+    doc.text(`Rubrica ${role}`, x + 14, initialsY + 7, { align: "center" });
+  });
 }
 
 // ─── Watermark ────────────────────────────────────────────────
