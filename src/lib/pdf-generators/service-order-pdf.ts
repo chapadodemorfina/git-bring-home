@@ -1,8 +1,8 @@
 import {
   createPdf, addHeader, addSection, addField, addHighlightedField,
   addTable, addTotalBox, addChecklistTable, addSignatureBlock,
-  addTermsBlock, addQrCodeBlock, savePdf,
-  formatCurrency, formatDate, formatDateTime,
+  addTermsBlock, addQrCodeBlock, savePdf, addTextBlock,
+  formatCurrency, formatDateTime,
   type CompanyInfo,
   DEFAULT_THEME,
 } from "@/lib/pdf-utils";
@@ -152,116 +152,120 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
           signatures, terms, entryChecklist, exitChecklist, qrCodeImageData } = opts;
 
   const doc = createPdf();
-  const col1 = 14;
+  const col1 = 16;
   const col2 = 110;
 
   // ── HEADER ──
-  let y = addHeader(doc, company, `Ordem de Serviço: ${order.order_number}`,
-    `Status: ${statusLabels[order.status as keyof typeof statusLabels] || order.status}`);
+  let y = addHeader(doc, company,
+    `Ordem de Serviço: ${order.order_number}`,
+    statusLabels[order.status as keyof typeof statusLabels] || order.status
+  );
+
+  y += 2;
 
   // ── 1. INFORMAÇÕES DA OS ──
   y = addSection(doc, "Informações da Ordem de Serviço", y);
   y = addField(doc, "Nº da OS", order.order_number, col1, y);
-  addField(doc, "Prioridade", priorityMap[order.priority] || order.priority, col2, y - 8);
-  y = addField(doc, "Data de Abertura", formatDateTime(order.created_at), col1, y + 2);
-  addField(doc, "Canal de Entrada", channelMap[order.intake_channel] || order.intake_channel, col2, y - 8);
+  addField(doc, "Prioridade", priorityMap[order.priority] || order.priority, col2, y - 7);
+  y = addField(doc, "Data de Abertura", formatDateTime(order.created_at), col1, y);
+  addField(doc, "Canal de Entrada", channelMap[order.intake_channel] || order.intake_channel, col2, y - 7);
   if (order.expected_deadline) {
-    y = addField(doc, "Prazo Estimado", formatDateTime(order.expected_deadline), col1, y + 2);
+    y = addField(doc, "Prazo Estimado", formatDateTime(order.expected_deadline), col1, y);
   }
   if (order.technician_name) {
-    addField(doc, "Técnico Responsável", order.technician_name, col2, y - 8);
+    addField(doc, "Técnico Responsável", order.technician_name, col2, y - 7);
   }
   if (order.collection_point_name) {
-    y = addField(doc, "Ponto de Coleta", order.collection_point_name, col1, y + 2);
+    y = addField(doc, "Ponto de Coleta", order.collection_point_name, col1, y);
   }
-  y += 4;
+  y += 2;
 
   // ── 2. DADOS DO CLIENTE ──
   y = addSection(doc, "Dados do Cliente", y);
   y = addField(doc, "Nome", order.customer_name, col1, y);
   if (order.customer_document) {
-    addField(doc, "CPF/CNPJ", order.customer_document, col2, y - 8);
+    addField(doc, "CPF/CNPJ", order.customer_document, col2, y - 7);
   }
   if (order.customer_phone) {
-    y = addField(doc, "Telefone", order.customer_phone, col1, y + 2);
+    y = addField(doc, "Telefone", order.customer_phone, col1, y);
   }
-  y += 4;
+  y += 2;
 
   // ── 3. DADOS DO APARELHO ──
   if (order.device_label || order.device_brand) {
     y = addSection(doc, "Dados do Aparelho", y);
-    if (order.device_brand) y = addField(doc, "Marca", order.device_brand, col1, y);
-    if (order.device_model) addField(doc, "Modelo", order.device_model, col2, y - 8);
-    if (order.device_serial) y = addField(doc, "Nº de Série", order.device_serial, col1, y + 2);
-    if (order.device_color) addField(doc, "Cor", order.device_color, col2, y - 8);
+    if (order.device_brand) {
+      y = addField(doc, "Marca", order.device_brand, col1, y);
+      if (order.device_model) addField(doc, "Modelo", order.device_model, col2, y - 7);
+    }
+    if (order.device_serial) {
+      y = addField(doc, "Nº de Série", order.device_serial, col1, y);
+      if (order.device_color) addField(doc, "Cor", order.device_color, col2, y - 7);
+    }
 
-    // IMEI with highlight
+    // IMEI highlight
     if (order.device_imei) {
-      y += 2;
+      y += 1;
       y = addHighlightedField(doc, "IMEI", order.device_imei, col1, y, 90);
     }
-    y += 2;
+    y += 1;
   }
 
-  // ── 4. ESTADO DO APARELHO (Physical Condition Checklist) ──
+  // ── 4. ESTADO FÍSICO ──
   const conditionItems = parsePhysicalCondition(order.physical_condition);
   if (conditionItems && conditionItems.length > 0) {
     y = addChecklistTable(doc, y, conditionItems, "Estado Físico do Aparelho");
-    y += 4;
+    y += 2;
   } else if (order.physical_condition) {
     y = addSection(doc, "Estado Físico do Aparelho", y);
-    y = addField(doc, "Condição", order.physical_condition, col1, y, 170);
-    y += 4;
+    y = addField(doc, "Condição", order.physical_condition, col1, y, 165);
+    y += 2;
   }
 
   // Accessories
   if (order.accessories_received) {
     y = addSection(doc, "Acessórios Entregues", y);
-    y = addField(doc, "Itens", order.accessories_received, col1, y, 170);
-    y += 4;
+    y = addField(doc, "Itens", order.accessories_received, col1, y, 165);
+    y += 2;
   }
 
   // ── 5. DESCRIÇÃO DO PROBLEMA ──
   if (order.reported_issue) {
-    y = addSection(doc, "Descrição do Problema", y);
-    doc.setFontSize(9);
-    doc.setTextColor(...DEFAULT_THEME.textColor);
-    const lines = doc.splitTextToSize(order.reported_issue, 170);
-    doc.text(lines, col1, y);
-    y += lines.length * 4 + 4;
+    y = addSection(doc, "Descrição do Problema Relatado", y);
+    y = addTextBlock(doc, order.reported_issue, col1, y, 165, 8.5);
   }
 
   // ── CHECKLIST DE ENTRADA ──
   if (entryChecklist && entryChecklist.length > 0) {
     y = addChecklistTable(doc, y, entryChecklist, "Checklist de Entrada");
-    y += 4;
+    y += 2;
   }
 
   // ── 6. DIAGNÓSTICO TÉCNICO ──
   if (diagnostic) {
     y = addSection(doc, "Diagnóstico Técnico", y);
     if (diagnostic.technical_findings) {
-      y = addField(doc, "Achados Técnicos", diagnostic.technical_findings, col1, y, 170);
+      y = addField(doc, "Achados Técnicos", diagnostic.technical_findings, col1, y, 165);
     }
     if (diagnostic.probable_cause) {
-      y = addField(doc, "Causa Provável", diagnostic.probable_cause, col1, y + 2, 170);
+      y = addField(doc, "Causa Provável", diagnostic.probable_cause, col1, y, 165);
     }
     if (diagnostic.repair_complexity) {
-      y = addField(doc, "Complexidade", complexityMap[diagnostic.repair_complexity] || diagnostic.repair_complexity, col1, y + 2);
+      y = addField(doc, "Complexidade", complexityMap[diagnostic.repair_complexity] || diagnostic.repair_complexity, col1, y);
     }
     if (diagnostic.repair_viability) {
-      addField(doc, "Viabilidade", viabilityMap[diagnostic.repair_viability] || diagnostic.repair_viability, col2, y - 8);
+      addField(doc, "Viabilidade", viabilityMap[diagnostic.repair_viability] || diagnostic.repair_viability, col2, y - 7);
     }
     if (diagnostic.estimated_repair_hours) {
-      y = addField(doc, "Horas Estimadas", `${diagnostic.estimated_repair_hours}h`, col1, y + 2);
+      y = addField(doc, "Horas Estimadas", `${diagnostic.estimated_repair_hours}h`, col1, y);
     }
     if (diagnostic.not_repairable_reason) {
-      y = addField(doc, "Motivo Inviabilidade", diagnostic.not_repairable_reason, col1, y + 2, 170);
+      y = addField(doc, "Motivo Inviabilidade", diagnostic.not_repairable_reason, col1, y, 165);
     }
-    y += 4;
+    y += 2;
   }
 
-  // ── 7. SERVIÇOS EXECUTADOS / ORÇAMENTO ──
+  // ── 7. SERVIÇOS E PEÇAS ──
   if (quoteItems && quoteItems.length > 0) {
     y = addSection(doc, "Serviços e Peças", y);
     y = addTable(doc, y,
@@ -275,13 +279,13 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
       ]),
       {
         columnStyles: {
-          0: { cellWidth: 70 },
+          0: { cellWidth: 65 },
           3: { halign: "right" as const },
           4: { halign: "right" as const },
         },
       }
     );
-    y += 2;
+    y += 1;
   }
 
   // ── 8. RESUMO FINANCEIRO ──
@@ -309,17 +313,13 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   // ── CHECKLIST DE SAÍDA ──
   if (exitChecklist && exitChecklist.length > 0) {
     y = addChecklistTable(doc, y, exitChecklist, "Checklist de Saída");
-    y += 4;
+    y += 2;
   }
 
-  // ── NOTAS INTERNAS ──
+  // ── OBSERVAÇÕES ──
   if (order.intake_notes) {
     y = addSection(doc, "Observações", y);
-    doc.setFontSize(8);
-    doc.setTextColor(...DEFAULT_THEME.textColor);
-    const lines = doc.splitTextToSize(order.intake_notes, 170);
-    doc.text(lines, col1, y);
-    y += lines.length * 3.5 + 4;
+    y = addTextBlock(doc, order.intake_notes, col1, y, 165, 8);
   }
 
   // ── HISTÓRICO DE STATUS ──
@@ -333,29 +333,28 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
         h.notes || "—",
       ])
     );
-    y += 4;
+    y += 2;
   }
 
-  // ── 5. TERMOS E GARANTIA ──
+  // ── TERMOS E GARANTIA ──
   if (terms && terms.length > 0) {
     terms.forEach((term) => {
       y = addTermsBlock(doc, y, term.title, term.content);
     });
   }
 
-  // ── QR CODE ──
+  // ── QR CODE + ASSINATURAS (grouped tightly) ──
   if (qrCodeImageData) {
     y = addQrCodeBlock(doc, y, qrCodeImageData, "Acompanhe seu reparo pelo QR Code");
   }
 
-  // ── 6. ASSINATURAS ──
+  // ── ASSINATURAS ──
   const sigList = (signatures || []).map((s) => ({
     name: s.signer_name,
     role: s.signer_role === "customer" ? "Cliente" : s.signer_role === "technician" ? "Técnico" : s.signer_role,
     imageData: s.signature_data,
   }));
 
-  // Always show at least client + technician slots
   if (sigList.length === 0) {
     sigList.push({ name: "", role: "Cliente", imageData: undefined });
     sigList.push({ name: "", role: "Técnico", imageData: undefined });
