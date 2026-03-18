@@ -26,6 +26,7 @@ export function AppHeader() {
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background px-4">
       <SidebarTrigger />
+      <TenantSwitcher />
 
       {/* Global Search Placeholder */}
       <div className="relative flex-1 max-w-md">
