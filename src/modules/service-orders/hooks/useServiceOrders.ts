@@ -183,16 +183,13 @@ export function useChangeStatus() {
     mutationFn: async ({ id, fromStatus, toStatus, notes }: {
       id: string; fromStatus: ServiceOrderStatus; toStatus: ServiceOrderStatus; notes?: string;
     }) => {
-      const { error: updateErr } = await db.from("service_orders").update({ status: toStatus }).eq("id", id);
-      if (updateErr) throw updateErr;
-
-      const { error: histErr } = await db.from("service_order_status_history").insert({
-        service_order_id: id,
-        from_status: fromStatus,
-        to_status: toStatus,
-        notes: notes || null,
+      const { error } = await db.rpc("change_service_order_status", {
+        _order_id: id,
+        _from_status: fromStatus,
+        _to_status: toStatus,
+        _notes: notes || null,
       });
-      if (histErr) throw histErr;
+      if (error) throw error;
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["service-orders"] });

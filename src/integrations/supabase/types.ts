@@ -3887,6 +3887,15 @@ export type Database = {
         Args: { _reason?: string; _sale_id: string }
         Returns: Json
       }
+      change_service_order_status: {
+        Args: {
+          _from_status: string
+          _notes?: string
+          _order_id: string
+          _to_status: string
+        }
+        Returns: undefined
+      }
       close_cash_register: {
         Args: {
           _closing_notes?: string
