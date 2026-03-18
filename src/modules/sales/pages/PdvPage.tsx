@@ -28,7 +28,7 @@ import {
 import {
   Search, Plus, Minus, Trash2, ShoppingCart, DollarSign, CreditCard, Smartphone,
   Banknote, XCircle, Printer, Receipt, RotateCcw, Maximize, Minimize,
-  UserPlus, Package, Keyboard,
+  UserPlus, Package, Keyboard, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
