@@ -148,7 +148,7 @@ export default function ReceivablesPage() {
               ))}
             </TableBody>
           </Table>
-          {data && <DataPagination page={data.page} totalPages={data.totalPages} total={data.total} pageSize={data.pageSize} onPageChange={setPage} />}
+          {data && <DataPagination page={data.page} total={data.total} pageSize={data.pageSize} onPageChange={setPage} />}
         </CardContent>
       </Card>
 
