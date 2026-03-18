@@ -19,7 +19,7 @@ import { Plus, DollarSign, Search, FileDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateFinancialReportPdf } from "@/lib/pdf-generators/financial-report-pdf";
-import { useCompanyName } from "@/hooks/useCompanyName";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 export default function FinanceListPage() {
   const [tab, setTab] = useState<string>("all");

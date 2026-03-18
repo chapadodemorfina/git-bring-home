@@ -28,7 +28,8 @@ export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { hasRole } = useAuth();
-  const companyName = useCompanyName();
+  const companySettings = useCompanySettings();
+  const companyName = companySettings.company_name;
 
   const { data: sale, isLoading } = useSale(id);
   const { data: items } = useSaleItems(id);
