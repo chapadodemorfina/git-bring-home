@@ -131,7 +131,7 @@ export default function SaleDetailPage() {
           {sale.status === "completed" && sale.customer_id && (
             <WhatsAppSendButton
               customerId={sale.customer_id}
-              customerPhone={sale.customer_phone || null}
+              customerPhone={customerPhone}
               customerName={sale.customer_name || "Cliente"}
               eventType="sale_completed"
               referenceType="sale"
