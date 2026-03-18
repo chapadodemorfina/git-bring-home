@@ -156,7 +156,7 @@ export function addHeader(
   if (info.address) {
     doc.setFontSize(6.5);
     doc.setTextColor(...t.mutedText);
-    doc.text(info.address, M, metaY);
+    doc.text(info.address, textStartX, metaY);
     metaY += 3;
   }
 
