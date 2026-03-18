@@ -304,7 +304,10 @@ export default function PdvPage() {
           // non-blocking
         }
       }
-  }, [cart, user, customerId, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast, openCashRegister, addCashMovement]);
+    } catch {
+      // error handled by mutation
+    }
+  }, [cart, user, customerId, customerName, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast, openCashRegister, addCashMovement, autoSend]);
 
   // ── Post-sale actions ──
   const handleNewSale = useCallback(() => {
