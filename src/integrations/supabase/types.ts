@@ -2843,6 +2843,50 @@ export type Database = {
           },
         ]
       }
+      service_order_checklists: {
+        Row: {
+          checklist_type: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          items: Json
+          notes: string | null
+          service_order_id: string
+          technician_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          checklist_type?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          service_order_id: string
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checklist_type?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          service_order_id?: string
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_checklists_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_order_public_links: {
         Row: {
           access_count: number
