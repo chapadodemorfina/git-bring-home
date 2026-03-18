@@ -134,8 +134,28 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   if (order.device_label || order.device_brand) {
     y = addSection(doc, "Dados do Aparelho", y);
     if (order.device_brand) {
-      y = addField(doc, "Marca", order.device_brand, col1, y);
-      if (order.device_model) addField(doc, "Modelo", order.device_model, col2, y - 6.5);
+      // Bold brand/model for emphasis
+      doc.setFontSize(5.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(100, 116, 139);
+      doc.text("MARCA", col1, y);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(15, 23, 42);
+      doc.text(order.device_brand, col1, y + 3);
+      if (order.device_model) {
+        doc.setFontSize(5.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(100, 116, 139);
+        doc.text("MODELO", col2, y);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(15, 23, 42);
+        doc.text(order.device_model, col2, y + 3);
+      }
+      y = y + 3 + 3.5;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(15, 23, 42);
     }
     if (order.device_serial) {
       y = addField(doc, "Nº de Série", order.device_serial, col1, y);
