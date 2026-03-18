@@ -33,6 +33,7 @@ const mainItems = [
   { title: "Controle de Caixa", url: "/cash-register", icon: Landmark },
   { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
+  { title: "Contas a Receber", url: "/financial/receivables", icon: TrendingUp },
 ];
 
 const adminOnlyItems = [
