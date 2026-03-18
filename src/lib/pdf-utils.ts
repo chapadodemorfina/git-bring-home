@@ -525,7 +525,7 @@ export function addWatermark(doc: jsPDF, text: string) {
   }
 }
 
-// ─── QR Code Block ────────────────────────────────────────────
+// ─── QR Code Block (compact) ──────────────────────────────────
 export function addQrCodeBlock(
   doc: jsPDF,
   y: number,
@@ -535,38 +535,75 @@ export function addQrCodeBlock(
   if (!qrImageData) return y;
 
   const pageW = pw(doc);
-  y = ensureSpace(doc, y, 50);
+  y = ensureSpace(doc, y, 46);
 
   const centerX = pageW / 2;
-  const qrSize = 35;
-  const boxW = 70;
-  const boxH = qrSize + 18;
+  const qrSize = 32;
+  const boxW = 65;
+  const boxH = qrSize + 14;
 
-  // Container card
+  // Container
   doc.setFillColor(...THEME.cardBg);
   doc.setDrawColor(...THEME.divider);
-  doc.setLineWidth(0.2);
+  doc.setLineWidth(0.15);
   doc.roundedRect(centerX - boxW / 2, y, boxW, boxH, 2, 2, "FD");
 
   try {
-    doc.addImage(qrImageData, "PNG", centerX - qrSize / 2, y + 3, qrSize, qrSize);
+    doc.addImage(qrImageData, "PNG", centerX - qrSize / 2, y + 2, qrSize, qrSize);
   } catch {
     return y;
   }
 
-  // Label
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...THEME.primaryDark);
-  doc.text(label, centerX, y + qrSize + 7, { align: "center" });
+  doc.text(label, centerX, y + qrSize + 5, { align: "center" });
 
-  // Subtitle
   doc.setFontSize(5.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...THEME.mutedText);
-  doc.text("Escaneie para acompanhar o status do reparo", centerX, y + qrSize + 11, { align: "center" });
+  doc.text("Escaneie para acompanhar o status do reparo", centerX, y + qrSize + 9, { align: "center" });
 
-  return y + boxH + 3;
+  return y + boxH + 2;
+}
+
+// ─── Page 2 Mini Header ──────────────────────────────────────
+export function addContinuationHeader(
+  doc: jsPDF,
+  orderNumber: string,
+  customerName: string,
+  sectionTitle = "Validação e Assinaturas"
+): number {
+  const pageW = pw(doc);
+  let y = 14;
+
+  // Light top bar
+  doc.setFillColor(...THEME.primaryDark);
+  doc.rect(0, 0, pageW, 2, "F");
+
+  // OS reference
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...THEME.primaryDark);
+  doc.text(`OS: ${orderNumber}`, M, y);
+
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...THEME.mutedText);
+  doc.text(customerName, pageW - M, y, { align: "right" });
+
+  y += 4;
+
+  // Section title centered
+  doc.setFillColor(...THEME.primary);
+  const titleW = 70;
+  doc.roundedRect(pageW / 2 - titleW / 2, y, titleW, 8, 3, 3, "F");
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...THEME.white);
+  doc.text(sectionTitle, pageW / 2, y + 5.5, { align: "center" });
+
+  return y + 14;
 }
 
 // ─── Terms Block ──────────────────────────────────────────────
