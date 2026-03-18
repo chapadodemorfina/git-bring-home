@@ -45,13 +45,18 @@ function formatPhysicalCondition(raw: string | null | undefined): string {
   try {
     const items = JSON.parse(raw);
     if (Array.isArray(items)) {
+      const nameMap: Record<string, string> = {
+        screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
+        charging: "Porta de Carga", battery: "Bateria", speakers: "Alto-falante/Mic",
+        camera: "Câmera", connectivity: "Wi-Fi/Bluetooth", biometrics: "Biometria/Face ID",
+      };
       const statusMap: Record<string, string> = {
-        ok: "OK", damaged: "Danificado", scratched: "Arranhado", cracked: "Trincado", missing: "Ausente",
+        ok: "OK", damaged: "Danificado", scratched: "Arranhado", cracked: "Trincado",
+        missing: "Ausente", na: "N/A",
       };
       return items
         .map((item: any) => {
-          const name = (item.id || item.name || "").replace(/_/g, " ");
-          const label = name.charAt(0).toUpperCase() + name.slice(1);
+          const label = nameMap[item.id] || nameMap[item.name] || item.id || item.name || "";
           const status = statusMap[item.status] || item.status || "";
           const notes = item.notes ? ` (${item.notes})` : "";
           return `${label}: ${status}${notes}`;
