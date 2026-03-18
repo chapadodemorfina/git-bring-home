@@ -217,6 +217,12 @@ export default function ServiceOrderDetailPage() {
       })),
       qrCodeImageData,
       trackingUrl,
+      displayOptions: {
+        showQrCode: settingIsTrue(companySettings.pdf_show_qrcode),
+        showSignatures: settingIsTrue(companySettings.pdf_show_signatures),
+        showTerms: settingIsTrue(companySettings.pdf_show_terms),
+        mode: (companySettings.pdf_mode as "compact" | "full") || "compact",
+      },
     });
   };
 
