@@ -40,6 +40,30 @@ const channelMap: Record<string, string> = {
   phone: "Telefone", email: "E-mail", website: "Website",
 };
 
+function formatPhysicalCondition(raw: string | null | undefined): string {
+  if (!raw) return "";
+  try {
+    const items = JSON.parse(raw);
+    if (Array.isArray(items)) {
+      const statusMap: Record<string, string> = {
+        ok: "OK", damaged: "Danificado", scratched: "Arranhado", cracked: "Trincado", missing: "Ausente",
+      };
+      return items
+        .map((item: any) => {
+          const name = (item.id || item.name || "").replace(/_/g, " ");
+          const label = name.charAt(0).toUpperCase() + name.slice(1);
+          const status = statusMap[item.status] || item.status || "";
+          const notes = item.notes ? ` (${item.notes})` : "";
+          return `${label}: ${status}${notes}`;
+        })
+        .join(" | ");
+    }
+  } catch {
+    // not JSON, return as-is
+  }
+  return raw;
+}
+
 export function generateServiceOrderPdf(
   order: ServiceOrderData,
   statusHistory: StatusEntry[],
@@ -79,7 +103,7 @@ export function generateServiceOrderPdf(
   if (order.reported_issue || order.physical_condition || order.accessories_received) {
     y = addSection(doc, "Detalhes do Serviço", y);
     if (order.reported_issue) y = addField(doc, "Problema Relatado", order.reported_issue, col1, y, 170);
-    if (order.physical_condition) y = addField(doc, "Condição Física", order.physical_condition, col1, y + 2, 170);
+    if (order.physical_condition) y = addField(doc, "Condição Física", formatPhysicalCondition(order.physical_condition), col1, y + 2, 170);
     if (order.accessories_received) y = addField(doc, "Acessórios", order.accessories_received, col1, y + 2, 170);
     if (order.intake_notes) y = addField(doc, "Observações", order.intake_notes, col1, y + 2, 170);
     y += 4;
