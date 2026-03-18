@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useCreatePayment } from "../hooks/useFinance";
 import { PaymentFormData, paymentMethodLabels, PaymentMethod, Payment } from "../types";
+import { useAutoSendMessage } from "@/modules/messaging/hooks/useCustomerMessaging";
+import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,28 +20,63 @@ interface Props {
   payments: Payment[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  customerId?: string | null;
+  customerName?: string;
+  reference?: string;
 }
 
-export default function PaymentDialog({ entryId, remainingAmount, payments, open, onOpenChange }: Props) {
+export default function PaymentDialog({ entryId, remainingAmount, payments, open, onOpenChange, customerId, customerName, reference }: Props) {
   const [amount, setAmount] = useState(remainingAmount.toString());
   const [method, setMethod] = useState<PaymentMethod>("pix");
-  const [reference, setReference] = useState("");
+  const [ref, setRef] = useState("");
   const [notes, setNotes] = useState("");
   const createMutation = useCreatePayment();
+  const autoSend = useAutoSendMessage();
 
   const handleSubmit = async () => {
+    const paidAmount = parseFloat(amount);
     await createMutation.mutateAsync({
       entryId,
       data: {
-        amount: parseFloat(amount),
+        amount: paidAmount,
         payment_method: method,
-        reference: reference || undefined,
+        reference: ref || undefined,
         notes: notes || undefined,
       },
     });
+
+    // Auto-send WhatsApp payment confirmation
+    if (customerId) {
+      try {
+        const db = supabase as any;
+        const { data: cust } = await db.from("customers").select("phone, whatsapp, full_name").eq("id", customerId).single();
+        const phone = cust?.whatsapp || cust?.phone;
+        if (phone) {
+          const newRemaining = Math.max(0, remainingAmount - paidAmount);
+          autoSend({
+            customerId,
+            phone,
+            eventType: "payment_confirmed",
+            referenceType: "payment",
+            referenceId: entryId,
+            templateKey: "payment_confirmed_whatsapp",
+            variables: {
+              customer_name: cust?.full_name || customerName || "Cliente",
+              paid_amount: paidAmount.toFixed(2),
+              reference: reference || ref || entryId.slice(0, 8),
+              payment_method: paymentMethodLabels[method],
+              remaining_balance: newRemaining.toFixed(2),
+            },
+          });
+        }
+      } catch {
+        // non-blocking
+      }
+    }
+
     onOpenChange(false);
     setAmount(remainingAmount.toString());
-    setReference("");
+    setRef("");
     setNotes("");
   };
 
