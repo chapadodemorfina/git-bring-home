@@ -282,7 +282,7 @@ export default function PdvPage() {
           const { data: cust } = await db.from("customers").select("phone, whatsapp").eq("id", customerId).single();
           const custPhone = cust?.whatsapp || cust?.phone;
           if (custPhone) {
-            const itemsSummary = cart.map(i => `${i.quantity}x ${i.product_name}`).join(", ");
+            const itemsSummary = cart.map(i => `${i.quantity}x ${i.name}`).join(", ");
             autoSend({
               customerId,
               phone: custPhone,
