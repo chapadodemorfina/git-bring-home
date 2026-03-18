@@ -101,6 +101,8 @@ export default function PdvPage() {
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const createSale = useCreateSale();
+  const { data: openCashRegister } = useOpenCashRegister();
+  const addCashMovement = useAddCashMovement();
 
   // ── State ──
   const [search, setSearch] = useState("");
