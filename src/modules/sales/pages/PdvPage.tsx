@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreateSale } from "../hooks/useSales";
 import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
 import { useGenerateSaleCommissions } from "@/modules/commissions/hooks/useCommissions";
+import { useAutoSendMessage } from "@/modules/messaging/hooks/useCustomerMessaging";
 import { useToast } from "@/hooks/use-toast";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
 import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
