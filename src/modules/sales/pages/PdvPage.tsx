@@ -275,9 +275,35 @@ export default function PdvPage() {
       setLastSaleId(result.id);
       setLastSaleNumber(result.sale_number || "");
       setShowSuccessDialog(true);
-    } catch {
-      // error handled by mutation
-    }
+
+      // Auto-send WhatsApp receipt (non-blocking, only if customer has phone)
+      if (customerId && customerName) {
+        try {
+          const { data: cust } = await db.from("customers").select("phone, whatsapp").eq("id", customerId).single();
+          const custPhone = cust?.whatsapp || cust?.phone;
+          if (custPhone) {
+            const itemsSummary = cart.map(i => `${i.quantity}x ${i.product_name}`).join(", ");
+            autoSend({
+              customerId,
+              phone: custPhone,
+              eventType: "sale_completed",
+              referenceType: "sale",
+              referenceId: result.id,
+              templateKey: "sale_completed_whatsapp",
+              variables: {
+                customer_name: customerName,
+                sale_number: result.sale_number || "",
+                items_summary: itemsSummary,
+                total_amount: total.toFixed(2),
+                payment_method: paymentMethodLabel,
+                sale_date: new Date().toLocaleString("pt-BR"),
+              },
+            });
+          }
+        } catch {
+          // non-blocking
+        }
+      }
   }, [cart, user, customerId, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast, openCashRegister, addCashMovement]);
 
   // ── Post-sale actions ──
