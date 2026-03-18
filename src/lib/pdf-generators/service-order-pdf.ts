@@ -239,8 +239,20 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
     terms.forEach((term) => { y = addTermsBlock(doc, y, term.title, term.content); });
   }
 
-  // ── QR CODE ──
-  if (qrCodeImageData) {
+  // ── CLOSING BLOCK (QR + Signatures) ──
+  // Calculate total space needed for closing block
+  const hasQr = !!qrCodeImageData;
+  const closingBlockHeight = (hasQr ? 56 : 0) + 32; // QR ~56mm + signatures ~32mm
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const remainingSpace = pageHeight - y - 22; // 22mm for footer
+
+  // If closing block doesn't fit, start fresh page with intentional layout
+  if (remainingSpace < closingBlockHeight && remainingSpace < pageHeight * 0.6) {
+    doc.addPage();
+    y = 20;
+  }
+
+  if (hasQr) {
     y = addQrCodeBlock(doc, y, qrCodeImageData, "Acompanhe seu reparo pelo QR Code");
   }
 

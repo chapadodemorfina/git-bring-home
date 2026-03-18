@@ -90,23 +90,23 @@ export function addHeader(
 
   const companyName = info.name || "Assistência Técnica";
 
-  // ── Thin top accent ──
+  // ── Top accent bar ──
   doc.setFillColor(...t.primaryDark);
-  doc.rect(0, 0, pageW, 2.5, "F");
+  doc.rect(0, 0, pageW, 2, "F");
 
-  // ── Company name ──
-  doc.setFontSize(17);
+  // ── Company name (prominent) ──
+  doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...t.primaryDark);
-  doc.text(companyName, M, 12);
+  doc.text(companyName, M, 13);
 
-  // ── Company meta line ──
+  // ── Company meta (single formatted line) ──
   const meta: string[] = [];
-  if (info.cnpj) meta.push(`CNPJ: ${info.cnpj}`);
-  if (info.phone) meta.push(`Tel: ${info.phone}`);
+  if (info.cnpj) meta.push(`CNPJ ${info.cnpj}`);
+  if (info.phone) meta.push(info.phone);
   if (info.email) meta.push(info.email);
 
-  let metaY = 16;
+  let metaY = 17.5;
   if (meta.length > 0) {
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
@@ -125,31 +125,38 @@ export function addHeader(
   const dateStr = format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR });
   doc.setFontSize(6.5);
   doc.setTextColor(...t.mutedText);
-  doc.text(`Emitido em ${dateStr}`, pageW - M, 12, { align: "right" });
+  doc.text(`Emitido em ${dateStr}`, pageW - M, 13, { align: "right" });
 
-  // ── Divider ──
-  const divY = Math.max(metaY + 1, 22);
-  doc.setDrawColor(...t.divider);
-  doc.setLineWidth(0.3);
-  doc.line(M, divY, pageW - M, divY);
-
-  // ── Title bar ──
-  const titleY = divY + 4;
-  doc.setFillColor(...t.primary);
-  doc.roundedRect(M, titleY - 3, cw(doc), 10, 1.5, 1.5, "F");
-
-  doc.setFontSize(11);
+  // ── Title row ──
+  const titleY = Math.max(metaY + 2, 24);
+  // Title text (left, dark)
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...t.white);
-  doc.text(title, M + 4, titleY + 3);
+  doc.setTextColor(...t.primaryDark);
+  doc.text(title, M, titleY + 1);
 
+  // Status badge (right, pill shape)
   if (subtitle) {
+    const badgeText = subtitle;
     doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text(subtitle, pageW - M - 4, titleY + 3, { align: "right" });
+    doc.setFont("helvetica", "bold");
+    const tw = doc.getTextWidth(badgeText);
+    const badgeW = tw + 8;
+    const badgeX = pageW - M - badgeW;
+    const badgeY = titleY - 3;
+    doc.setFillColor(...t.primary);
+    doc.roundedRect(badgeX, badgeY, badgeW, 7, 3, 3, "F");
+    doc.setTextColor(...t.white);
+    doc.text(badgeText, badgeX + badgeW / 2, badgeY + 5, { align: "center" });
   }
 
-  return titleY + 11;
+  // Divider
+  const divY = titleY + 4;
+  doc.setDrawColor(...t.primary);
+  doc.setLineWidth(0.5);
+  doc.line(M, divY, pageW - M, divY);
+
+  return divY + 4;
 }
 
 // ─── Section Title ───────────────────────────────────────────
