@@ -137,6 +137,23 @@ export default function ServiceOrderDetailPage() {
           <Button variant="outline" onClick={handlePrintLabel} disabled={generateLink.isPending}>
             <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Etiqueta"}
           </Button>
+          {(order.status === "ready_for_pickup" || order.status === "completed") && (
+            <WhatsAppSendButton
+              customerId={order.customer_id}
+              customerPhone={order.customer_phone}
+              customerName={order.customer_name || "Cliente"}
+              eventType="os_ready"
+              referenceType="service_order"
+              referenceId={order.id}
+              templateKey="os_ready_whatsapp"
+              variables={{
+                order_number: order.order_number,
+                status: order.status === "ready_for_pickup" ? "Pronto para retirada" : "Concluído",
+                final_notes: order.internal_notes || "",
+              }}
+              label="WhatsApp"
+            />
+          )}
           <Button variant="outline" asChild>
             <Link to={`/service-orders/${order.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar</Link>
           </Button>
