@@ -104,7 +104,8 @@ export function addHeader(
   company: CompanyInfo | string,
   title: string,
   subtitle?: string,
-  logoDataUrl?: string | null
+  logoDataUrl?: string | null,
+  qrCodeImageData?: string | null
 ): number {
   const pageW = pw(doc);
   const t = THEME;
