@@ -69,6 +69,40 @@ export default function QuoteDetailPage() {
     setRejectReason("");
   };
 
+  const handleExportPdf = () => {
+    if (!quote || !items) return;
+    const cs = companySettings;
+    const laborCost = items.filter(i => i.item_type === "labor").reduce((s, i) => s + Number(i.total_price), 0);
+    const partsCost = items.filter(i => i.item_type === "part").reduce((s, i) => s + Number(i.total_price), 0);
+    generateQuotePdf(
+      {
+        quote_number: quote.quote_number,
+        status: quote.status,
+        total_amount: Number(quote.total_amount),
+        labor_cost: laborCost,
+        parts_cost: partsCost,
+        analysis_fee: 0,
+        expires_at: quote.valid_until,
+        notes: quote.description || null,
+        created_at: quote.created_at,
+        order_number: quote.service_orders?.order_number,
+        customer_name: quote.customers?.full_name,
+        device_label: undefined,
+      },
+      items.map(i => ({
+        description: i.description,
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price),
+        total_price: Number(i.total_price),
+        item_type: i.item_type,
+      })),
+      {
+        name: cs.company_name, cnpj: cs.company_cnpj, address: cs.company_address,
+        phone: cs.company_phone, email: cs.company_email, logoUrl: cs.company_logo_url,
+      }
+    );
+  };
+
   const partItems = items?.filter((i) => i.item_type === "part") || [];
   const laborItems = items?.filter((i) => i.item_type === "labor") || [];
   const otherItems = items?.filter((i) => i.item_type === "service" || i.item_type === "other") || [];
