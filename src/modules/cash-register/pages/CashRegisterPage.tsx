@@ -172,7 +172,11 @@ export default function CashRegisterPage() {
       };
     })();
 
-    generateCashRegisterClosingPdf(registerData, sum, movRows, "i9 Solution");
+    const cs = companySettings;
+    generateCashRegisterClosingPdf(registerData, sum, movRows, {
+      name: cs.company_name, cnpj: cs.company_cnpj, address: cs.company_address,
+      phone: cs.company_phone, email: cs.company_email, logoUrl: cs.company_logo_url,
+    });
   };
 
   if (loadingRegister) {

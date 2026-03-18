@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useServiceOrder, useDeleteServiceOrder } from "../hooks/useServiceOrders";
+import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatures } from "../hooks/useServiceOrders";
 import { statusLabels, statusColors, priorityLabels, priorityColors, channelLabels, statusTransitions } from "../types";
 import StatusTimeline from "../components/StatusTimeline";
 import StatusChangeDialog from "../components/StatusChangeDialog";
@@ -26,9 +26,11 @@ import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSma
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
-import { useCompanyName } from "@/hooks/useCompanyName";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+const db = supabase as any;
 
 function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   if (!el) return;
@@ -48,6 +50,43 @@ function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   printWindow.print();
 }
 
+// Generate QR code as data URL for PDF
+function generateQrDataUrl(url: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 200;
+      canvas.height = 200;
+
+      // We'll use qrcode.react's rendering via a temporary element
+      // For simplicity, create a simple SVG-to-canvas approach
+      // Actually, let's just render it from the existing QRCodeSVG in the DOM
+      const qrEl = document.querySelector("[data-qr-pdf]");
+      if (qrEl) {
+        const svgData = new XMLSerializer().serializeToString(qrEl);
+        const img = new Image();
+        img.onload = () => {
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, 200, 200);
+            ctx.drawImage(img, 0, 0, 200, 200);
+            resolve(canvas.toDataURL("image/png"));
+          } else {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+      } else {
+        resolve(null);
+      }
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
 export default function ServiceOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -56,10 +95,10 @@ export default function ServiceOrderDetailPage() {
   const [statusOpen, setStatusOpen] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
-  const companyName = useCompanyName("i9 Solutions");
+  const companySettings = useCompanySettings();
   const generateLink = useGeneratePublicLink();
 
-  const db = supabase as any;
+  // Fetch additional data for PDF
   const { data: statusHistory } = useQuery({
     queryKey: ["so-status-history-pdf", id],
     enabled: !!id,
@@ -74,22 +113,117 @@ export default function ServiceOrderDetailPage() {
     },
   });
 
+  const { data: diagnostic } = useQuery({
+    queryKey: ["diagnostic-pdf", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("diagnostics")
+        .select("*")
+        .eq("service_order_id", id!)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: repairQuote } = useQuery({
+    queryKey: ["repair-quote-pdf", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("repair_quotes")
+        .select("*")
+        .eq("service_order_id", id!)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: quoteItems } = useQuery({
+    queryKey: ["repair-quote-items-pdf", repairQuote?.id],
+    enabled: !!repairQuote?.id,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("repair_quote_items")
+        .select("*")
+        .eq("quote_id", repairQuote.id)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const { data: signatures } = useOrderSignatures(id);
+  const { data: terms } = useActiveTerms();
   const { data: publicLinks } = useServiceOrderPublicLinks(id);
   const activeLink = publicLinks?.find((l: any) => l.status === "active");
   const trackingUrl = activeLink
     ? `${window.location.origin}/track/${activeLink.public_token}`
     : null;
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (!order) return;
-    generateServiceOrderPdf(order, statusHistory || [], companyName);
+
+    const company = {
+      name: companySettings.company_name,
+      cnpj: companySettings.company_cnpj,
+      address: companySettings.company_address,
+      phone: companySettings.company_phone,
+      email: companySettings.company_email,
+      logoUrl: companySettings.company_logo_url,
+    };
+
+    // Try to get QR code image
+    let qrCodeImageData: string | null = null;
+    if (trackingUrl) {
+      qrCodeImageData = await generateQrDataUrl(trackingUrl);
+    }
+
+    generateServiceOrderPdf({
+      order,
+      statusHistory: statusHistory || [],
+      company,
+      diagnostic: diagnostic || null,
+      quoteData: repairQuote ? {
+        quote_number: repairQuote.quote_number,
+        total_amount: repairQuote.total_amount,
+        discount_amount: repairQuote.discount_amount,
+        analysis_fee: repairQuote.analysis_fee,
+        labor_cost: (quoteItems || []).filter((i: any) => i.item_type === "labor").reduce((s: number, i: any) => s + Number(i.total_price), 0),
+        parts_cost: (quoteItems || []).filter((i: any) => i.item_type === "part").reduce((s: number, i: any) => s + Number(i.total_price), 0),
+        notes: repairQuote.notes,
+      } : null,
+      quoteItems: (quoteItems || []).map((i: any) => ({
+        description: i.description,
+        item_type: i.item_type,
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price),
+        total_price: Number(i.total_price),
+      })),
+      signatures: (signatures || []).map((s) => ({
+        signer_name: s.signer_name,
+        signer_role: s.signer_role,
+        signature_data: s.signature_data,
+      })),
+      terms: (terms || []).map((t) => ({
+        title: t.title,
+        content: t.content,
+      })),
+      qrCodeImageData,
+      trackingUrl,
+    });
   };
 
   const handlePrintLabel = async () => {
     if (!order || !id) return;
     if (!trackingUrl) {
       await generateLink.mutateAsync(id);
-      // Wait for query refetch to get the new link - print after a short delay
       setTimeout(() => printElement(labelRef.current, `Etiqueta ${order.order_number}`, true), 1500);
     } else {
       printElement(labelRef.current, `Etiqueta ${order.order_number}`, true);
@@ -316,6 +450,13 @@ export default function ServiceOrderDetailPage() {
           collectionPointName={order.collection_point_name}
         />
       </div>
+
+      {/* Hidden QR code for PDF export */}
+      {trackingUrl && (
+        <div className="hidden">
+          <svg data-qr-pdf style={{ display: "none" }} />
+        </div>
+      )}
     </div>
   );
 }
