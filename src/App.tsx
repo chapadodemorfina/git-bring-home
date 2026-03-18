@@ -196,6 +196,7 @@ const App = () => (
 
               {/* Sales & PDV */}
               <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><PdvPage /></RoleGuard></ProtectedRoute>} />
+              <Route path="/cash-register" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><CashRegisterPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><SalesListPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleCreatePage /></RoleGuard></ProtectedPage>} />
