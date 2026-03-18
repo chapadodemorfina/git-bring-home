@@ -49,6 +49,7 @@ const DEVELOPER_CREDIT = "Desenvolvido por Alvo Sistemas e Gestão";
 // ─── Company Info interface ───────────────────────────────────
 export interface CompanyInfo {
   name: string;
+  legalName?: string;
   cnpj: string;
   address: string;
   phone: string;
@@ -85,7 +86,7 @@ export function addHeader(
   const t = THEME;
 
   const info: CompanyInfo = typeof company === "string"
-    ? { name: company, cnpj: "", address: "", phone: "", email: "", logoUrl: "" }
+    ? { name: company, legalName: "", cnpj: "", address: "", phone: "", email: "", logoUrl: "" }
     : company;
 
   const companyName = info.name || "Assistência Técnica";
@@ -107,6 +108,15 @@ export function addHeader(
   if (info.email) meta.push(info.email);
 
   let metaY = 16;
+
+  // ── Legal name (if different from trade name) ──
+  if (info.legalName && info.legalName !== info.name) {
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...t.mutedText);
+    doc.text(info.legalName, M, metaY);
+    metaY += 3;
+  }
   if (meta.length > 0) {
     doc.setFontSize(6.5);
     doc.setFont("helvetica", "normal");

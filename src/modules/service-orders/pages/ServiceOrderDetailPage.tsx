@@ -26,11 +26,24 @@ import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSma
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
-import { useCompanySettings, settingIsTrue } from "@/hooks/useCompanySettings";
+import { useCompanySettings, settingIsTrue, type CompanySettings } from "@/hooks/useCompanySettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const db = supabase as any;
+
+/** Build PDF terms: prefer settings terms, fallback to DB terms */
+function buildPdfTerms(settings: CompanySettings, dbTerms: any[] | undefined) {
+  const result: { title: string; content: string }[] = [];
+  if (settings.terms_service) result.push({ title: "Termos de Serviço", content: settings.terms_service });
+  if (settings.terms_warranty) result.push({ title: "Condições de Garantia", content: settings.terms_warranty });
+  if (settings.terms_abandonment) result.push({ title: "Política de Abandono", content: settings.terms_abandonment });
+  // If no settings terms, fallback to DB terms
+  if (result.length === 0 && dbTerms && dbTerms.length > 0) {
+    return dbTerms.map((t: any) => ({ title: t.title, content: t.content }));
+  }
+  return result;
+}
 
 function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   if (!el) return;
@@ -172,6 +185,7 @@ export default function ServiceOrderDetailPage() {
 
     const company = {
       name: companySettings.company_name,
+      legalName: companySettings.company_legal_name,
       cnpj: companySettings.company_cnpj,
       address: companySettings.company_address,
       phone: companySettings.company_phone,
@@ -211,10 +225,7 @@ export default function ServiceOrderDetailPage() {
         signer_role: s.signer_role,
         signature_data: s.signature_data,
       })),
-      terms: (terms || []).map((t) => ({
-        title: t.title,
-        content: t.content,
-      })),
+      terms: buildPdfTerms(companySettings, terms),
       qrCodeImageData,
       trackingUrl,
       displayOptions: {
