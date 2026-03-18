@@ -295,7 +295,7 @@ export default function PdvPage() {
                 sale_number: result.sale_number || "",
                 items_summary: itemsSummary,
                 total_amount: total.toFixed(2),
-                payment_method: paymentMethodLabel,
+                payment_method: paymentMethodLabels[paymentMethod] || paymentMethod,
                 sale_date: new Date().toLocaleString("pt-BR"),
               },
             });
