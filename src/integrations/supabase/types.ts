@@ -74,6 +74,104 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_register_movements: {
+        Row: {
+          amount: number
+          cash_register_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          movement_type: Database["public"]["Enums"]["cash_movement_type"]
+          payment_method: string | null
+          reference_id: string | null
+          reference_type: string | null
+        }
+        Insert: {
+          amount: number
+          cash_register_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          movement_type: Database["public"]["Enums"]["cash_movement_type"]
+          payment_method?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Update: {
+          amount?: number
+          cash_register_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          movement_type?: Database["public"]["Enums"]["cash_movement_type"]
+          payment_method?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_register_movements_cash_register_id_fkey"
+            columns: ["cash_register_id"]
+            isOneToOne: false
+            referencedRelation: "cash_registers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_registers: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          closing_notes: string | null
+          counted_amount: number | null
+          created_at: string
+          difference_amount: number | null
+          expected_amount: number | null
+          id: string
+          initial_amount: number
+          notes: string | null
+          opened_at: string
+          opened_by: string
+          status: Database["public"]["Enums"]["cash_register_status"]
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_notes?: string | null
+          counted_amount?: number | null
+          created_at?: string
+          difference_amount?: number | null
+          expected_amount?: number | null
+          id?: string
+          initial_amount?: number
+          notes?: string | null
+          opened_at?: string
+          opened_by: string
+          status?: Database["public"]["Enums"]["cash_register_status"]
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_notes?: string | null
+          counted_amount?: number | null
+          created_at?: string
+          difference_amount?: number | null
+          expected_amount?: number | null
+          id?: string
+          initial_amount?: number
+          notes?: string | null
+          opened_at?: string
+          opened_by?: string
+          status?: Database["public"]["Enums"]["cash_register_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collection_point_commissions: {
         Row: {
           base_amount: number
@@ -3388,6 +3486,14 @@ export type Database = {
         Args: { _reason?: string; _sale_id: string }
         Returns: Json
       }
+      close_cash_register: {
+        Args: {
+          _closing_notes?: string
+          _counted_amount: number
+          _register_id: string
+        }
+        Returns: Json
+      }
       complete_sale: { Args: { _sale_id: string }; Returns: Json }
       consume_part: {
         Args: {
@@ -3579,6 +3685,14 @@ export type Database = {
         | "finance"
         | "collection_point_operator"
         | "customer"
+      cash_movement_type:
+        | "sale"
+        | "receipt"
+        | "withdrawal"
+        | "reinforcement"
+        | "expense"
+        | "adjustment"
+      cash_register_status: "open" | "closed"
       commission_type: "percentage" | "fixed_per_order" | "fixed_per_device"
       customer_type: "individual" | "business"
       device_type:
@@ -3866,6 +3980,15 @@ export const Constants = {
         "collection_point_operator",
         "customer",
       ],
+      cash_movement_type: [
+        "sale",
+        "receipt",
+        "withdrawal",
+        "reinforcement",
+        "expense",
+        "adjustment",
+      ],
+      cash_register_status: ["open", "closed"],
       commission_type: ["percentage", "fixed_per_order", "fixed_per_device"],
       customer_type: ["individual", "business"],
       device_type: [
