@@ -166,11 +166,21 @@ export function addHeader(
     metaY += 3;
   }
 
-  // ── Right: generation date ──
+  // ── Right: QR Code + generation date ──
+  const qrSize = 20;
+  const rightEdge = pageW - M;
+
+  if (qrCodeImageData) {
+    try {
+      doc.addImage(qrCodeImageData, "PNG", rightEdge - qrSize, 3, qrSize, qrSize);
+    } catch { /* skip QR on error */ }
+  }
+
   const dateStr = format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR });
   doc.setFontSize(6);
   doc.setTextColor(...t.mutedText);
-  doc.text(`Emitido em ${dateStr}`, pageW - M, 12, { align: "right" });
+  const dateX = qrCodeImageData ? rightEdge - qrSize - 2 : rightEdge;
+  doc.text(`Emitido em ${dateStr}`, dateX, 12, { align: "right" });
 
   // ── Title row ──
   const titleY = Math.max(metaY + 1, 22);
