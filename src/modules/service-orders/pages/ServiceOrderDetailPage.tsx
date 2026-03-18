@@ -32,6 +32,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 const db = supabase as any;
 
+/** Build PDF terms: prefer settings terms, fallback to DB terms */
+function buildPdfTerms(settings: CompanySettings, dbTerms: any[] | undefined) {
+  const result: { title: string; content: string }[] = [];
+  if (settings.terms_service) result.push({ title: "Termos de Serviço", content: settings.terms_service });
+  if (settings.terms_warranty) result.push({ title: "Condições de Garantia", content: settings.terms_warranty });
+  if (settings.terms_abandonment) result.push({ title: "Política de Abandono", content: settings.terms_abandonment });
+  // If no settings terms, fallback to DB terms
+  if (result.length === 0 && dbTerms && dbTerms.length > 0) {
+    return dbTerms.map((t: any) => ({ title: t.title, content: t.content }));
+  }
+  return result;
+}
+
 function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   if (!el) return;
   const printWindow = window.open("", "_blank");
