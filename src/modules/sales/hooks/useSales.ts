@@ -209,6 +209,93 @@ export function useCreateSale() {
   });
 }
 
+// ── Update Draft Sale ──
+export function useUpdateDraftSale() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (payload: {
+      sale_id: string;
+      customer_id?: string | null;
+      items: SaleFormItem[];
+      discount_amount: number;
+      surcharge_amount: number;
+      notes?: string;
+      payments: { method: SalePaymentMethod; amount: number; reference?: string }[];
+      finalize: boolean;
+    }) => {
+      const subtotal = payload.items.reduce((sum, i) => sum + (i.unit_price * i.quantity - i.discount), 0);
+      const total = subtotal - payload.discount_amount + payload.surcharge_amount;
+
+      // Update sale header
+      const { error: saleErr } = await db
+        .from("sales")
+        .update({
+          customer_id: payload.customer_id || null,
+          subtotal,
+          discount_amount: payload.discount_amount,
+          surcharge_amount: payload.surcharge_amount,
+          total_amount: total,
+          notes: payload.notes || null,
+        })
+        .eq("id", payload.sale_id);
+      if (saleErr) throw saleErr;
+
+      // Replace items: delete old, insert new
+      const { error: delItemsErr } = await db.from("sale_items").delete().eq("sale_id", payload.sale_id);
+      if (delItemsErr) throw delItemsErr;
+
+      const itemRows = payload.items.map((i) => ({
+        sale_id: payload.sale_id,
+        product_id: i.product_id,
+        sku_snapshot: i.sku,
+        product_name_snapshot: i.name,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+        cost_price_snapshot: i.cost_price,
+        discount_amount: i.discount,
+        total_amount: i.unit_price * i.quantity - i.discount,
+      }));
+      const { error: itemsErr } = await db.from("sale_items").insert(itemRows);
+      if (itemsErr) throw itemsErr;
+
+      // Replace payments
+      const { error: delPayErr } = await db.from("sale_payments").delete().eq("sale_id", payload.sale_id);
+      if (delPayErr) throw delPayErr;
+
+      if (payload.payments.length > 0) {
+        const payRows = payload.payments.map((p) => ({
+          sale_id: payload.sale_id,
+          payment_method: p.method,
+          amount: p.amount,
+          reference: p.reference || null,
+        }));
+        const { error: payErr } = await db.from("sale_payments").insert(payRows);
+        if (payErr) throw payErr;
+      }
+
+      // Finalize if requested
+      if (payload.finalize) {
+        const { error: compErr } = await db.rpc("complete_sale", { _sale_id: payload.sale_id });
+        if (compErr) throw compErr;
+      }
+
+      return { id: payload.sale_id };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["sale"] });
+      qc.invalidateQueries({ queryKey: ["sale-items"] });
+      qc.invalidateQueries({ queryKey: ["sale-payments"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["stock_movements"] });
+      qc.invalidateQueries({ queryKey: ["financial-entries"] });
+      toast({ title: "Venda atualizada!" });
+    },
+    onError: (e: any) => toast({ title: "Erro ao atualizar", description: e.message, variant: "destructive" }),
+  });
+}
+
 // ── Complete Draft Sale ──
 export function useCompleteSale() {
   const qc = useQueryClient();

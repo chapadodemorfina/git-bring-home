@@ -79,7 +79,7 @@ export default function SaleEditPage() {
     setItems((prev) => prev.map((item) => {
       const product = products.find((p: any) => p.id === item.product_id);
       if (product) {
-        return { ...item, available_stock: product.quantity - product.reserved_quantity + item.quantity };
+        return { ...item, available_stock: (product as any).quantity - ((product as any).reserved_quantity || 0) + item.quantity };
       }
       return item;
     }));
