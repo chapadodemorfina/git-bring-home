@@ -195,6 +195,9 @@ export default function QuoteDetailPage() {
               </Button>
             </>
           )}
+          <Button variant="outline" size="sm" onClick={handleExportPdf}>
+            <FileDown className="mr-1 h-4 w-4" /> PDF
+          </Button>
           <Button variant="outline" size="sm" onClick={async () => {
             const r = await duplicateQuote.mutateAsync(id!);
             navigate(`/quotes/${r.id}`);
