@@ -3,7 +3,7 @@
  * Desenvolvido por Alvo Sistemas e Gestão
  */
 import {
-  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone,
+  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone, Landmark,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -29,6 +29,7 @@ const mainItems = [
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
   { title: "Vendas", url: "/sales", icon: ShoppingBag },
   { title: "Frente de Caixa", url: "/pdv", icon: MonitorSmartphone },
+  { title: "Controle de Caixa", url: "/cash-register", icon: Landmark },
   { title: "Logística", url: "/logistics", icon: Truck },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
 ];

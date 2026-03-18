@@ -106,6 +106,7 @@ import SaleDetailPage from "./modules/sales/pages/SaleDetailPage";
 import SaleEditPage from "./modules/sales/pages/SaleEditPage";
 import SalesDashboardPage from "./modules/sales/pages/SalesDashboardPage";
 import PdvPage from "./modules/sales/pages/PdvPage";
+import CashRegisterPage from "./modules/cash-register/pages/CashRegisterPage";
 
 // Warranties
 import WarrantiesPage from "./modules/repair/pages/WarrantiesPage";
@@ -195,6 +196,7 @@ const App = () => (
 
               {/* Sales & PDV */}
               <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><PdvPage /></RoleGuard></ProtectedRoute>} />
+              <Route path="/cash-register" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><CashRegisterPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><SalesListPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleCreatePage /></RoleGuard></ProtectedPage>} />

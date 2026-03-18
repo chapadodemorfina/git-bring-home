@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateSale } from "../hooks/useSales";
+import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
 import { useToast } from "@/hooks/use-toast";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
 import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
@@ -100,6 +101,8 @@ export default function PdvPage() {
   const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const createSale = useCreateSale();
+  const { data: openCashRegister } = useOpenCashRegister();
+  const addCashMovement = useAddCashMovement();
 
   // ── State ──
   const [search, setSearch] = useState("");
@@ -238,13 +241,30 @@ export default function PdvPage() {
         finalize: true,
       });
 
+      // Auto-create cash register movement if register is open
+      if (openCashRegister) {
+        try {
+          await addCashMovement.mutateAsync({
+            cash_register_id: openCashRegister.id,
+            movement_type: "sale",
+            payment_method: paymentMethod,
+            amount: payAmount,
+            description: `Venda ${result.sale_number || ""}`.trim(),
+            reference_type: "sale",
+            reference_id: result.id,
+          });
+        } catch {
+          // non-blocking: movement registration failure shouldn't block the sale
+        }
+      }
+
       setLastSaleId(result.id);
       setLastSaleNumber(result.sale_number || "");
       setShowSuccessDialog(true);
     } catch {
       // error handled by mutation
     }
-  }, [cart, user, customerId, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast]);
+  }, [cart, user, customerId, discountAmount, surcharge, notes, paymentMethod, amountReceived, total, createSale, toast, openCashRegister, addCashMovement]);
 
   // ── Post-sale actions ──
   const handleNewSale = useCallback(() => {
