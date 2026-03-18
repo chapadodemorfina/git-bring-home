@@ -241,16 +241,17 @@ export function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   }
 
   // ── CLOSING BLOCK (QR + Signatures) ──
-  // Calculate total space needed for closing block
   const hasQr = !!qrCodeImageData;
-  const closingBlockHeight = (hasQr ? 56 : 0) + 32; // QR ~56mm + signatures ~32mm
+  const closingH = (hasQr ? 48 : 0) + 26; // QR ~48mm + signatures ~26mm
   const pageHeight = doc.internal.pageSize.getHeight();
-  const remainingSpace = pageHeight - y - 22; // 22mm for footer
+  const remaining = pageHeight - y - 20;
 
-  // If closing block doesn't fit, start fresh page with intentional layout
-  if (remainingSpace < closingBlockHeight && remainingSpace < pageHeight * 0.6) {
+  // Decide: fit on current page or start intentional page 2
+  const needsNewPage = remaining < closingH;
+
+  if (needsNewPage) {
     doc.addPage();
-    y = 20;
+    y = addContinuationHeader(doc, order.order_number, order.customer_name || "—");
   }
 
   if (hasQr) {
