@@ -13,7 +13,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, Save, Building2, MapPin, Phone, FileText,
-  Shield, Settings2, Palette
+  Shield, Settings2, Palette, Key, Eye, EyeOff
 } from "lucide-react";
 import { LogoUpload } from "@/components/settings/LogoUpload";
 
