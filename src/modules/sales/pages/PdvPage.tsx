@@ -251,6 +251,7 @@ export default function PdvPage() {
       // Auto-create cash register movement if register is open
       if (openCashRegister) {
         try {
+          const isCash = paymentMethod === "cash";
           await addCashMovement.mutateAsync({
             cash_register_id: openCashRegister.id,
             movement_type: "sale",
@@ -259,6 +260,9 @@ export default function PdvPage() {
             description: `Venda ${result.sale_number || ""}`.trim(),
             reference_type: "sale",
             reference_id: result.id,
+            affects_cash: isCash,
+            affects_bank: !isCash,
+            source_type: "pdv",
           });
         } catch {
           // non-blocking: movement registration failure shouldn't block the sale

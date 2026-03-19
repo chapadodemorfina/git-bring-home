@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSale, useSaleItems, useSalePayments, useSaleReturns, useCancelSale, useCompleteSale, useAddSalePayment, useProcessReturn } from "../hooks/useSales";
+import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
 import { saleStatusLabels, saleStatusColors, paymentStatusLabels, paymentMethodLabels, SalePaymentMethod } from "../types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -52,6 +53,8 @@ export default function SaleDetailPage() {
   const completeSale = useCompleteSale();
   const addPayment = useAddSalePayment();
   const processReturn = useProcessReturn();
+  const { data: openCashRegister } = useOpenCashRegister();
+  const addCashMovement = useAddCashMovement();
 
   // Cancel dialog
   const [showCancel, setShowCancel] = useState(false);
@@ -100,7 +103,33 @@ export default function SaleDetailPage() {
       payment_method: newPayMethod,
       amount: newPayAmount,
       reference: newPayRef || undefined,
-    }, { onSuccess: () => { setShowPayment(false); setNewPayAmount(0); setNewPayRef(""); } });
+    }, {
+      onSuccess: async () => {
+        // Register cash movement if register is open
+        if (openCashRegister) {
+          const isCash = newPayMethod === "cash";
+          try {
+            await addCashMovement.mutateAsync({
+              cash_register_id: openCashRegister.id,
+              movement_type: "receipt",
+              payment_method: newPayMethod,
+              amount: newPayAmount,
+              description: `Pagamento - Venda ${sale.sale_number}`,
+              reference_type: "sale",
+              reference_id: sale.id,
+              affects_cash: isCash,
+              affects_bank: !isCash,
+              source_type: "sale",
+            });
+          } catch {
+            // non-blocking
+          }
+        }
+        setShowPayment(false);
+        setNewPayAmount(0);
+        setNewPayRef("");
+      },
+    });
   };
 
   const handlePrint = () => {

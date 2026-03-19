@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreateSale } from "../hooks/useSales";
 import { useAllProducts } from "@/modules/inventory/hooks/useInventory";
 import { useCustomers } from "@/modules/customers/hooks/useCustomers";
+import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
 import type { SaleFormItem, SalePaymentMethod } from "../types";
 import { paymentMethodLabels } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,7 +89,10 @@ export default function SaleCreatePage() {
 
   const removePayment = (idx: number) => setPayments(payments.filter((_, i) => i !== idx));
 
-  const handleSubmit = (finalize: boolean) => {
+  const { data: openCashRegister } = useOpenCashRegister();
+  const addCashMovement = useAddCashMovement();
+
+  const handleSubmit = async (finalize: boolean) => {
     if (items.length === 0) return;
     createSale.mutate(
       {
@@ -101,7 +105,33 @@ export default function SaleCreatePage() {
         payments,
         finalize,
       },
-      { onSuccess: (sale: any) => navigate(`/sales/${sale.id}`) }
+      {
+        onSuccess: async (sale: any) => {
+          // Register cash movements for each payment if register is open and sale finalized
+          if (finalize && openCashRegister) {
+            for (const p of payments) {
+              const isCash = p.method === "cash";
+              try {
+                await addCashMovement.mutateAsync({
+                  cash_register_id: openCashRegister.id,
+                  movement_type: "sale",
+                  payment_method: p.method,
+                  amount: p.amount,
+                  description: `Venda ${sale.sale_number || ""}`.trim(),
+                  reference_type: "sale",
+                  reference_id: sale.id,
+                  affects_cash: isCash,
+                  affects_bank: !isCash,
+                  source_type: "sale",
+                });
+              } catch {
+                // non-blocking
+              }
+            }
+          }
+          navigate(`/sales/${sale.id}`);
+        },
+      }
     );
   };
 
