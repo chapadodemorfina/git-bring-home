@@ -2,6 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CollectionPointForm from "../components/CollectionPointForm";
 import { useCollectionPoint, useUpdateCollectionPoint } from "../hooks/useCollectionPoints";
+import type { CollectionPointSettings, CollectionPointFormData } from "../types";
+import { defaultCpSettings } from "../types";
 
 export default function CollectionPointEditPage() {
   const { id } = useParams();
@@ -19,6 +21,8 @@ export default function CollectionPointEditPage() {
         <CardContent>
           <CollectionPointForm
             isLoading={update.isPending}
+            defaultIsActive={cp.is_active}
+            defaultSettings={{ ...defaultCpSettings, ...cp.settings }}
             defaultValues={{
               name: cp.name,
               company_name: cp.company_name || "",
@@ -37,8 +41,8 @@ export default function CollectionPointEditPage() {
               commission_type: cp.commission_type,
               commission_value: cp.commission_value,
             }}
-            onSubmit={async (data) => {
-              await update.mutateAsync({ id: id!, values: data });
+            onSubmit={async (data: CollectionPointFormData, settings: CollectionPointSettings, isActive: boolean) => {
+              await update.mutateAsync({ id: id!, values: data, settings, isActive });
               navigate(`/collection-points/${id}`);
             }}
           />

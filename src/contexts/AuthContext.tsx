@@ -11,6 +11,7 @@ interface Profile {
   avatar_url: string | null;
   phone: string | null;
   is_active: boolean;
+  collection_point_id: string | null;
 }
 
 interface AuthContextType {

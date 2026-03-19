@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CollectionPointForm from "../components/CollectionPointForm";
 import { useCreateCollectionPoint } from "../hooks/useCollectionPoints";
+import type { CollectionPointSettings, CollectionPointFormData } from "../types";
 
 export default function CollectionPointCreatePage() {
   const navigate = useNavigate();
@@ -14,8 +15,8 @@ export default function CollectionPointCreatePage() {
         <CardContent>
           <CollectionPointForm
             isLoading={create.isPending}
-            onSubmit={async (data) => {
-              const result = await create.mutateAsync(data);
+            onSubmit={async (data: CollectionPointFormData, settings: CollectionPointSettings, isActive: boolean) => {
+              const result = await create.mutateAsync({ values: data, settings, isActive });
               navigate(`/collection-points/${result.id}`);
             }}
           />

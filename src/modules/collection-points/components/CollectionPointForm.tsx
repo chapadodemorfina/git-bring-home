@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -5,18 +6,27 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import PermissionsPanel from "./PermissionsPanel";
 import {
   collectionPointSchema, type CollectionPointFormData,
   commissionTypeLabels, brazilianStates, type CommissionType,
+  type CollectionPointSettings, defaultCpSettings,
 } from "../types";
 
 interface Props {
   defaultValues?: Partial<CollectionPointFormData>;
-  onSubmit: (data: CollectionPointFormData) => void;
+  defaultSettings?: CollectionPointSettings;
+  defaultIsActive?: boolean;
+  onSubmit: (data: CollectionPointFormData, settings: CollectionPointSettings, isActive: boolean) => void;
   isLoading?: boolean;
 }
 
-export default function CollectionPointForm({ defaultValues, onSubmit, isLoading }: Props) {
+export default function CollectionPointForm({ defaultValues, defaultSettings, defaultIsActive = true, onSubmit, isLoading }: Props) {
+  const [settings, setSettings] = useState<CollectionPointSettings>(defaultSettings || defaultCpSettings);
+  const [isActive, setIsActive] = useState(defaultIsActive);
+
   const form = useForm<CollectionPointFormData>({
     resolver: zodResolver(collectionPointSchema),
     defaultValues: {
@@ -30,7 +40,7 @@ export default function CollectionPointForm({ defaultValues, onSubmit, isLoading
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit((data) => onSubmit(data, settings, isActive))} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField control={form.control} name="name" render={({ field }) => (
             <FormItem><FormLabel>Nome do Ponto *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -115,9 +125,18 @@ export default function CollectionPointForm({ defaultValues, onSubmit, isLoading
           )} />
         </div>
 
+        {/* Status ativo/inativo */}
+        <div className="flex items-center gap-3 pt-2">
+          <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
+          <Label htmlFor="is_active" className="cursor-pointer">{isActive ? "Ativo" : "Inativo"}</Label>
+        </div>
+
         <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem><FormLabel>Observações</FormLabel><FormControl><Textarea rows={3} {...field} /></FormControl><FormMessage /></FormItem>
         )} />
+
+        {/* Permissions */}
+        <PermissionsPanel settings={settings} onChange={setSettings} />
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>{isLoading ? "Salvando..." : "Salvar"}</Button>
