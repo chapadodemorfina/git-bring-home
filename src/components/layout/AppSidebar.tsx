@@ -45,6 +45,7 @@ const systemItems = [
   { title: "WhatsApp", url: "/whatsapp", icon: MessageSquare },
   { title: "Mensagens Clientes", url: "/message-history", icon: MessageSquare },
   { title: "Notificações", url: "/notifications", icon: Bell },
+  { title: "Assinatura", url: "/subscription", icon: CreditCard },
   { title: "Configurações", url: "/settings", icon: Settings },
   { title: "Logs de Auditoria", url: "/audit-logs", icon: FileText },
 ];

@@ -171,6 +171,8 @@ const App = () => (
               <Route path="/system/users/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
+              <Route path="/subscription" element={<ProtectedPage><SubscriptionPage /></ProtectedPage>} />
+              <Route path="/admin/subscription" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><AdminSubscriptionPage /></RoleGuard></ProtectedPage>} />
               <Route path="/audit-logs" element={<ProtectedPage><AuditLogsPage /></ProtectedPage>} />
               <Route path="/queues" element={<ProtectedPage><WorkQueuesPage /></ProtectedPage>} />
               <Route path="/notifications" element={<ProtectedPage><NotificationsPage /></ProtectedPage>} />
