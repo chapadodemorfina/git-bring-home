@@ -39,37 +39,41 @@ const FEATURE_LABELS: Record<string, string[]> = {
     "Até 2 usuários",
     "50 ordens de serviço/mês",
     "100 produtos cadastrados",
-    "Gestão de clientes e dispositivos",
-    "PDFs personalizados",
+    "Cadastro de clientes e dispositivos",
     "Suporte por email",
   ],
   professional: [
-    "Até 5 usuários",
-    "200 ordens de serviço/mês",
-    "500 produtos cadastrados",
+    "Até 10 usuários",
+    "500 ordens de serviço/mês",
+    "1.000 produtos cadastrados",
     "WhatsApp integrado",
     "Portal do cliente",
     "Orçamentos e garantias",
     "Suporte prioritário",
   ],
   business: [
-    "Até 15 usuários",
-    "1.000 ordens de serviço/mês",
-    "2.000 produtos cadastrados",
+    "Até 25 usuários",
+    "2.000 ordens de serviço/mês",
+    "5.000 produtos cadastrados",
     "Pontos de coleta e comissões",
     "Logística e financeiro completo",
     "Relatórios avançados",
     "API completa",
-    "Suporte dedicado",
   ],
   enterprise: [
     "Usuários ilimitados",
     "Ordens e produtos ilimitados",
-    "Multi-tenant avançado",
+    "Estrutura corporativa",
     "SLA garantido",
-    "Onboarding personalizado",
-    "Suporte 24/7 com gerente dedicado",
+    "Onboarding dedicado",
+    "Projeto sob medida",
+    "Suporte prioritário 24/7",
   ],
+};
+
+const MICRO_TEXT: Record<string, string> = {
+  professional: "Ideal para assistências que querem escalar com organização.",
+  business: "Ideal para operações com equipe, logística e maior volume.",
 };
 
 export default function SelectPlanPage() {
