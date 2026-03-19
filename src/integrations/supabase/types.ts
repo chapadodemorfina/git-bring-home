@@ -5018,6 +5018,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cp_can_view_all_tenant_orders: { Args: never; Returns: boolean }
       create_tenant: {
         Args: { _document?: string; _name: string; _slug: string }
         Returns: Json
@@ -5090,6 +5091,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string[]
       }
+      get_user_cp_id: { Args: never; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
