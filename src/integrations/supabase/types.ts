@@ -443,6 +443,7 @@ export type Database = {
           number: string | null
           phone: string | null
           responsible_person: string | null
+          settings: Json
           state: string | null
           street: string | null
           tenant_id: string
@@ -467,6 +468,7 @@ export type Database = {
           number?: string | null
           phone?: string | null
           responsible_person?: string | null
+          settings?: Json
           state?: string | null
           street?: string | null
           tenant_id: string
@@ -491,6 +493,7 @@ export type Database = {
           number?: string | null
           phone?: string | null
           responsible_person?: string | null
+          settings?: Json
           state?: string | null
           street?: string | null
           tenant_id?: string
@@ -2342,6 +2345,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          collection_point_id: string | null
           created_at: string
           email: string
           full_name: string
@@ -2352,6 +2356,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          collection_point_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -2362,6 +2367,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          collection_point_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -2370,7 +2376,22 @@ export type Database = {
           phone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "mv_partner_performance"
+            referencedColumns: ["collection_point_id"]
+          },
+        ]
       }
       purchase_entries: {
         Row: {
@@ -4955,6 +4976,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_cp_permission: { Args: { _permission: string }; Returns: boolean }
       check_plan_limits: {
         Args: { _resource_type: string; _tenant_id: string }
         Returns: boolean
@@ -4967,6 +4989,20 @@ export type Database = {
           _register_id: string
         }
         Returns: Json
+      }
+      collection_point_performance: {
+        Args: { _cp_id?: string; _from?: string; _to?: string }
+        Returns: {
+          avg_ticket: number
+          calculated_commission: number
+          commission_type: string
+          commission_value: number
+          completed_orders: number
+          cp_id: string
+          cp_name: string
+          total_orders: number
+          total_revenue: number
+        }[]
       }
       commission_summary: {
         Args: { _from?: string; _to?: string }
@@ -5044,6 +5080,7 @@ export type Database = {
       get_financial_balances: { Args: never; Returns: Json }
       get_goal_progress: { Args: { _goal_id: string }; Returns: Json }
       get_last_closed_balances: { Args: never; Returns: Json }
+      get_my_cp_settings: { Args: never; Returns: Json }
       get_next_sequence: {
         Args: { _key: string; _tenant_id: string }
         Returns: number
