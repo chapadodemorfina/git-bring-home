@@ -16,6 +16,7 @@ import {
   Shield, Settings2, Palette, Key, Eye, EyeOff
 } from "lucide-react";
 import { LogoUpload } from "@/components/settings/LogoUpload";
+import { useTenant } from "@/contexts/TenantContext";
 
 const db = supabase as any;
 
