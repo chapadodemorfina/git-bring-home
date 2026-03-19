@@ -85,7 +85,7 @@ export interface RepairPartUsed {
   products?: { name: string; sku: string } | null;
 }
 
-export type StockMovementType = "entry" | "exit" | "adjustment" | "return" | "reserved" | "consumed" | "scrap_recovery";
+export type StockMovementType = "entry" | "exit" | "adjustment" | "return" | "reserved" | "consumed" | "scrap_recovery" | "sale" | "sale_return";
 
 export const movementTypeLabels: Record<StockMovementType, string> = {
   entry: "Entrada",
@@ -95,6 +95,8 @@ export const movementTypeLabels: Record<StockMovementType, string> = {
   reserved: "Reserva",
   consumed: "Consumo",
   scrap_recovery: "Recuperação Sucata",
+  sale: "Venda",
+  sale_return: "Estorno Venda",
 };
 
 export const productSchema = z.object({
