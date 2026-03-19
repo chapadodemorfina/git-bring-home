@@ -333,6 +333,35 @@ function Field({ label, value, onChange, placeholder }: {
   );
 }
 
+function SecretField({ label, value, onChange, placeholder }: {
+  label: string; value: string | undefined; onChange: (v: string) => void; placeholder?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="relative">
+        <Input
+          type={visible ? "text" : "password"}
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="pr-10 font-mono text-sm"
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute right-0 top-0 h-10 w-10"
+          onClick={() => setVisible(!visible)}
+        >
+          {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ToggleField({ label, checked, onToggle, description }: {
   label: string; checked: boolean; onToggle: () => void; description: string;
 }) {
