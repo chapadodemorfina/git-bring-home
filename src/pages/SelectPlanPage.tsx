@@ -219,10 +219,17 @@ export default function SelectPlanPage() {
           })}
         </div>
 
+        {/* Evolution note */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-muted-foreground/70 italic">
+            Comece no plano ideal para sua operação e evolua quando precisar.
+          </p>
+        </div>
+
         {/* Footer note */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-4">
           <p className="text-sm text-muted-foreground">
-            Precisa de um plano personalizado?{" "}
+            Precisa de um plano personalizado ou quer ajuda para escolher?{" "}
             <a
               href="https://wa.me/5500000000000?text=Olá! Gostaria de um plano personalizado."
               target="_blank"
