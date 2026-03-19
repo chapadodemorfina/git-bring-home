@@ -499,12 +499,29 @@ export default function CashRegisterPage() {
       </Tabs>
 
       {/* ── Open Dialog ── */}
-      <Dialog open={showOpen} onOpenChange={setShowOpen}>
+      <Dialog open={showOpen} onOpenChange={(open) => {
+        setShowOpen(open);
+        if (open && lastBalances) {
+          setInitialAmount(String(Number(lastBalances.last_cash_balance) || 0));
+          setOpenBankBalance(String(Number(lastBalances.last_bank_balance) || 0));
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Abrir Caixa</DialogTitle>
             <DialogDescription>Informe os saldos iniciais para abrir o caixa do dia</DialogDescription>
           </DialogHeader>
+          {lastBalances?.closed_at && (
+            <div className="p-3 rounded-lg bg-muted text-sm">
+              <p className="text-muted-foreground">
+                Último fechamento: <span className="font-medium text-foreground">{format(new Date(lastBalances.closed_at), "dd/MM/yyyy HH:mm")}</span>
+                {lastBalances.opened_by_name && <> por <span className="font-medium text-foreground">{lastBalances.opened_by_name}</span></>}
+              </p>
+              <p className="text-muted-foreground mt-1">
+                Saldos sugeridos: Caixa <span className="font-medium text-foreground">{fmt(Number(lastBalances.last_cash_balance))}</span> • Banco <span className="font-medium text-foreground">{fmt(Number(lastBalances.last_bank_balance))}</span>
+              </p>
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium flex items-center gap-2">
