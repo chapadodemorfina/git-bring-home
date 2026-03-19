@@ -739,6 +739,83 @@ export type Database = {
           },
         ]
       }
+      cp_commission_periods: {
+        Row: {
+          collection_point_id: string
+          commission_amount: number
+          completed_orders: number
+          created_at: string
+          financial_entry_id: string | null
+          id: string
+          period_end: string
+          period_start: string
+          status: Database["public"]["Enums"]["cp_commission_period_status"]
+          tenant_id: string
+          total_orders: number
+          total_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          collection_point_id: string
+          commission_amount?: number
+          completed_orders?: number
+          created_at?: string
+          financial_entry_id?: string | null
+          id?: string
+          period_end: string
+          period_start: string
+          status?: Database["public"]["Enums"]["cp_commission_period_status"]
+          tenant_id: string
+          total_orders?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          collection_point_id?: string
+          commission_amount?: number
+          completed_orders?: number
+          created_at?: string
+          financial_entry_id?: string | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          status?: Database["public"]["Enums"]["cp_commission_period_status"]
+          tenant_id?: string
+          total_orders?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cp_commission_periods_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "collection_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cp_commission_periods_collection_point_id_fkey"
+            columns: ["collection_point_id"]
+            isOneToOne: false
+            referencedRelation: "mv_partner_performance"
+            referencedColumns: ["collection_point_id"]
+          },
+          {
+            foreignKeyName: "cp_commission_periods_financial_entry_id_fkey"
+            columns: ["financial_entry_id"]
+            isOneToOne: false
+            referencedRelation: "financial_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cp_commission_periods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_addresses: {
         Row: {
           city: string | null
@@ -4950,6 +5027,7 @@ export type Database = {
         Args: { _new_quantity: number; _product_id: string; _reason?: string }
         Returns: Json
       }
+      approve_cp_commission: { Args: { _id: string }; Returns: undefined }
       approve_reject_quote: {
         Args: {
           _charge_analysis_fee?: boolean
@@ -5046,6 +5124,10 @@ export type Database = {
       finance_summary:
         | { Args: never; Returns: Json }
         | { Args: { _from: string; _to: string }; Returns: Json }
+      generate_cp_commissions: {
+        Args: { _cp_id?: string; _period_end: string; _period_start: string }
+        Returns: number
+      }
       generate_public_tracking_token: {
         Args: { _service_order_id: string }
         Returns: Json
@@ -5147,6 +5229,10 @@ export type Database = {
           _user_name: string
         }
         Returns: Json
+      }
+      pay_cp_commission: {
+        Args: { _id: string; _method?: string }
+        Returns: undefined
       }
       process_notification_events: { Args: never; Returns: Json }
       process_sale_return: {
@@ -5306,6 +5392,7 @@ export type Database = {
       cash_register_status: "open" | "closed"
       commission_entry_status: "pending" | "approved" | "paid" | "cancelled"
       commission_type: "percentage" | "fixed_per_order" | "fixed_per_device"
+      cp_commission_period_status: "pending" | "approved" | "paid"
       customer_type: "individual" | "business"
       device_type:
         | "notebook"
@@ -5607,6 +5694,7 @@ export const Constants = {
       cash_register_status: ["open", "closed"],
       commission_entry_status: ["pending", "approved", "paid", "cancelled"],
       commission_type: ["percentage", "fixed_per_order", "fixed_per_device"],
+      cp_commission_period_status: ["pending", "approved", "paid"],
       customer_type: ["individual", "business"],
       device_type: [
         "notebook",
