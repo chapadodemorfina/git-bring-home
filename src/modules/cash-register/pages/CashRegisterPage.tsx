@@ -9,6 +9,7 @@ import {
   useOpenCashRegisterMutation,
   useCloseCashRegisterMutation,
   useAddCashMovement,
+  useLastClosedBalances,
   movementTypeLabels,
   movementTypeColors,
   type CashMovementType,
