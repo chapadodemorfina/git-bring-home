@@ -663,13 +663,16 @@ export type Database = {
       commission_rules: {
         Row: {
           base_type: string
+          category_filter: string | null
           created_at: string | null
           fixed_amount: number | null
           id: string
           is_active: boolean | null
           label: string
           notes: string | null
+          only_after_payment: boolean
           percentage: number | null
+          product_id: string | null
           role: string
           source_type: string
           tenant_id: string
@@ -677,13 +680,16 @@ export type Database = {
         }
         Insert: {
           base_type: string
+          category_filter?: string | null
           created_at?: string | null
           fixed_amount?: number | null
           id?: string
           is_active?: boolean | null
           label: string
           notes?: string | null
+          only_after_payment?: boolean
           percentage?: number | null
+          product_id?: string | null
           role: string
           source_type: string
           tenant_id: string
@@ -691,19 +697,36 @@ export type Database = {
         }
         Update: {
           base_type?: string
+          category_filter?: string | null
           created_at?: string | null
           fixed_amount?: number | null
           id?: string
           is_active?: boolean | null
           label?: string
           notes?: string | null
+          only_after_payment?: boolean
           percentage?: number | null
+          product_id?: string | null
           role?: string
           source_type?: string
           tenant_id?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "commission_rules_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "commission_rules_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commission_rules_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -3133,6 +3156,59 @@ export type Database = {
           },
         ]
       }
+      sales_goals: {
+        Row: {
+          created_at: string
+          goal_type: string
+          id: string
+          label: string
+          notes: string | null
+          period_end: string
+          period_start: string
+          target_value: number
+          team_role: string | null
+          tenant_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          label: string
+          notes?: string | null
+          period_end: string
+          period_start: string
+          target_value?: number
+          team_role?: string | null
+          tenant_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          target_value?: number
+          team_role?: string | null
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_goals_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrap_carcass_details: {
         Row: {
           aesthetic_state: string | null
@@ -4963,6 +5039,7 @@ export type Database = {
         Returns: Json
       }
       get_financial_balances: { Args: never; Returns: Json }
+      get_goal_progress: { Args: { _goal_id: string }; Returns: Json }
       get_last_closed_balances: { Args: never; Returns: Json }
       get_next_sequence: {
         Args: { _key: string; _tenant_id: string }
@@ -5100,6 +5177,10 @@ export type Database = {
         }
         Returns: Json
       }
+      reverse_sale_commissions: {
+        Args: { _proportion?: number; _sale_id: string }
+        Returns: undefined
+      }
       run_consistency_checks: { Args: never; Returns: Json }
       sales_dashboard_summary: {
         Args: { _from: string; _to: string }
@@ -5108,6 +5189,22 @@ export type Database = {
       scrap_dashboard_summary: { Args: never; Returns: Json }
       set_tenant_context: { Args: { _tenant_id: string }; Returns: undefined }
       switch_tenant: { Args: { _tenant_id: string }; Returns: Json }
+      team_ranking_data: {
+        Args: { _from?: string; _to?: string }
+        Returns: {
+          commission_total: number
+          goal_pct: number
+          name: string
+          role: string
+          sales_count: number
+          sales_revenue: number
+          so_count: number
+          so_revenue: number
+          ticket_avg: number
+          total_revenue: number
+          user_id: string
+        }[]
+      }
       void_warranty: {
         Args: { _reason: string; _warranty_id: string }
         Returns: Json
