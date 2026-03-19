@@ -15,6 +15,8 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import SelectPlanPage from "./pages/SelectPlanPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
