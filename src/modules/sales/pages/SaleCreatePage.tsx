@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreateSale } from "../hooks/useSales";
 import { useAllProducts } from "@/modules/inventory/hooks/useInventory";
 import { useCustomers } from "@/modules/customers/hooks/useCustomers";
+import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
 import type { SaleFormItem, SalePaymentMethod } from "../types";
 import { paymentMethodLabels } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
