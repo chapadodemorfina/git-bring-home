@@ -137,6 +137,7 @@ Deno.serve(async (req) => {
       await createHandoff(supabase, conversation.id, "ai_unavailable");
     } else {
       const context = await gatherBusinessContext(supabase, customerId);
+      context.tenant_id = conversation.tenant_id || null;
       const aiResult = await classifyAndRespond(lovableApiKey, message, customerName || "Cliente", context, conversation.id);
       intent = aiResult.intent;
       confidence = aiResult.confidence;
