@@ -1,5 +1,47 @@
 import { z } from "zod";
 
+export interface CollectionPointSettings {
+  create_customers: boolean;
+  edit_customers: boolean;
+  create_service_orders: boolean;
+  view_only_own_orders: boolean;
+  view_quotes: boolean;
+  approve_quotes: boolean;
+  upload_attachments: boolean;
+  view_status: boolean;
+  view_financial: boolean;
+  close_orders: boolean;
+  cancel_orders: boolean;
+}
+
+export const defaultCpSettings: CollectionPointSettings = {
+  create_customers: true,
+  edit_customers: false,
+  create_service_orders: true,
+  view_only_own_orders: true,
+  view_quotes: true,
+  approve_quotes: false,
+  upload_attachments: true,
+  view_status: true,
+  view_financial: false,
+  close_orders: false,
+  cancel_orders: false,
+};
+
+export const cpSettingLabels: Record<keyof CollectionPointSettings, string> = {
+  create_customers: "Criar Clientes",
+  edit_customers: "Editar Clientes",
+  create_service_orders: "Criar Ordens de Serviço",
+  view_only_own_orders: "Ver Apenas Próprias OS",
+  view_quotes: "Visualizar Orçamentos",
+  approve_quotes: "Aprovar Orçamentos",
+  upload_attachments: "Enviar Anexos",
+  view_status: "Ver Status da OS",
+  view_financial: "Ver Financeiro",
+  close_orders: "Finalizar OS",
+  cancel_orders: "Cancelar OS",
+};
+
 export interface CollectionPoint {
   id: string;
   name: string;
@@ -18,6 +60,7 @@ export interface CollectionPoint {
   notes: string | null;
   commission_type: CommissionType;
   commission_value: number;
+  settings: CollectionPointSettings;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
