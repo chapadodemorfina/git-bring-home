@@ -164,6 +164,8 @@ export type Database = {
       }
       cash_register_movements: {
         Row: {
+          affects_bank: boolean | null
+          affects_cash: boolean | null
           amount: number
           cash_register_id: string
           created_at: string
@@ -174,9 +176,12 @@ export type Database = {
           payment_method: string | null
           reference_id: string | null
           reference_type: string | null
+          source_type: string | null
           tenant_id: string
         }
         Insert: {
+          affects_bank?: boolean | null
+          affects_cash?: boolean | null
           amount: number
           cash_register_id: string
           created_at?: string
@@ -187,9 +192,12 @@ export type Database = {
           payment_method?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          source_type?: string | null
           tenant_id: string
         }
         Update: {
+          affects_bank?: boolean | null
+          affects_cash?: boolean | null
           amount?: number
           cash_register_id?: string
           created_at?: string
@@ -200,6 +208,7 @@ export type Database = {
           payment_method?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          source_type?: string | null
           tenant_id?: string
         }
         Relationships: [
@@ -223,16 +232,20 @@ export type Database = {
         Row: {
           closed_at: string | null
           closed_by: string | null
+          closing_bank_balance: number | null
           closing_notes: string | null
           counted_amount: number | null
           created_at: string
           difference_amount: number | null
+          difference_bank: number | null
           expected_amount: number | null
+          expected_bank_balance: number | null
           id: string
           initial_amount: number
           notes: string | null
           opened_at: string
           opened_by: string
+          opening_bank_balance: number | null
           status: Database["public"]["Enums"]["cash_register_status"]
           tenant_id: string
           updated_at: string
@@ -240,16 +253,20 @@ export type Database = {
         Insert: {
           closed_at?: string | null
           closed_by?: string | null
+          closing_bank_balance?: number | null
           closing_notes?: string | null
           counted_amount?: number | null
           created_at?: string
           difference_amount?: number | null
+          difference_bank?: number | null
           expected_amount?: number | null
+          expected_bank_balance?: number | null
           id?: string
           initial_amount?: number
           notes?: string | null
           opened_at?: string
           opened_by: string
+          opening_bank_balance?: number | null
           status?: Database["public"]["Enums"]["cash_register_status"]
           tenant_id: string
           updated_at?: string
@@ -257,16 +274,20 @@ export type Database = {
         Update: {
           closed_at?: string | null
           closed_by?: string | null
+          closing_bank_balance?: number | null
           closing_notes?: string | null
           counted_amount?: number | null
           created_at?: string
           difference_amount?: number | null
+          difference_bank?: number | null
           expected_amount?: number | null
+          expected_bank_balance?: number | null
           id?: string
           initial_amount?: number
           notes?: string | null
           opened_at?: string
           opened_by?: string
+          opening_bank_balance?: number | null
           status?: Database["public"]["Enums"]["cash_register_status"]
           tenant_id?: string
           updated_at?: string
@@ -4859,14 +4880,24 @@ export type Database = {
         Args: { _resource_type: string; _tenant_id: string }
         Returns: boolean
       }
-      close_cash_register: {
-        Args: {
-          _closing_notes?: string
-          _counted_amount: number
-          _register_id: string
-        }
-        Returns: Json
-      }
+      close_cash_register:
+        | {
+            Args: {
+              _closing_notes?: string
+              _counted_amount: number
+              _register_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _closing_notes?: string
+              _counted_amount: number
+              _counted_bank_balance?: number
+              _register_id: string
+            }
+            Returns: Json
+          }
       commission_summary: {
         Args: { _from?: string; _to?: string }
         Returns: Json
@@ -4940,6 +4971,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_financial_balances: { Args: never; Returns: Json }
       get_next_sequence: {
         Args: { _key: string; _tenant_id: string }
         Returns: number

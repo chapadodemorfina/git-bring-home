@@ -14,12 +14,16 @@ export interface CashRegister {
   opened_by: string;
   opened_at: string;
   initial_amount: number;
+  opening_bank_balance: number;
   status: CashRegisterStatus;
   closed_by: string | null;
   closed_at: string | null;
   expected_amount: number | null;
   counted_amount: number | null;
   difference_amount: number | null;
+  expected_bank_balance: number | null;
+  closing_bank_balance: number | null;
+  difference_bank: number | null;
   notes: string | null;
   closing_notes: string | null;
   created_at: string;
@@ -38,6 +42,9 @@ export interface CashMovement {
   description: string;
   reference_type: string | null;
   reference_id: string | null;
+  affects_cash: boolean;
+  affects_bank: boolean;
+  source_type: string;
   created_by: string | null;
   created_at: string;
   // joined
@@ -62,46 +69,37 @@ export const movementTypeColors: Record<CashMovementType, string> = {
   adjustment: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
 };
 
-// ── Get current open cash register for user (per-operator) ──
+// ── Get current open cash register for the tenant ──
 export function useOpenCashRegister() {
   return useQuery<CashRegister | null>({
     queryKey: ["cash-register-open"],
     queryFn: async () => {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) return null;
-
-      // First try to find the operator's own open register
-      const { data: own, error: ownErr } = await db
-        .from("cash_registers")
-        .select("*, profiles!cash_registers_opened_by_fkey(full_name)")
-        .eq("status", "open")
-        .eq("opened_by", userId)
-        .order("opened_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (ownErr) throw ownErr;
-      if (own) {
-        return {
-          ...own,
-          opened_by_name: own.profiles?.full_name || null,
-          profiles: undefined,
-        } as CashRegister;
-      }
-
-      // Fallback: check if there's any open register (global mode)
+      // Find any open register for this tenant (one per tenant)
       const { data, error } = await db
         .from("cash_registers")
-        .select("*, profiles!cash_registers_opened_by_fkey(full_name)")
+        .select("*")
         .eq("status", "open")
         .order("opened_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
+
+      // Fetch operator name separately to avoid FK join issues
+      let openedByName: string | null = null;
+      if (data.opened_by) {
+        const { data: profile } = await db
+          .from("profiles")
+          .select("full_name")
+          .eq("id", data.opened_by)
+          .maybeSingle();
+        openedByName = profile?.full_name || null;
+      }
+
       return {
         ...data,
-        opened_by_name: data.profiles?.full_name || null,
-        profiles: undefined,
+        opening_bank_balance: Number(data.opening_bank_balance ?? 0),
+        opened_by_name: openedByName,
       } as CashRegister;
     },
     staleTime: 10000,
@@ -118,19 +116,30 @@ export function useCashMovements(registerId: string | undefined, page: number = 
         { page },
         {
           table: "cash_register_movements",
-          select: "*, profiles!cash_register_movements_created_by_fkey(full_name)",
+          select: "*",
           defaultSort: { column: "created_at", ascending: false },
           additionalFilters: (q: any) => q.eq("cash_register_id", registerId),
           countFilters: (q: any) => q.eq("cash_register_id", registerId),
         }
-      ).then((result) => ({
-        ...result,
-        items: result.items.map((m: any) => ({
-          ...m,
-          created_by_name: m.profiles?.full_name || null,
-          profiles: undefined,
-        })),
-      }));
+      ).then(async (result) => {
+        // Fetch profile names for created_by
+        const userIds = [...new Set(result.items.map((m: any) => m.created_by).filter(Boolean))];
+        let profileMap: Record<string, string> = {};
+        if (userIds.length > 0) {
+          const { data: profiles } = await db
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", userIds);
+          profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p.full_name]));
+        }
+        return {
+          ...result,
+          items: result.items.map((m: any) => ({
+            ...m,
+            created_by_name: profileMap[m.created_by] || null,
+          })),
+        };
+      });
     },
   });
 }
@@ -144,11 +153,11 @@ export function useCashRegisterHistory(
   return useQuery<PaginatedResult<CashRegister>>({
     queryKey: ["cash-register-history", page, dateFrom, dateTo],
     queryFn: async () => {
-      return executePaginatedQuery<CashRegister>(
+      const result = await executePaginatedQuery<any>(
         { page },
         {
           table: "cash_registers",
-          select: "*, profiles!cash_registers_opened_by_fkey(full_name)",
+          select: "*",
           defaultSort: { column: "opened_at", ascending: false },
           additionalFilters: (q: any) => {
             let query = q;
@@ -163,14 +172,28 @@ export function useCashRegisterHistory(
             return query;
           },
         }
-      ).then((result) => ({
+      );
+
+      // Fetch profile names
+      const userIds = [...new Set(result.items.flatMap((r: any) => [r.opened_by, r.closed_by].filter(Boolean)))];
+      let profileMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await db
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", userIds);
+        profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p.full_name]));
+      }
+
+      return {
         ...result,
         items: result.items.map((r: any) => ({
           ...r,
-          opened_by_name: r.profiles?.full_name || null,
-          profiles: undefined,
+          opening_bank_balance: Number(r.opening_bank_balance ?? 0),
+          opened_by_name: profileMap[r.opened_by] || null,
+          closed_by_name: profileMap[r.closed_by] || null,
         })),
-      }));
+      };
     },
   });
 }
@@ -183,51 +206,63 @@ export function useCashRegisterSummary(registerId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await db
         .from("cash_register_movements")
-        .select("movement_type, payment_method, amount")
+        .select("movement_type, payment_method, amount, affects_cash, affects_bank")
         .eq("cash_register_id", registerId);
       if (error) throw error;
 
-      const movements = (data || []) as { movement_type: string; payment_method: string; amount: number }[];
+      const movements = (data || []) as {
+        movement_type: string; payment_method: string; amount: number;
+        affects_cash: boolean; affects_bank: boolean;
+      }[];
 
-      const cash_in = movements.filter(m => m.amount > 0 && m.payment_method === "cash").reduce((s, m) => s + Number(m.amount), 0);
+      const cash_in = movements.filter(m => m.amount > 0 && m.affects_cash).reduce((s, m) => s + Number(m.amount), 0);
+      const bank_in = movements.filter(m => m.amount > 0 && m.affects_bank).reduce((s, m) => s + Number(m.amount), 0);
+      const cash_out = movements.filter(m => m.amount < 0 && m.affects_cash).reduce((s, m) => s + Math.abs(Number(m.amount)), 0);
+      const bank_out = movements.filter(m => m.amount < 0 && m.affects_bank).reduce((s, m) => s + Math.abs(Number(m.amount)), 0);
+
       const pix_in = movements.filter(m => m.amount > 0 && m.payment_method === "pix").reduce((s, m) => s + Number(m.amount), 0);
       const credit_in = movements.filter(m => m.amount > 0 && m.payment_method === "credit_card").reduce((s, m) => s + Number(m.amount), 0);
       const debit_in = movements.filter(m => m.amount > 0 && m.payment_method === "debit_card").reduce((s, m) => s + Number(m.amount), 0);
+      const cash_money_in = movements.filter(m => m.amount > 0 && m.payment_method === "cash").reduce((s, m) => s + Number(m.amount), 0);
       const withdrawals = movements.filter(m => m.movement_type === "withdrawal").reduce((s, m) => s + Math.abs(Number(m.amount)), 0);
       const reinforcements = movements.filter(m => m.movement_type === "reinforcement").reduce((s, m) => s + Number(m.amount), 0);
       const expenses = movements.filter(m => m.movement_type === "expense").reduce((s, m) => s + Math.abs(Number(m.amount)), 0);
       const total_in = movements.filter(m => m.amount > 0).reduce((s, m) => s + Number(m.amount), 0);
       const total_out = movements.filter(m => m.amount < 0).reduce((s, m) => s + Math.abs(Number(m.amount)), 0);
 
-      return { cash_in, pix_in, credit_in, debit_in, withdrawals, reinforcements, expenses, total_in, total_out };
+      return {
+        cash_in, bank_in, cash_out, bank_out,
+        cash_money_in, pix_in, credit_in, debit_in,
+        withdrawals, reinforcements, expenses, total_in, total_out,
+      };
     },
     staleTime: 5000,
   });
 }
 
-// ── Open cash register (per-operator: each user can have their own) ──
+// ── Open cash register (one per tenant) ──
 export function useOpenCashRegisterMutation() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: async (payload: { initial_amount: number; notes?: string }) => {
+    mutationFn: async (payload: { initial_amount: number; opening_bank_balance: number; notes?: string }) => {
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (!userId) throw new Error("Usuário não autenticado");
 
-      // Check if this user already has an open register
+      // Check if there's ANY open register for this tenant
       const { data: existing } = await db
         .from("cash_registers")
         .select("id")
         .eq("status", "open")
-        .eq("opened_by", userId)
         .limit(1);
-      if (existing && existing.length > 0) throw new Error("Você já possui um caixa aberto");
+      if (existing && existing.length > 0) throw new Error("Já existe um caixa aberto para esta empresa");
 
       const { data, error } = await db
         .from("cash_registers")
         .insert({
           opened_by: userId,
           initial_amount: payload.initial_amount,
+          opening_bank_balance: payload.opening_bank_balance,
           notes: payload.notes || null,
         })
         .select()
@@ -238,6 +273,7 @@ export function useOpenCashRegisterMutation() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cash-register-open"] });
       qc.invalidateQueries({ queryKey: ["cash-register-history"] });
+      qc.invalidateQueries({ queryKey: ["financial-balances"] });
       toast({ title: "Caixa aberto com sucesso!" });
     },
     onError: (e: any) => toast({ title: "Erro ao abrir caixa", description: e.message, variant: "destructive" }),
@@ -249,11 +285,17 @@ export function useCloseCashRegisterMutation() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: async (payload: { register_id: string; counted_amount: number; closing_notes?: string }) => {
+    mutationFn: async (payload: {
+      register_id: string;
+      counted_amount: number;
+      counted_bank_balance?: number;
+      closing_notes?: string;
+    }) => {
       const { data, error } = await db.rpc("close_cash_register", {
         _register_id: payload.register_id,
         _counted_amount: payload.counted_amount,
         _closing_notes: payload.closing_notes || null,
+        _counted_bank_balance: payload.counted_bank_balance ?? null,
       });
       if (error) throw error;
       return data;
@@ -263,6 +305,7 @@ export function useCloseCashRegisterMutation() {
       qc.invalidateQueries({ queryKey: ["cash-register-history"] });
       qc.invalidateQueries({ queryKey: ["cash-movements"] });
       qc.invalidateQueries({ queryKey: ["cash-register-summary"] });
+      qc.invalidateQueries({ queryKey: ["financial-balances"] });
       toast({ title: "Caixa fechado com sucesso!" });
     },
     onError: (e: any) => toast({ title: "Erro ao fechar caixa", description: e.message, variant: "destructive" }),
@@ -280,11 +323,13 @@ export function useAddCashMovement() {
       payment_method?: string;
       amount: number;
       description: string;
+      affects_cash?: boolean;
+      affects_bank?: boolean;
+      source_type?: string;
       reference_type?: string;
       reference_id?: string;
     }) => {
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      // For withdrawals/expenses store as negative
       const finalAmount = ["withdrawal", "expense"].includes(payload.movement_type)
         ? -Math.abs(payload.amount)
         : Math.abs(payload.amount);
@@ -295,6 +340,9 @@ export function useAddCashMovement() {
         payment_method: payload.payment_method || "cash",
         amount: finalAmount,
         description: payload.description,
+        affects_cash: payload.affects_cash ?? true,
+        affects_bank: payload.affects_bank ?? false,
+        source_type: payload.source_type || "manual",
         reference_type: payload.reference_type || null,
         reference_id: payload.reference_id || null,
         created_by: userId,
@@ -305,8 +353,32 @@ export function useAddCashMovement() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cash-movements"] });
       qc.invalidateQueries({ queryKey: ["cash-register-summary"] });
+      qc.invalidateQueries({ queryKey: ["financial-balances"] });
       toast({ title: "Movimentação registrada!" });
     },
     onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+}
+
+// ── Financial Balances (for dashboard) ──
+export function useFinancialBalances() {
+  return useQuery({
+    queryKey: ["financial-balances"],
+    queryFn: async () => {
+      const defaults = {
+        cash_balance: 0,
+        bank_balance: 0,
+        is_register_open: false,
+        today_income: 0,
+        today_expenses: 0,
+        receivables_total: 0,
+        payables_total: 0,
+        overdue_count: 0,
+      };
+      const { data, error } = await db.rpc("get_financial_balances");
+      if (error) throw error;
+      return { ...defaults, ...data } as typeof defaults;
+    },
+    staleTime: 15000,
   });
 }

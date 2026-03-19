@@ -41,7 +41,7 @@ import {
   DollarSign, Lock, Unlock, ArrowDownCircle, ArrowUpCircle,
   Banknote, CreditCard, Smartphone, Receipt, TrendingDown,
   TrendingUp, AlertTriangle, CheckCircle2, Clock, History,
-  Loader2, Printer,
+  Loader2, Printer, Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -63,14 +63,22 @@ export default function CashRegisterPage() {
   const [movType, setMovType] = useState<CashMovementType>("withdrawal");
   const [showHistoryDetail, setShowHistoryDetail] = useState<CashRegister | null>(null);
 
-  // Form
+  // Open form
   const [initialAmount, setInitialAmount] = useState("");
+  const [openBankBalance, setOpenBankBalance] = useState("");
   const [openNotes, setOpenNotes] = useState("");
+
+  // Close form
   const [countedAmount, setCountedAmount] = useState("");
+  const [countedBank, setCountedBank] = useState("");
   const [closeNotes, setCloseNotes] = useState("");
+
+  // Movement form
   const [movAmount, setMovAmount] = useState("");
   const [movDesc, setMovDesc] = useState("");
   const [movPayMethod, setMovPayMethod] = useState("cash");
+  const [movAffectsCash, setMovAffectsCash] = useState(true);
+  const [movAffectsBank, setMovAffectsBank] = useState(false);
 
   // Queries
   const { data: openRegister, isLoading: loadingRegister } = useOpenCashRegister();
@@ -83,14 +91,21 @@ export default function CashRegisterPage() {
   const closeMut = useCloseCashRegisterMutation();
   const addMov = useAddCashMovement();
 
-  const expectedBalance = openRegister
-    ? Number(openRegister.initial_amount) + (summary?.total_in || 0) - (summary?.total_out || 0)
+  const expectedCash = openRegister
+    ? Number(openRegister.initial_amount) + (summary?.cash_in || 0) - (summary?.cash_out || 0)
+    : 0;
+  const expectedBank = openRegister
+    ? Number(openRegister.opening_bank_balance || 0) + (summary?.bank_in || 0) - (summary?.bank_out || 0)
     : 0;
 
   const handleOpen = () => {
     openMut.mutate(
-      { initial_amount: parseFloat(initialAmount) || 0, notes: openNotes || undefined },
-      { onSuccess: () => { setShowOpen(false); setInitialAmount(""); setOpenNotes(""); } }
+      {
+        initial_amount: parseFloat(initialAmount) || 0,
+        opening_bank_balance: parseFloat(openBankBalance) || 0,
+        notes: openNotes || undefined,
+      },
+      { onSuccess: () => { setShowOpen(false); setInitialAmount(""); setOpenBankBalance(""); setOpenNotes(""); } }
     );
   };
 
@@ -99,20 +114,28 @@ export default function CashRegisterPage() {
     const registerSnapshot = { ...openRegister };
     const summarySnapshot = summary ? { ...summary } : null;
     closeMut.mutate(
-      { register_id: openRegister.id, counted_amount: parseFloat(countedAmount) || 0, closing_notes: closeNotes || undefined },
+      {
+        register_id: openRegister.id,
+        counted_amount: parseFloat(countedAmount) || 0,
+        counted_bank_balance: parseFloat(countedBank) || 0,
+        closing_notes: closeNotes || undefined,
+      },
       {
         onSuccess: async (result: any) => {
           setShowClose(false);
           setCountedAmount("");
+          setCountedBank("");
           setCloseNotes("");
-          // Auto-print closing report
           try {
             await printClosingReport(registerSnapshot.id, {
               ...registerSnapshot,
               closed_at: new Date().toISOString(),
-              expected_amount: result?.expected_amount ?? null,
-              counted_amount: result?.counted_amount ?? null,
-              difference_amount: result?.difference ?? null,
+              expected_amount: result?.expected_cash ?? null,
+              counted_amount: result?.counted_cash ?? null,
+              difference_amount: result?.difference_cash ?? null,
+              expected_bank_balance: result?.expected_bank ?? null,
+              closing_bank_balance: result?.counted_bank ?? null,
+              difference_bank: result?.difference_bank ?? null,
               closing_notes: closeNotes || null,
             }, summarySnapshot);
           } catch { /* non-blocking */ }
@@ -130,6 +153,8 @@ export default function CashRegisterPage() {
         payment_method: movPayMethod,
         amount: parseFloat(movAmount) || 0,
         description: movDesc,
+        affects_cash: movAffectsCash,
+        affects_bank: movAffectsBank,
       },
       { onSuccess: () => { setShowMovement(false); setMovAmount(""); setMovDesc(""); } }
     );
@@ -140,28 +165,28 @@ export default function CashRegisterPage() {
     setMovPayMethod("cash");
     setMovAmount("");
     setMovDesc("");
+    setMovAffectsCash(true);
+    setMovAffectsBank(false);
     setShowMovement(true);
   };
 
   const printClosingReport = async (registerId: string, registerData: any, summaryData: any) => {
     const db2 = supabase as any;
-    // Fetch movements for this register
     const { data: movs } = await db2
       .from("cash_register_movements")
-      .select("*, profiles!cash_register_movements_created_by_fkey(full_name)")
+      .select("*")
       .eq("cash_register_id", registerId)
       .order("created_at", { ascending: true });
 
     const movRows = (movs || []).map((m: any) => ({
       ...m,
-      created_by_name: m.profiles?.full_name || null,
+      created_by_name: null,
     }));
 
-    // If no summary provided, calculate from movements
     const sum = summaryData || (() => {
       const ms = movRows;
       return {
-        cash_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "cash").reduce((s: number, m: any) => s + Number(m.amount), 0),
+        cash_money_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "cash").reduce((s: number, m: any) => s + Number(m.amount), 0),
         pix_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "pix").reduce((s: number, m: any) => s + Number(m.amount), 0),
         credit_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "credit_card").reduce((s: number, m: any) => s + Number(m.amount), 0),
         debit_in: ms.filter((m: any) => m.amount > 0 && m.payment_method === "debit_card").reduce((s: number, m: any) => s + Number(m.amount), 0),
@@ -173,8 +198,21 @@ export default function CashRegisterPage() {
       };
     })();
 
+    // Map to legacy format expected by PDF generator
+    const pdfSummary = {
+      cash_in: sum.cash_money_in ?? sum.cash_in ?? 0,
+      pix_in: sum.pix_in ?? 0,
+      credit_in: sum.credit_in ?? 0,
+      debit_in: sum.debit_in ?? 0,
+      withdrawals: sum.withdrawals ?? 0,
+      reinforcements: sum.reinforcements ?? 0,
+      expenses: sum.expenses ?? 0,
+      total_in: sum.total_in ?? 0,
+      total_out: sum.total_out ?? 0,
+    };
+
     const cs = companySettings;
-    generateCashRegisterClosingPdf(registerData, sum, movRows, {
+    generateCashRegisterClosingPdf(registerData, pdfSummary, movRows, {
       name: cs.company_name, cnpj: cs.company_cnpj, address: cs.company_address,
       phone: cs.company_phone, email: cs.company_email, logoUrl: cs.company_logo_url,
     });
@@ -211,11 +249,11 @@ export default function CashRegisterPage() {
           {/* Status Card */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   {openRegister ? (
                     <>
-                      <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center shrink-0">
                         <Unlock className="h-6 w-6 text-green-600 dark:text-green-400" />
                       </div>
                       <div>
@@ -224,15 +262,18 @@ export default function CashRegisterPage() {
                           <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Aberto</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Operador: <span className="font-medium">{openRegister.opened_by_name || "—"}</span> •
-                          Abertura: {format(new Date(openRegister.opened_at), "dd/MM/yyyy HH:mm")} •
-                          Valor inicial: <span className="font-medium">{fmt(Number(openRegister.initial_amount))}</span>
+                          Operador: <span className="font-medium">{openRegister.opened_by_name || "—"}</span> •{" "}
+                          Abertura: {format(new Date(openRegister.opened_at), "dd/MM/yyyy HH:mm")}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Caixa inicial: <span className="font-medium">{fmt(Number(openRegister.initial_amount))}</span> •{" "}
+                          Banco inicial: <span className="font-medium">{fmt(Number(openRegister.opening_bank_balance || 0))}</span>
                         </p>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <Lock className="h-6 w-6 text-muted-foreground" />
                       </div>
                       <div>
@@ -248,7 +289,7 @@ export default function CashRegisterPage() {
                       <Unlock className="h-4 w-4 mr-2" /> Abrir Caixa
                     </Button>
                   ) : (
-                    <Button variant="destructive" onClick={() => { setCountedAmount(""); setCloseNotes(""); setShowClose(true); }}>
+                    <Button variant="destructive" onClick={() => { setCountedAmount(""); setCountedBank(""); setCloseNotes(""); setShowClose(true); }}>
                       <Lock className="h-4 w-4 mr-2" /> Fechar Caixa
                     </Button>
                   )}
@@ -259,16 +300,23 @@ export default function CashRegisterPage() {
 
           {openRegister && (
             <>
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                <SummaryCard icon={<Banknote className="h-4 w-4" />} label="Dinheiro" value={fmt(summary?.cash_in || 0)} color="text-green-600" />
+              {/* Summary Cards - Cash + Bank */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <SummaryCard icon={<Banknote className="h-4 w-4" />} label="Saldo Caixa Esperado" value={fmt(expectedCash)} color="text-green-600" />
+                <SummaryCard icon={<Landmark className="h-4 w-4" />} label="Saldo Banco Esperado" value={fmt(expectedBank)} color="text-blue-600" />
+                <SummaryCard icon={<TrendingUp className="h-4 w-4" />} label="Total Entradas" value={fmt(summary?.total_in || 0)} color="text-emerald-600" />
+                <SummaryCard icon={<TrendingDown className="h-4 w-4" />} label="Total Saídas" value={fmt(summary?.total_out || 0)} color="text-red-600" />
+                <SummaryCard icon={<DollarSign className="h-4 w-4" />} label="Consolidado" value={fmt(expectedCash + expectedBank)} color="text-primary font-bold" />
+              </div>
+
+              {/* Payment method breakdown */}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <SummaryCard icon={<Banknote className="h-4 w-4" />} label="Dinheiro" value={fmt(summary?.cash_money_in || 0)} color="text-green-600" />
                 <SummaryCard icon={<Smartphone className="h-4 w-4" />} label="PIX" value={fmt(summary?.pix_in || 0)} color="text-blue-600" />
                 <SummaryCard icon={<CreditCard className="h-4 w-4" />} label="Crédito" value={fmt(summary?.credit_in || 0)} color="text-purple-600" />
                 <SummaryCard icon={<CreditCard className="h-4 w-4" />} label="Débito" value={fmt(summary?.debit_in || 0)} color="text-indigo-600" />
                 <SummaryCard icon={<TrendingDown className="h-4 w-4" />} label="Sangrias" value={fmt(summary?.withdrawals || 0)} color="text-red-600" />
                 <SummaryCard icon={<TrendingUp className="h-4 w-4" />} label="Reforços" value={fmt(summary?.reinforcements || 0)} color="text-teal-600" />
-                <SummaryCard icon={<ArrowDownCircle className="h-4 w-4" />} label="Despesas" value={fmt(summary?.expenses || 0)} color="text-orange-600" />
-                <SummaryCard icon={<DollarSign className="h-4 w-4" />} label="Saldo Esperado" value={fmt(expectedBalance)} color="text-primary font-bold" />
               </div>
 
               {/* Quick Actions */}
@@ -305,6 +353,7 @@ export default function CashRegisterPage() {
                             <TableHead>Tipo</TableHead>
                             <TableHead>Descrição</TableHead>
                             <TableHead>Pagamento</TableHead>
+                            <TableHead>Destino</TableHead>
                             <TableHead className="text-right">Valor</TableHead>
                             <TableHead>Usuário</TableHead>
                           </TableRow>
@@ -320,6 +369,10 @@ export default function CashRegisterPage() {
                               </TableCell>
                               <TableCell className="text-sm max-w-[200px] truncate">{m.description}</TableCell>
                               <TableCell className="text-sm capitalize">{paymentLabel(m.payment_method)}</TableCell>
+                              <TableCell className="text-xs">
+                                {m.affects_cash && <Badge variant="outline" className="mr-1 text-[10px]">Caixa</Badge>}
+                                {m.affects_bank && <Badge variant="outline" className="text-[10px]">Banco</Badge>}
+                              </TableCell>
                               <TableCell className={cn("text-right font-medium text-sm", Number(m.amount) >= 0 ? "text-green-600" : "text-red-600")}>
                                 {Number(m.amount) >= 0 ? "+" : ""}{fmt(Number(m.amount))}
                               </TableCell>
@@ -366,54 +419,65 @@ export default function CashRegisterPage() {
             <CardContent className="pt-6">
               {history && history.items.length > 0 ? (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Operador</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Valor Inicial</TableHead>
-                        <TableHead className="text-right">Esperado</TableHead>
-                        <TableHead className="text-right">Contado</TableHead>
-                        <TableHead className="text-right">Diferença</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {history.items.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="text-sm">{format(new Date(r.opened_at), "dd/MM/yyyy HH:mm")}</TableCell>
-                          <TableCell className="text-sm">{r.opened_by_name || "—"}</TableCell>
-                          <TableCell>
-                            <Badge className={r.status === "open"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-muted text-muted-foreground"}>
-                              {r.status === "open" ? "Aberto" : "Fechado"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right text-sm">{fmt(Number(r.initial_amount))}</TableCell>
-                          <TableCell className="text-right text-sm">{r.expected_amount != null ? fmt(Number(r.expected_amount)) : "—"}</TableCell>
-                          <TableCell className="text-right text-sm">{r.counted_amount != null ? fmt(Number(r.counted_amount)) : "—"}</TableCell>
-                          <TableCell className={cn("text-right text-sm font-medium",
-                            r.difference_amount != null && Number(r.difference_amount) < 0 ? "text-red-600" :
-                            r.difference_amount != null && Number(r.difference_amount) > 0 ? "text-green-600" : ""
-                          )}>
-                            {r.difference_amount != null ? (
-                              <span className="flex items-center justify-end gap-1">
-                                {Number(r.difference_amount) !== 0 && <AlertTriangle className="h-3 w-3" />}
-                                {fmt(Number(r.difference_amount))}
-                              </span>
-                            ) : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <Button size="sm" variant="ghost" onClick={() => setShowHistoryDetail(r)}>
-                              Detalhes
-                            </Button>
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Operador</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Caixa Inicial</TableHead>
+                          <TableHead className="text-right">Banco Inicial</TableHead>
+                          <TableHead className="text-right">Caixa Esperado</TableHead>
+                          <TableHead className="text-right">Caixa Contado</TableHead>
+                          <TableHead className="text-right">Diferença Caixa</TableHead>
+                          <TableHead className="text-right">Diferença Banco</TableHead>
+                          <TableHead></TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {history.items.map((r) => (
+                          <TableRow key={r.id}>
+                            <TableCell className="text-sm">{format(new Date(r.opened_at), "dd/MM/yyyy HH:mm")}</TableCell>
+                            <TableCell className="text-sm">{r.opened_by_name || "—"}</TableCell>
+                            <TableCell>
+                              <Badge className={r.status === "open"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-muted text-muted-foreground"}>
+                                {r.status === "open" ? "Aberto" : "Fechado"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right text-sm">{fmt(Number(r.initial_amount))}</TableCell>
+                            <TableCell className="text-right text-sm">{fmt(Number(r.opening_bank_balance || 0))}</TableCell>
+                            <TableCell className="text-right text-sm">{r.expected_amount != null ? fmt(Number(r.expected_amount)) : "—"}</TableCell>
+                            <TableCell className="text-right text-sm">{r.counted_amount != null ? fmt(Number(r.counted_amount)) : "—"}</TableCell>
+                            <TableCell className={cn("text-right text-sm font-medium",
+                              r.difference_amount != null && Number(r.difference_amount) < 0 ? "text-red-600" :
+                              r.difference_amount != null && Number(r.difference_amount) > 0 ? "text-green-600" : ""
+                            )}>
+                              {r.difference_amount != null ? (
+                                <span className="flex items-center justify-end gap-1">
+                                  {Number(r.difference_amount) !== 0 && <AlertTriangle className="h-3 w-3" />}
+                                  {fmt(Number(r.difference_amount))}
+                                </span>
+                              ) : "—"}
+                            </TableCell>
+                            <TableCell className={cn("text-right text-sm font-medium",
+                              r.difference_bank != null && Number(r.difference_bank) < 0 ? "text-red-600" :
+                              r.difference_bank != null && Number(r.difference_bank) > 0 ? "text-green-600" : ""
+                            )}>
+                              {r.difference_bank != null ? fmt(Number(r.difference_bank)) : "—"}
+                            </TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="ghost" onClick={() => setShowHistoryDetail(r)}>
+                                Detalhes
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                   <DataPagination
                     page={history.page}
                     pageSize={history.pageSize}
@@ -437,11 +501,13 @@ export default function CashRegisterPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Abrir Caixa</DialogTitle>
-            <DialogDescription>Informe o saldo inicial para abrir o caixa</DialogDescription>
+            <DialogDescription>Informe os saldos iniciais para abrir o caixa do dia</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Valor Inicial (R$)</label>
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Banknote className="h-4 w-4" /> Saldo Inicial em Caixa (R$)
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -451,6 +517,20 @@ export default function CashRegisterPage() {
                 placeholder="0,00"
                 className="text-lg"
                 autoFocus
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Landmark className="h-4 w-4" /> Saldo Bancário Inicial (R$)
+              </label>
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                value={openBankBalance}
+                onChange={(e) => setOpenBankBalance(e.target.value)}
+                placeholder="0,00"
+                className="text-lg"
               />
             </div>
             <div>
@@ -473,13 +553,18 @@ export default function CashRegisterPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Fechar Caixa</AlertDialogTitle>
-            <AlertDialogDescription>
-              Saldo esperado: <span className="font-bold text-foreground">{fmt(expectedBalance)}</span>
+            <AlertDialogDescription asChild>
+              <div className="space-y-1">
+                <p>Saldo caixa esperado: <span className="font-bold text-foreground">{fmt(expectedCash)}</span></p>
+                <p>Saldo banco esperado: <span className="font-bold text-foreground">{fmt(expectedBank)}</span></p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Valor Contado (R$)</label>
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Banknote className="h-4 w-4" /> Valor Contado no Caixa (R$)
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -491,16 +576,24 @@ export default function CashRegisterPage() {
                 autoFocus
               />
               {countedAmount && (
-                <div className={cn("mt-2 p-2 rounded text-sm font-medium",
-                  parseFloat(countedAmount) - expectedBalance === 0
-                    ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
-                    : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
-                )}>
-                  Diferença: {fmt((parseFloat(countedAmount) || 0) - expectedBalance)}
-                  {(parseFloat(countedAmount) || 0) - expectedBalance === 0 && (
-                    <CheckCircle2 className="h-4 w-4 inline ml-2" />
-                  )}
-                </div>
+                <DiffBadge expected={expectedCash} counted={parseFloat(countedAmount) || 0} label="Caixa" />
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Landmark className="h-4 w-4" /> Saldo Bancário Final (R$)
+              </label>
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                value={countedBank}
+                onChange={(e) => setCountedBank(e.target.value)}
+                placeholder="0,00"
+                className="text-lg"
+              />
+              {countedBank && (
+                <DiffBadge expected={expectedBank} counted={parseFloat(countedBank) || 0} label="Banco" />
               )}
             </div>
             <div>
@@ -543,7 +636,7 @@ export default function CashRegisterPage() {
                 autoFocus
               />
             </div>
-            {["receipt", "adjustment"].includes(movType) && (
+            {["receipt", "adjustment", "sale"].includes(movType) && (
               <div>
                 <label className="text-sm font-medium">Forma de Pagamento</label>
                 <Select value={movPayMethod} onValueChange={setMovPayMethod}>
@@ -557,6 +650,16 @@ export default function CashRegisterPage() {
                 </Select>
               </div>
             )}
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={movAffectsCash} onChange={(e) => setMovAffectsCash(e.target.checked)} className="rounded" />
+                <Banknote className="h-3.5 w-3.5" /> Afeta Caixa
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={movAffectsBank} onChange={(e) => setMovAffectsBank(e.target.checked)} className="rounded" />
+                <Landmark className="h-3.5 w-3.5" /> Afeta Banco
+              </label>
+            </div>
             <div>
               <label className="text-sm font-medium">Descrição / Motivo</label>
               <Textarea value={movDesc} onChange={(e) => setMovDesc(e.target.value)} placeholder="Descreva o motivo..." rows={2} />
@@ -587,8 +690,9 @@ export default function CashRegisterPage() {
                 <div><span className="text-muted-foreground">Status:</span> <Badge className={showHistoryDetail.status === "open" ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"}>{showHistoryDetail.status === "open" ? "Aberto" : "Fechado"}</Badge></div>
               </div>
               <Separator />
+              <h4 className="font-medium flex items-center gap-2"><Banknote className="h-4 w-4" /> Caixa Físico</h4>
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground">Valor Inicial:</span> <span className="font-medium">{fmt(Number(showHistoryDetail.initial_amount))}</span></div>
+                <div><span className="text-muted-foreground">Inicial:</span> <span className="font-medium">{fmt(Number(showHistoryDetail.initial_amount))}</span></div>
                 <div><span className="text-muted-foreground">Esperado:</span> <span className="font-medium">{showHistoryDetail.expected_amount != null ? fmt(Number(showHistoryDetail.expected_amount)) : "—"}</span></div>
                 <div><span className="text-muted-foreground">Contado:</span> <span className="font-medium">{showHistoryDetail.counted_amount != null ? fmt(Number(showHistoryDetail.counted_amount)) : "—"}</span></div>
                 <div>
@@ -598,6 +702,22 @@ export default function CashRegisterPage() {
                     showHistoryDetail.difference_amount != null && Number(showHistoryDetail.difference_amount) > 0 ? "text-green-600" : ""
                   )}>
                     {showHistoryDetail.difference_amount != null ? fmt(Number(showHistoryDetail.difference_amount)) : "—"}
+                  </span>
+                </div>
+              </div>
+              <Separator />
+              <h4 className="font-medium flex items-center gap-2"><Landmark className="h-4 w-4" /> Conta Bancária</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div><span className="text-muted-foreground">Inicial:</span> <span className="font-medium">{fmt(Number(showHistoryDetail.opening_bank_balance || 0))}</span></div>
+                <div><span className="text-muted-foreground">Esperado:</span> <span className="font-medium">{showHistoryDetail.expected_bank_balance != null ? fmt(Number(showHistoryDetail.expected_bank_balance)) : "—"}</span></div>
+                <div><span className="text-muted-foreground">Informado:</span> <span className="font-medium">{showHistoryDetail.closing_bank_balance != null ? fmt(Number(showHistoryDetail.closing_bank_balance)) : "—"}</span></div>
+                <div>
+                  <span className="text-muted-foreground">Diferença:</span>{" "}
+                  <span className={cn("font-bold",
+                    showHistoryDetail.difference_bank != null && Number(showHistoryDetail.difference_bank) < 0 ? "text-red-600" :
+                    showHistoryDetail.difference_bank != null && Number(showHistoryDetail.difference_bank) > 0 ? "text-green-600" : ""
+                  )}>
+                    {showHistoryDetail.difference_bank != null ? fmt(Number(showHistoryDetail.difference_bank)) : "—"}
                   </span>
                 </div>
               </div>
@@ -641,6 +761,20 @@ function SummaryCard({ icon, label, value, color }: { icon: React.ReactNode; lab
         <p className={cn("text-sm font-semibold", color)}>{value}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function DiffBadge({ expected, counted, label }: { expected: number; counted: number; label: string }) {
+  const diff = counted - expected;
+  return (
+    <div className={cn("mt-2 p-2 rounded text-sm font-medium",
+      diff === 0
+        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+        : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+    )}>
+      Diferença {label}: {fmt(diff)}
+      {diff === 0 && <CheckCircle2 className="h-4 w-4 inline ml-2" />}
+    </div>
   );
 }
 
