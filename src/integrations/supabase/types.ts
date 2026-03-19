@@ -4864,8 +4864,8 @@ export type Database = {
       can_delete_product: { Args: { _product_id: string }; Returns: Json }
       can_delete_supplier: { Args: { _supplier_id: string }; Returns: Json }
       cancel_sale: {
-        Args: { _reason: string; _sale_id: string }
-        Returns: Json
+        Args: { _reason?: string; _sale_id: string }
+        Returns: undefined
       }
       change_service_order_status: {
         Args: {
@@ -5035,7 +5035,7 @@ export type Database = {
           _sale_id: string
           _sale_item_id: string
         }
-        Returns: Json
+        Returns: string
       }
       public_approve_reject_quote: {
         Args: { _decision: string; _quote_id: string; _token: string }
