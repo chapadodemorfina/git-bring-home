@@ -4943,7 +4943,7 @@ export type Database = {
       can_delete_product: { Args: { _product_id: string }; Returns: Json }
       can_delete_supplier: { Args: { _supplier_id: string }; Returns: Json }
       cancel_sale: {
-        Args: { _reason?: string; _sale_id: string }
+        Args: { _reason: string; _sale_id: string }
         Returns: undefined
       }
       change_service_order_status: {
