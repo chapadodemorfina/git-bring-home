@@ -13,8 +13,11 @@ import { TenantProvider } from "@/contexts/TenantContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import SelectPlanPage from "./pages/SelectPlanPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -136,7 +139,9 @@ const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
-    <AppLayout>{children}</AppLayout>
+    <SubscriptionGate>
+      <AppLayout>{children}</AppLayout>
+    </SubscriptionGate>
   </ProtectedRoute>
 );
 
@@ -152,6 +157,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/select-plan" element={<ProtectedRoute><SelectPlanPage /></ProtectedRoute>} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 

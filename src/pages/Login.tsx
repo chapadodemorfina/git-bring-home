@@ -71,12 +71,17 @@ export default function Login() {
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
-            <div className="text-center space-y-1">
-              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Não tem conta?{" "}
+                <Link to="/register" className="text-primary hover:underline font-medium">
+                  Cadastre-se grátis
+                </Link>
+              </p>
+              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary block">
                 Esqueceu a senha?
               </Link>
-              <br />
-              <Link to="/portal/login" className="text-sm text-muted-foreground hover:text-primary">
+              <Link to="/portal/login" className="text-sm text-muted-foreground hover:text-primary block">
                 Portal do Cliente →
               </Link>
             </div>
