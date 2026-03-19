@@ -206,9 +206,9 @@ export default function SelectPlanPage() {
                   <Button
                     onClick={() => handleSelectPlan(plan)}
                     disabled={!!selecting}
-                    variant={isPopular ? "default" : isBusiness ? "secondary" : "outline"}
+                    variant={isPopular ? "default" : "outline"}
                     size="lg"
-                    className={`w-full font-semibold ${isPopular ? "shadow-md" : isBusiness ? "bg-foreground text-background hover:bg-foreground/90" : ""}`}
+                    className={`w-full font-semibold ${isPopular ? "shadow-md" : ""}`}
                   >
                     {selecting === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isEnterprise ? "Solicitar proposta" : "Começar agora"}
