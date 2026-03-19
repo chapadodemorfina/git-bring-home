@@ -26,6 +26,7 @@ const ALL_KEYS = [
   "pdf_show_qrcode", "pdf_show_signatures", "pdf_show_terms", "pdf_mode",
   "terms_service", "terms_warranty", "terms_abandonment",
   "default_warranty_days", "default_whatsapp_message",
+  "api_key_stripe", "api_key_whatsapp", "api_key_custom",
 ];
 
 export default function SettingsPage() {
