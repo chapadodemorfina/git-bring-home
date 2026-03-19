@@ -214,11 +214,12 @@ const App = () => (
               <Route path="/inventory/scrap/:id" element={<ProtectedPage><ScrapDetailPage /></ProtectedPage>} />
 
               {/* Collection Points */}
-              <Route path="/collection-points" element={<ProtectedPage><CollectionPointsListPage /></ProtectedPage>} />
-              <Route path="/collection-points/new" element={<ProtectedPage><CollectionPointCreatePage /></ProtectedPage>} />
-              <Route path="/collection-points/:id" element={<ProtectedPage><CollectionPointDetailPage /></ProtectedPage>} />
-              <Route path="/collection-points/:id/edit" element={<ProtectedPage><CollectionPointEditPage /></ProtectedPage>} />
-              <Route path="/collection-points/commissions" element={<ProtectedPage><CommissionManagementPage /></ProtectedPage>} />
+              <Route path="/collection-points" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointsListPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/collection-points/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/collection-points/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/collection-points/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/collection-points/commissions" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CommissionManagementPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/collection-points/reports" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CpReportsPage /></RoleGuard></ProtectedPage>} />
 
               {/* Sales & PDV */}
               <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><PdvPage /></RoleGuard></ProtectedRoute>} />
