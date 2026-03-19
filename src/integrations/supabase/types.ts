@@ -3101,6 +3101,7 @@ export type Database = {
           surcharge_amount: number
           tenant_id: string
           total_amount: number
+          total_returned: number
           updated_at: string
         }
         Insert: {
@@ -3119,6 +3120,7 @@ export type Database = {
           surcharge_amount?: number
           tenant_id: string
           total_amount?: number
+          total_returned?: number
           updated_at?: string
         }
         Update: {
@@ -3137,6 +3139,7 @@ export type Database = {
           surcharge_amount?: number
           tenant_id?: string
           total_amount?: number
+          total_returned?: number
           updated_at?: string
         }
         Relationships: [
