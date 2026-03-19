@@ -5125,6 +5125,10 @@ export type Database = {
         Returns: boolean
       }
       is_cp_operator_for_cp: { Args: { _cp_id: string }; Returns: boolean }
+      is_cp_operator_for_quote: {
+        Args: { _quote_id: string }
+        Returns: boolean
+      }
       is_cp_operator_for_so: { Args: { _so_id: string }; Returns: boolean }
       is_customer_for_so: { Args: { _so_id: string }; Returns: boolean }
       is_technician_for_so: { Args: { _so_id: string }; Returns: boolean }
