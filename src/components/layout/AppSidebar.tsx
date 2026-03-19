@@ -39,6 +39,7 @@ const mainItems = [
 
 const adminOnlyItems = [
   { title: "Gestão de Equipe", url: "/system/users", icon: Users },
+  { title: "Admin Assinatura", url: "/admin/subscription", icon: ShieldCheck },
 ];
 
 const systemItems = [
