@@ -13,7 +13,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, Save, Building2, MapPin, Phone, FileText,
-  Shield, Settings2, Palette
+  Shield, Settings2, Palette, Key, Eye, EyeOff
 } from "lucide-react";
 import { LogoUpload } from "@/components/settings/LogoUpload";
 
@@ -26,6 +26,7 @@ const ALL_KEYS = [
   "pdf_show_qrcode", "pdf_show_signatures", "pdf_show_terms", "pdf_mode",
   "terms_service", "terms_warranty", "terms_abandonment",
   "default_warranty_days", "default_whatsapp_message",
+  "api_key_stripe", "api_key_whatsapp", "api_key_custom",
 ];
 
 export default function SettingsPage() {
@@ -285,6 +286,24 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* 7. Chaves de API */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Chaves de API</CardTitle>
+          </div>
+          <CardDescription>Chaves de integração com serviços externos. Os valores são armazenados de forma segura.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <SecretField label="Stripe API Key" value={v.api_key_stripe} onChange={(val) => set("api_key_stripe", val)} placeholder="sk_live_..." />
+            <SecretField label="WhatsApp API Key" value={v.api_key_whatsapp} onChange={(val) => set("api_key_whatsapp", val)} placeholder="Token da API do WhatsApp" />
+            <SecretField label="Chave de API Personalizada" value={v.api_key_custom} onChange={(val) => set("api_key_custom", val)} placeholder="Chave de integração customizada" />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Save */}
       <div className="sticky bottom-4 flex justify-end">
         <Button
@@ -310,6 +329,35 @@ function Field({ label, value, onChange, placeholder }: {
     <div className="space-y-2">
       <Label>{label}</Label>
       <Input value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
+function SecretField({ label, value, onChange, placeholder }: {
+  label: string; value: string | undefined; onChange: (v: string) => void; placeholder?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="relative">
+        <Input
+          type={visible ? "text" : "password"}
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="pr-10 font-mono text-sm"
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute right-0 top-0 h-10 w-10"
+          onClick={() => setVisible(!visible)}
+        >
+          {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </Button>
+      </div>
     </div>
   );
 }
