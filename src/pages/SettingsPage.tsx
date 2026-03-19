@@ -33,6 +33,7 @@ const ALL_KEYS = [
 export default function SettingsPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { activeTenant } = useTenant();
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["app-settings-full"],
