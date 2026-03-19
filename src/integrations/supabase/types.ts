@@ -5097,6 +5097,19 @@ export type Database = {
         Returns: Json
       }
       cp_can_view_all_tenant_orders: { Args: never; Returns: boolean }
+      cp_ranking: {
+        Args: { _cp_id?: string; _from?: string; _to?: string }
+        Returns: {
+          avg_ticket: number
+          commission: number
+          completed_orders: number
+          cp_id: string
+          cp_name: string
+          rank_position: number
+          total_orders: number
+          total_revenue: number
+        }[]
+      }
       create_tenant: {
         Args: { _document?: string; _name: string; _slug: string }
         Returns: Json
