@@ -39,37 +39,41 @@ const FEATURE_LABELS: Record<string, string[]> = {
     "Até 2 usuários",
     "50 ordens de serviço/mês",
     "100 produtos cadastrados",
-    "Gestão de clientes e dispositivos",
-    "PDFs personalizados",
+    "Cadastro de clientes e dispositivos",
     "Suporte por email",
   ],
   professional: [
-    "Até 5 usuários",
-    "200 ordens de serviço/mês",
-    "500 produtos cadastrados",
+    "Até 10 usuários",
+    "500 ordens de serviço/mês",
+    "1.000 produtos cadastrados",
     "WhatsApp integrado",
     "Portal do cliente",
     "Orçamentos e garantias",
     "Suporte prioritário",
   ],
   business: [
-    "Até 15 usuários",
-    "1.000 ordens de serviço/mês",
-    "2.000 produtos cadastrados",
+    "Até 25 usuários",
+    "2.000 ordens de serviço/mês",
+    "5.000 produtos cadastrados",
     "Pontos de coleta e comissões",
     "Logística e financeiro completo",
     "Relatórios avançados",
     "API completa",
-    "Suporte dedicado",
   ],
   enterprise: [
     "Usuários ilimitados",
     "Ordens e produtos ilimitados",
-    "Multi-tenant avançado",
+    "Estrutura corporativa",
     "SLA garantido",
-    "Onboarding personalizado",
-    "Suporte 24/7 com gerente dedicado",
+    "Onboarding dedicado",
+    "Projeto sob medida",
+    "Suporte prioritário 24/7",
   ],
+};
+
+const MICRO_TEXT: Record<string, string> = {
+  professional: "Ideal para assistências que querem escalar com organização.",
+  business: "Ideal para operações com equipe, logística e maior volume.",
 };
 
 export default function SelectPlanPage() {
@@ -150,9 +154,11 @@ export default function SelectPlanPage() {
           {plans.map((plan) => {
             const features = FEATURE_LABELS[plan.slug] || [];
             const isPopular = plan.slug === "professional";
+            const isBusiness = plan.slug === "business";
             const isEnterprise = plan.slug === "enterprise";
             const displayName = DISPLAY_NAMES[plan.slug] || plan.name;
             const displayPrice = DISPLAY_PRICES[plan.slug];
+            const microText = MICRO_TEXT[plan.slug];
 
             return (
               <Card
@@ -165,14 +171,14 @@ export default function SelectPlanPage() {
               >
                 {isPopular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 gap-1 px-3 py-1 text-xs font-semibold shadow-sm">
-                    <Sparkles className="h-3 w-3" /> Mais popular
+                    <Sparkles className="h-3 w-3" /> Melhor custo-benefício
                   </Badge>
                 )}
-                <CardHeader className="text-center pb-2 pt-7">
+                <CardHeader className="text-center pb-1 pt-8">
                   <CardTitle className="text-base font-bold uppercase tracking-wide text-muted-foreground">
                     {displayName}
                   </CardTitle>
-                  <CardDescription className="mt-3">
+                  <CardDescription className="mt-4 mb-1">
                     {isEnterprise ? (
                       <span className="text-2xl font-bold text-foreground">Sob consulta</span>
                     ) : (
@@ -184,8 +190,11 @@ export default function SelectPlanPage() {
                       </>
                     )}
                   </CardDescription>
+                  {microText && (
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{microText}</p>
+                  )}
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col pt-4">
+                <CardContent className="flex-1 flex flex-col pt-5">
                   <ul className="space-y-2.5 mb-8 flex-1">
                     {features.map((f) => (
                       <li key={f} className="flex items-start gap-2.5 text-sm">
@@ -197,9 +206,9 @@ export default function SelectPlanPage() {
                   <Button
                     onClick={() => handleSelectPlan(plan)}
                     disabled={!!selecting}
-                    variant={isPopular ? "default" : "outline"}
+                    variant={isPopular ? "default" : isBusiness ? "secondary" : "outline"}
                     size="lg"
-                    className={`w-full font-semibold ${isPopular ? "shadow-md" : ""}`}
+                    className={`w-full font-semibold ${isPopular ? "shadow-md" : isBusiness ? "bg-foreground text-background hover:bg-foreground/90" : ""}`}
                   >
                     {selecting === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isEnterprise ? "Solicitar proposta" : "Começar agora"}
