@@ -286,6 +286,24 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* 7. Chaves de API */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Chaves de API</CardTitle>
+          </div>
+          <CardDescription>Chaves de integração com serviços externos. Os valores são armazenados de forma segura.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <SecretField label="Stripe API Key" value={v.api_key_stripe} onChange={(val) => set("api_key_stripe", val)} placeholder="sk_live_..." />
+            <SecretField label="WhatsApp API Key" value={v.api_key_whatsapp} onChange={(val) => set("api_key_whatsapp", val)} placeholder="Token da API do WhatsApp" />
+            <SecretField label="Chave de API Personalizada" value={v.api_key_custom} onChange={(val) => set("api_key_custom", val)} placeholder="Chave de integração customizada" />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Save */}
       <div className="sticky bottom-4 flex justify-end">
         <Button
