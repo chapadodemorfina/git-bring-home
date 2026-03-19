@@ -144,7 +144,7 @@ export default function SelectPlanPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
             Escolha o plano ideal para sua operação
           </h1>
-          <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-base md:text-lg">
+          <p className="text-muted-foreground/80 mt-3 max-w-xl mx-auto text-sm md:text-base">
             Continue usando o sistema com suporte, controle e recursos na medida do seu negócio.
           </p>
         </div>
@@ -171,11 +171,11 @@ export default function SelectPlanPage() {
               >
                 {isPopular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 gap-1 px-3 py-1 text-xs font-semibold shadow-sm">
-                    <Sparkles className="h-3 w-3" /> Melhor custo-benefício
+                    <Sparkles className="h-3 w-3" /> ⭐ Melhor custo-benefício
                   </Badge>
                 )}
                 <CardHeader className="text-center pb-1 pt-8">
-                  <CardTitle className="text-base font-bold uppercase tracking-wide text-muted-foreground">
+                   <CardTitle className="text-base font-bold tracking-wide text-muted-foreground">
                     {displayName}
                   </CardTitle>
                   <CardDescription className="mt-4 mb-1">
@@ -206,9 +206,9 @@ export default function SelectPlanPage() {
                   <Button
                     onClick={() => handleSelectPlan(plan)}
                     disabled={!!selecting}
-                    variant={isPopular ? "default" : isBusiness ? "secondary" : "outline"}
+                    variant={isPopular ? "default" : "outline"}
                     size="lg"
-                    className={`w-full font-semibold ${isPopular ? "shadow-md" : isBusiness ? "bg-foreground text-background hover:bg-foreground/90" : ""}`}
+                    className={`w-full font-semibold ${isPopular ? "shadow-md" : ""}`}
                   >
                     {selecting === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isEnterprise ? "Solicitar proposta" : "Começar agora"}
@@ -219,10 +219,17 @@ export default function SelectPlanPage() {
           })}
         </div>
 
+        {/* Evolution note */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-muted-foreground/70 italic">
+            Comece no plano ideal para sua operação e evolua quando precisar.
+          </p>
+        </div>
+
         {/* Footer note */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-4">
           <p className="text-sm text-muted-foreground">
-            Precisa de um plano personalizado?{" "}
+            Precisa de um plano personalizado ou quer ajuda para escolher?{" "}
             <a
               href="https://wa.me/5500000000000?text=Olá! Gostaria de um plano personalizado."
               target="_blank"
