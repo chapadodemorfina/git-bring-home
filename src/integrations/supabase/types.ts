@@ -5283,6 +5283,9 @@ export type Database = {
         | "return"
         | "reserved"
         | "consumed"
+        | "sale"
+        | "sale_return"
+        | "scrap_recovery"
       tenant_role: "owner" | "admin" | "member"
       test_result: "pass" | "fail" | "abnormal" | "inconclusive" | "not_tested"
       transfer_status:
@@ -5594,6 +5597,9 @@ export const Constants = {
         "return",
         "reserved",
         "consumed",
+        "sale",
+        "sale_return",
+        "scrap_recovery",
       ],
       tenant_role: ["owner", "admin", "member"],
       test_result: ["pass", "fail", "abnormal", "inconclusive", "not_tested"],
