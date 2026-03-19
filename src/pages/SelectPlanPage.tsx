@@ -175,7 +175,7 @@ export default function SelectPlanPage() {
                   </Badge>
                 )}
                 <CardHeader className="text-center pb-1 pt-8">
-                  <CardTitle className="text-base font-bold uppercase tracking-wide text-muted-foreground">
+                   <CardTitle className="text-base font-bold tracking-wide text-muted-foreground">
                     {displayName}
                   </CardTitle>
                   <CardDescription className="mt-4 mb-1">
