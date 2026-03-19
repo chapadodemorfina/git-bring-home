@@ -1,22 +1,23 @@
 import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { usePlanUsage } from "@/hooks/usePlanUsage";
 import { useTenant } from "@/contexts/TenantContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Loader2 } from "lucide-react";
+import { SubscriptionExpiredScreen } from "@/modules/billing/components/SubscriptionExpiredScreen";
 
 interface SubscriptionGateProps {
   children: ReactNode;
 }
 
-/**
- * Redirects to /select-plan if the tenant's subscription has expired
- * (status is not 'active' or 'trialing').
- */
+const ALLOWED_STATUSES = ["active", "trialing"];
+
 export function SubscriptionGate({ children }: SubscriptionGateProps) {
   const { activeTenant, loading: tenantLoading } = useTenant();
-  const { data: usage, isLoading } = usePlanUsage();
+  const { data: sub, isLoading: subLoading } = useSubscription();
+  const location = useLocation();
 
-  if (tenantLoading || isLoading) {
+  if (tenantLoading || subLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -26,9 +27,14 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
 
   if (!activeTenant) return null;
 
-  // If has subscription data and status is neither active nor trialing → force plan selection
-  if (usage && usage.has_subscription && usage.status !== "active" && usage.status !== "trialing") {
+  // No subscription yet → redirect to plan selection
+  if (!sub) {
     return <Navigate to="/select-plan" replace />;
+  }
+
+  // Blocked statuses → show friendly expired screen
+  if (!ALLOWED_STATUSES.includes(sub.status)) {
+    return <SubscriptionExpiredScreen status={sub.status} planName={sub.plan?.name} />;
   }
 
   return <>{children}</>;
