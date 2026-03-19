@@ -4972,6 +4972,7 @@ export type Database = {
         Returns: Json
       }
       get_financial_balances: { Args: never; Returns: Json }
+      get_last_closed_balances: { Args: never; Returns: Json }
       get_next_sequence: {
         Args: { _key: string; _tenant_id: string }
         Returns: number
