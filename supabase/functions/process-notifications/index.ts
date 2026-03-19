@@ -18,14 +18,29 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    // --- AUTH: Only allow service role or valid JWT ---
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "");
+
+    if (token !== serviceRoleKey) {
+      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Step 1: Process pending events → generate queue items
-    const { data: eventResult, error: evtErr } = await supabase.rpc(
-      "process_notification_events"
-    );
+    // Step 1: Process pending events
+    const { data: eventResult, error: evtErr } = await supabase.rpc("process_notification_events");
     if (evtErr) console.error("process_notification_events error:", evtErr);
 
     // Step 2: Process due queue items
@@ -48,56 +63,38 @@ Deno.serve(async (req) => {
     let skipped = 0;
 
     for (const item of queueItems || []) {
-      // Mark as processing
       await supabase
         .from("notification_queue")
         .update({ status: "processing", last_attempt_at: new Date().toISOString() })
         .eq("id", item.id);
 
       const result = await deliverNotification(item, supabase);
-
       const newAttempts = item.attempts + 1;
 
       if (result.success) {
         await supabase
           .from("notification_queue")
-          .update({
-            status: "sent",
-            sent_at: new Date().toISOString(),
-            attempts: newAttempts,
-          })
+          .update({ status: "sent", sent_at: new Date().toISOString(), attempts: newAttempts })
           .eq("id", item.id);
         sent++;
       } else if (result.skip) {
         await supabase
           .from("notification_queue")
-          .update({
-            status: "skipped",
-            error_message: result.error,
-            attempts: newAttempts,
-          })
+          .update({ status: "skipped", error_message: result.error, attempts: newAttempts })
           .eq("id", item.id);
         skipped++;
       } else {
         const nextStatus = newAttempts >= MAX_ATTEMPTS ? "failed" : "pending";
         const backoffMinutes = Math.pow(BACKOFF_BASE_MINUTES, newAttempts);
-        const nextAttempt = new Date(
-          Date.now() + backoffMinutes * 60 * 1000
-        ).toISOString();
+        const nextAttempt = new Date(Date.now() + backoffMinutes * 60 * 1000).toISOString();
 
         await supabase
           .from("notification_queue")
-          .update({
-            status: nextStatus,
-            error_message: result.error,
-            attempts: newAttempts,
-            next_attempt_at: nextAttempt,
-          })
+          .update({ status: nextStatus, error_message: result.error, attempts: newAttempts, next_attempt_at: nextAttempt })
           .eq("id", item.id);
         failed++;
       }
 
-      // Log delivery attempt
       await supabase.from("notification_logs").insert({
         queue_id: item.id,
         provider_key: result.provider || item.channel,
@@ -162,135 +159,59 @@ async function deliverNotification(
     case "internal":
       return { success: true, provider: "internal", response: { stored: true } };
     default:
-      return {
-        success: false,
-        skip: true,
-        error: `Unknown channel: ${channel}`,
-        provider: "none",
-      };
+      return { success: false, skip: true, error: `Unknown channel: ${channel}`, provider: "none" };
   }
 }
 
-async function deliverWhatsApp(
-  item: Record<string, unknown>
-): Promise<DeliveryResult> {
+async function deliverWhatsApp(item: Record<string, unknown>): Promise<DeliveryResult> {
   const apiKey = Deno.env.get("WHATSAPP_API_KEY");
   const apiUrl = Deno.env.get("WHATSAPP_API_URL");
 
   if (!apiKey || !apiUrl) {
-    return {
-      success: false,
-      skip: true,
-      error: "WhatsApp provider not configured (WHATSAPP_API_KEY / WHATSAPP_API_URL missing)",
-      provider: "whatsapp_not_configured",
-    };
+    return { success: false, skip: true, error: "WhatsApp provider not configured", provider: "whatsapp_not_configured" };
   }
 
   try {
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        to: item.recipient_address,
-        message: item.rendered_body,
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ to: item.recipient_address, message: item.rendered_body }),
     });
-
     const body = await response.json().catch(() => ({}));
-
     if (response.ok) {
-      return {
-        success: true,
-        provider: "whatsapp",
-        response: body,
-        statusCode: response.status,
-      };
+      return { success: true, provider: "whatsapp", response: body, statusCode: response.status };
     }
-
-    return {
-      success: false,
-      error: `WhatsApp API returned ${response.status}: ${JSON.stringify(body)}`,
-      provider: "whatsapp",
-      response: body,
-      statusCode: response.status,
-    };
+    return { success: false, error: `WhatsApp API returned ${response.status}`, provider: "whatsapp", response: body, statusCode: response.status };
   } catch (err) {
-    return {
-      success: false,
-      error: `WhatsApp delivery error: ${err.message}`,
-      provider: "whatsapp",
-    };
+    return { success: false, error: `WhatsApp delivery error: ${err.message}`, provider: "whatsapp" };
   }
 }
 
-async function deliverEmail(
-  item: Record<string, unknown>
-): Promise<DeliveryResult> {
+async function deliverEmail(item: Record<string, unknown>): Promise<DeliveryResult> {
   const apiKey = Deno.env.get("EMAIL_API_KEY");
   const apiUrl = Deno.env.get("EMAIL_API_URL");
   const fromEmail = Deno.env.get("EMAIL_FROM") || "noreply@example.com";
 
   if (!apiKey || !apiUrl) {
-    return {
-      success: false,
-      skip: true,
-      error: "Email provider not configured (EMAIL_API_KEY / EMAIL_API_URL missing)",
-      provider: "email_not_configured",
-    };
+    return { success: false, skip: true, error: "Email provider not configured", provider: "email_not_configured" };
   }
 
   try {
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: item.recipient_address,
-        subject: item.rendered_subject || "Notificação",
-        text: item.rendered_body,
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ from: fromEmail, to: item.recipient_address, subject: item.rendered_subject || "Notificação", text: item.rendered_body }),
     });
-
     const body = await response.json().catch(() => ({}));
-
     if (response.ok) {
-      return {
-        success: true,
-        provider: "email",
-        response: body,
-        statusCode: response.status,
-      };
+      return { success: true, provider: "email", response: body, statusCode: response.status };
     }
-
-    return {
-      success: false,
-      error: `Email API returned ${response.status}: ${JSON.stringify(body)}`,
-      provider: "email",
-      response: body,
-      statusCode: response.status,
-    };
+    return { success: false, error: `Email API returned ${response.status}`, provider: "email", response: body, statusCode: response.status };
   } catch (err) {
-    return {
-      success: false,
-      error: `Email delivery error: ${err.message}`,
-      provider: "email",
-    };
+    return { success: false, error: `Email delivery error: ${err.message}`, provider: "email" };
   }
 }
 
-async function deliverSms(
-  item: Record<string, unknown>
-): Promise<DeliveryResult> {
-  return {
-    success: false,
-    skip: true,
-    error: "SMS provider not configured",
-    provider: "sms_not_configured",
-  };
+async function deliverSms(item: Record<string, unknown>): Promise<DeliveryResult> {
+  return { success: false, skip: true, error: "SMS provider not configured", provider: "sms_not_configured" };
 }

@@ -15,29 +15,41 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    // --- AUTH: Only allow service role or valid JWT ---
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "");
+
+    if (token !== serviceRoleKey) {
+      // Not service role - validate as authenticated user with admin role
+      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
     // 1. Expire stale quotes
-    const { data: expiredCount, error: expErr } = await supabase.rpc(
-      "expire_stale_quotes"
-    );
+    const { data: expiredCount, error: expErr } = await supabase.rpc("expire_stale_quotes");
     if (expErr) console.error("expire_stale_quotes error:", expErr);
 
     // 2. Mark overdue financial entries
-    const { data: overdueCount, error: ovdErr } = await supabase.rpc(
-      "mark_overdue_entries"
-    );
+    const { data: overdueCount, error: ovdErr } = await supabase.rpc("mark_overdue_entries");
     if (ovdErr) console.error("mark_overdue_entries error:", ovdErr);
 
-    // 3. Process notification events → queue
-    const { data: notifEvents, error: neErr } = await supabase.rpc(
-      "process_notification_events"
-    );
+    // 3. Process notification events
+    const { data: notifEvents, error: neErr } = await supabase.rpc("process_notification_events");
     if (neErr) console.error("process_notification_events error:", neErr);
 
-    // 4. Process notification queue (call sibling function)
+    // 4. Process notification queue
     let notifResult = null;
     try {
       const notifResp = await fetch(
@@ -64,7 +76,7 @@ Deno.serve(async (req) => {
     const { data: archivedConvs, error: waErr } = await supabase.rpc("wa_archive_stale_conversations");
     if (waErr) console.error("wa_archive_stale_conversations error:", waErr);
 
-    // 7. Refresh materialized views for dashboard performance
+    // 7. Refresh materialized views
     const { error: mvErr } = await supabase.rpc("refresh_materialized_views");
     if (mvErr) console.error("refresh_materialized_views error:", mvErr);
 
@@ -72,7 +84,7 @@ Deno.serve(async (req) => {
     const { data: consistencyResult, error: ccErr } = await supabase.rpc("run_consistency_checks");
     if (ccErr) console.error("run_consistency_checks error:", ccErr);
 
-    // 9. Detect stale devices (5+ days without update)
+    // 9. Detect stale devices
     const { data: staleDevices, error: sdErr } = await supabase.rpc("detect_stale_devices", { days_threshold: 5 });
     if (sdErr) console.error("detect_stale_devices error:", sdErr);
 
