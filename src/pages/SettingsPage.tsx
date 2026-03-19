@@ -57,8 +57,12 @@ export default function SettingsPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!activeTenant) throw new Error("Nenhum tenant ativo");
       const updates = ALL_KEYS.map((key) =>
-        db.from("app_settings").upsert({ key, value: v[key] || "" }, { onConflict: "key" })
+        db.from("app_settings").upsert(
+          { tenant_id: activeTenant.id, key, value: v[key] || "" },
+          { onConflict: "tenant_id,key" }
+        )
       );
       const results = await Promise.all(updates);
       const err = results.find((r: any) => r.error);
