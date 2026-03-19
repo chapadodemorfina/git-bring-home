@@ -74,6 +74,7 @@ import CollectionPointDetailPage from "./modules/collection-points/pages/Collect
 import CollectionPointEditPage from "./modules/collection-points/pages/CollectionPointEditPage";
 import CommissionManagementPage from "./modules/collection-points/pages/CommissionManagementPage";
 import CpCommissionPeriodsPage from "./modules/collection-points/pages/CpCommissionPeriodsPage";
+import CpRankingPage from "./modules/collection-points/pages/CpRankingPage";
 import CpReportsPage from "./modules/collection-points/pages/CpReportsPage";
 
 // Partner Portal
