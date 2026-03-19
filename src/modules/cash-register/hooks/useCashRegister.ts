@@ -382,3 +382,22 @@ export function useFinancialBalances() {
     staleTime: 15000,
   });
 }
+
+// ── Last closed balances (for suggested opening) ──
+export function useLastClosedBalances() {
+  return useQuery({
+    queryKey: ["last-closed-balances"],
+    queryFn: async () => {
+      const defaults = {
+        last_cash_balance: 0,
+        last_bank_balance: 0,
+        closed_at: null as string | null,
+        opened_by_name: null as string | null,
+      };
+      const { data, error } = await db.rpc("get_last_closed_balances");
+      if (error) throw error;
+      return { ...defaults, ...data } as typeof defaults;
+    },
+    staleTime: 30000,
+  });
+}
