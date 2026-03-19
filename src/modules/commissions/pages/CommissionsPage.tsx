@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,8 @@ import {
   useCommissionEntries, useCommissionSummary, useUpdateCommissionStatus,
 } from "../hooks/useCommissions";
 import { useGoals, useGoalProgress, useCreateGoal, useDeleteGoal } from "../hooks/useGoals";
+import { useTeamRanking, type RankingEntry } from "../hooks/useRanking";
+import { useAllProducts } from "@/modules/inventory/hooks/useInventory";
 import type {
   CommissionRule, CommissionEntryStatus, CommissionSourceType, CommissionBaseType, SalesGoal,
 } from "../types";
@@ -35,10 +37,12 @@ import {
 import {
   DollarSign, Clock, CheckCircle2, Banknote, TrendingUp,
   Settings2, Plus, MoreHorizontal, Trash2, Eye, Ban, Loader2, Target, Trophy,
+  BarChart3, Download, FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const medals = ["🥇", "🥈", "🥉"];
 
 export default function CommissionsPage() {
   const { hasRole } = useAuth();
@@ -68,6 +72,8 @@ export default function CommissionsPage() {
     percentage: 0,
     fixed_amount: 0,
     only_after_payment: false,
+    product_id: "" as string,
+    category_filter: "",
     notes: "",
   });
 
@@ -95,6 +101,8 @@ export default function CommissionsPage() {
   const { data: goalsData } = useGoals(goalsPage);
   const goalIds = (goalsData?.items || []).map((g) => g.id);
   const { data: goalProgress = [] } = useGoalProgress(goalIds);
+  const { data: ranking = [] } = useTeamRanking(filterDateFrom || null, filterDateTo || null);
+  const { data: allProducts = [] } = useAllProducts();
 
   // Mutations
   const createRule = useCreateCommissionRule();
@@ -104,11 +112,30 @@ export default function CommissionsPage() {
   const createGoal = useCreateGoal();
   const deleteGoal = useDeleteGoal();
 
+  // Reports data
+  const reportsByUser = useMemo(() => {
+    if (!entries?.items) return [];
+    const map = new Map<string, { name: string; role: string; pending: number; approved: number; paid: number; total: number; count: number }>();
+    entries.items.forEach((e) => {
+      const key = e.user_id;
+      const cur = map.get(key) || { name: e.user_name || "—", role: e.role, pending: 0, approved: 0, paid: 0, total: 0, count: 0 };
+      cur.count++;
+      cur.total += e.commission_amount;
+      if (e.status === "pending") cur.pending += e.commission_amount;
+      if (e.status === "approved") cur.approved += e.commission_amount;
+      if (e.status === "paid") cur.paid += e.commission_amount;
+      map.set(key, cur);
+    });
+    return Array.from(map.entries()).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.total - a.total);
+  }, [entries]);
+
   const handleSaveRule = () => {
     const payload = {
       ...ruleForm,
       percentage: Number(ruleForm.percentage),
       fixed_amount: Number(ruleForm.fixed_amount),
+      product_id: ruleForm.product_id || null,
+      category_filter: ruleForm.category_filter || null,
       notes: ruleForm.notes || null,
     };
     if (editingRule) {
@@ -126,6 +153,8 @@ export default function CommissionsPage() {
       role: rule.role, label: rule.label, source_type: rule.source_type,
       base_type: rule.base_type, percentage: rule.percentage,
       fixed_amount: rule.fixed_amount, only_after_payment: rule.only_after_payment,
+      product_id: rule.product_id || "",
+      category_filter: rule.category_filter || "",
       notes: rule.notes || "",
     });
     setShowRuleDialog(true);
@@ -136,7 +165,7 @@ export default function CommissionsPage() {
     setRuleForm({
       role: "front_desk", label: "", source_type: "sale",
       base_type: "total_amount", percentage: 0, fixed_amount: 0,
-      only_after_payment: false, notes: "",
+      only_after_payment: false, product_id: "", category_filter: "", notes: "",
     });
     setShowRuleDialog(true);
   };
@@ -161,6 +190,26 @@ export default function CommissionsPage() {
     else if (sourceType === "service_order") navigate(`/service-orders/${sourceId}`);
   };
 
+  const exportCsv = () => {
+    if (!entries?.items?.length) return;
+    const header = "Data,Usuário,Função,Origem,Base,Comissão,Status\n";
+    const rows = entries.items.map((e) =>
+      `${e.reference_date},${e.user_name || ""},${roleLabels[e.role] || e.role},${sourceTypeLabels[e.source_type as keyof typeof sourceTypeLabels] || e.source_type},${e.base_amount},${e.commission_amount},${statusLabels[e.status]}`
+    ).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `comissoes_${filterDateFrom || "all"}_${filterDateTo || "all"}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  // Unique categories from products
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    allProducts.forEach((p: any) => { if (p.category) set.add(p.category); });
+    return Array.from(set).sort();
+  }, [allProducts]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -179,10 +228,27 @@ export default function CommissionsPage() {
         <SummaryCard icon={<DollarSign className="h-4 w-4" />} label="Total Geral" value={fmt((summary?.total_pending || 0) + (summary?.total_approved || 0) + (summary?.total_paid || 0))} color="text-foreground font-bold" />
       </div>
 
+      {/* Global date filters */}
+      <div className="flex flex-wrap gap-3 items-end">
+        <div>
+          <label className="text-xs text-muted-foreground">De</label>
+          <Input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }} className="w-40" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">Até</label>
+          <Input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }} className="w-40" />
+        </div>
+        {(filterStatus !== "all" || filterRole !== "all" || filterDateFrom || filterDateTo) && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar filtros</Button>
+        )}
+      </div>
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="entries"><DollarSign className="h-4 w-4 mr-1" /> Lançamentos</TabsTrigger>
           {canManage && <TabsTrigger value="goals"><Target className="h-4 w-4 mr-1" /> Metas</TabsTrigger>}
+          <TabsTrigger value="ranking"><Trophy className="h-4 w-4 mr-1" /> Ranking</TabsTrigger>
+          {canManage && <TabsTrigger value="reports"><BarChart3 className="h-4 w-4 mr-1" /> Relatórios</TabsTrigger>}
           {isAdmin && <TabsTrigger value="rules"><Settings2 className="h-4 w-4 mr-1" /> Regras</TabsTrigger>}
         </TabsList>
 
@@ -214,17 +280,6 @@ export default function CommissionsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground">De</label>
-              <Input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }} className="w-40" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Até</label>
-              <Input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }} className="w-40" />
-            </div>
-            {(filterStatus !== "all" || filterRole !== "all" || filterDateFrom || filterDateTo) && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar</Button>
-            )}
           </div>
 
           <Card>
@@ -320,7 +375,6 @@ export default function CommissionsPage() {
               </Button>
             </div>
 
-            {/* Goal Progress Cards */}
             {goalProgress.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {goalProgress.map((gp) => (
@@ -350,7 +404,6 @@ export default function CommissionsPage() {
               </div>
             )}
 
-            {/* Goals Table */}
             <Card>
               <CardContent className="pt-6">
                 {goalsData && goalsData.items.length > 0 ? (
@@ -399,6 +452,144 @@ export default function CommissionsPage() {
           </TabsContent>
         )}
 
+        {/* ── Ranking Tab ── */}
+        <TabsContent value="ranking" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2"><Trophy className="h-4 w-4" /> Ranking da Equipe</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {ranking.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10">#</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Função</TableHead>
+                      <TableHead className="text-center">Vendas</TableHead>
+                      <TableHead className="text-center">Serviços</TableHead>
+                      <TableHead className="text-right">Faturamento</TableHead>
+                      <TableHead className="text-right">Ticket Médio</TableHead>
+                      <TableHead className="text-right">Comissão</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ranking.map((m, idx) => (
+                      <TableRow key={m.user_id}>
+                        <TableCell className="font-bold text-lg">{idx < 3 ? medals[idx] : idx + 1}</TableCell>
+                        <TableCell className="font-medium">{m.name || "—"}</TableCell>
+                        <TableCell className="text-sm">{roleLabels[m.role] || m.role || "—"}</TableCell>
+                        <TableCell className="text-center"><Badge variant="secondary">{m.sales_count}</Badge></TableCell>
+                        <TableCell className="text-center"><Badge variant="outline">{m.so_count}</Badge></TableCell>
+                        <TableCell className="text-right font-mono font-semibold">{fmt(Number(m.total_revenue))}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">{fmt(Number(m.ticket_avg))}</TableCell>
+                        <TableCell className="text-right font-mono text-sm text-green-600">{fmt(Number(m.commission_total))}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Trophy className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <p className="font-medium">Sem dados no período</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Reports Tab ── */}
+        {canManage && (
+          <TabsContent value="reports" className="space-y-4">
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={exportCsv} disabled={!entries?.items?.length}>
+                <Download className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            </div>
+
+            {/* Summary by user */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Resumo por Usuário</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {reportsByUser.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Usuário</TableHead>
+                        <TableHead>Função</TableHead>
+                        <TableHead className="text-center">Qtd</TableHead>
+                        <TableHead className="text-right">Pendente</TableHead>
+                        <TableHead className="text-right">Aprovada</TableHead>
+                        <TableHead className="text-right">Paga</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reportsByUser.map((r) => (
+                        <TableRow key={r.id}>
+                          <TableCell className="font-medium">{r.name}</TableCell>
+                          <TableCell className="text-sm">{roleLabels[r.role] || r.role}</TableCell>
+                          <TableCell className="text-center">{r.count}</TableCell>
+                          <TableCell className="text-right text-amber-600">{fmt(r.pending)}</TableCell>
+                          <TableCell className="text-right text-blue-600">{fmt(r.approved)}</TableCell>
+                          <TableCell className="text-right text-green-600">{fmt(r.paid)}</TableCell>
+                          <TableCell className="text-right font-semibold">{fmt(r.total)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">Nenhum dado para o período selecionado</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Summary by role */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-4 w-4" /> Resumo por Função</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {(() => {
+                  const byRole = new Map<string, { total: number; count: number }>();
+                  entries?.items?.forEach((e) => {
+                    const cur = byRole.get(e.role) || { total: 0, count: 0 };
+                    cur.total += e.commission_amount;
+                    cur.count++;
+                    byRole.set(e.role, cur);
+                  });
+                  const arr = Array.from(byRole.entries()).sort((a, b) => b[1].total - a[1].total);
+                  if (arr.length === 0) return <div className="text-center py-8 text-muted-foreground text-sm">Sem dados</div>;
+                  return (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Função</TableHead>
+                          <TableHead className="text-center">Lançamentos</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {arr.map(([role, v]) => (
+                          <TableRow key={role}>
+                            <TableCell className="font-medium">{roleLabels[role] || role}</TableCell>
+                            <TableCell className="text-center">{v.count}</TableCell>
+                            <TableCell className="text-right font-semibold">{fmt(v.total)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
         {/* ── Rules Tab ── */}
         {isAdmin && (
           <TabsContent value="rules" className="space-y-4">
@@ -418,6 +609,7 @@ export default function CommissionsPage() {
                         <TableHead>Base</TableHead>
                         <TableHead>%</TableHead>
                         <TableHead>Fixo</TableHead>
+                        <TableHead>Filtro</TableHead>
                         <TableHead>Pós-Pgto</TableHead>
                         <TableHead>Ativa</TableHead>
                         <TableHead></TableHead>
@@ -432,6 +624,11 @@ export default function CommissionsPage() {
                           <TableCell className="text-sm">{baseTypeLabels[r.base_type]}</TableCell>
                           <TableCell className="text-sm">{r.percentage > 0 ? `${r.percentage}%` : "—"}</TableCell>
                           <TableCell className="text-sm">{r.fixed_amount > 0 ? fmt(r.fixed_amount) : "—"}</TableCell>
+                          <TableCell className="text-xs">
+                            {r.product_id ? <Badge variant="outline" className="text-xs">Produto</Badge> : null}
+                            {r.category_filter ? <Badge variant="outline" className="text-xs ml-1">{r.category_filter}</Badge> : null}
+                            {!r.product_id && !r.category_filter ? "—" : null}
+                          </TableCell>
                           <TableCell>{r.only_after_payment ? <Badge variant="secondary" className="text-xs">Sim</Badge> : "—"}</TableCell>
                           <TableCell>
                             <Switch checked={r.is_active} onCheckedChange={(v) => updateRule.mutate({ id: r.id, data: { is_active: v } })} />
@@ -463,7 +660,7 @@ export default function CommissionsPage() {
 
       {/* ── Rule Dialog ── */}
       <Dialog open={showRuleDialog} onOpenChange={setShowRuleDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingRule ? "Editar Regra" : "Nova Regra de Comissão"}</DialogTitle>
           </DialogHeader>
@@ -516,6 +713,35 @@ export default function CommissionsPage() {
                 <Input type="number" min={0} step={0.01} value={ruleForm.fixed_amount} onChange={(e) => setRuleForm({ ...ruleForm, fixed_amount: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
+
+            {/* Product filter */}
+            <div>
+              <label className="text-sm font-medium">Produto específico (opcional)</label>
+              <Select value={ruleForm.product_id || "none"} onValueChange={(v) => setRuleForm({ ...ruleForm, product_id: v === "none" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Todos os produtos" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Todos os produtos</SelectItem>
+                  {allProducts.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category filter */}
+            <div>
+              <label className="text-sm font-medium">Categoria (opcional)</label>
+              <Select value={ruleForm.category_filter || "none"} onValueChange={(v) => setRuleForm({ ...ruleForm, category_filter: v === "none" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Todas as categorias" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Todas as categorias</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-center gap-3">
               <Switch checked={ruleForm.only_after_payment} onCheckedChange={(v) => setRuleForm({ ...ruleForm, only_after_payment: v })} />
               <label className="text-sm">Somente após pagamento confirmado</label>
