@@ -60,7 +60,7 @@ export function useCreateCollectionPoint() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: async (values: CollectionPointFormData) => {
+    mutationFn: async ({ values, settings, isActive }: { values: CollectionPointFormData; settings?: any; isActive?: boolean }) => {
       const { data: { user } } = await supabase.auth.getUser();
       const payload: any = {
         name: values.name,
@@ -81,6 +81,8 @@ export function useCreateCollectionPoint() {
         commission_value: values.commission_value,
         created_by: user?.id,
       };
+      if (settings) payload.settings = settings;
+      if (typeof isActive === "boolean") payload.is_active = isActive;
       const { data, error } = await sb.from("collection_points").insert(payload).select().single();
       if (error) throw error;
       return data;
