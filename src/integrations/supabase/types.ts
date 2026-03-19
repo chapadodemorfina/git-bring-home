@@ -5043,6 +5043,7 @@ export type Database = {
         Returns: Json
       }
       scrap_dashboard_summary: { Args: never; Returns: Json }
+      set_tenant_context: { Args: { _tenant_id: string }; Returns: undefined }
       switch_tenant: { Args: { _tenant_id: string }; Returns: Json }
       void_warranty: {
         Args: { _reason: string; _warranty_id: string }
