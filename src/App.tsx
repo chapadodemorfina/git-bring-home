@@ -221,6 +221,7 @@ const App = () => (
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/collection-points/commissions" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CommissionManagementPage /></RoleGuard></ProtectedPage>} />
               <Route path="/collection-points/reports" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CpReportsPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/commissions/cp" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CpCommissionPeriodsPage /></RoleGuard></ProtectedPage>} />
 
               {/* Sales & PDV */}
               <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><PdvPage /></RoleGuard></ProtectedRoute>} />
