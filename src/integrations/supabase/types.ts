@@ -3884,10 +3884,13 @@ export type Database = {
       subscriptions: {
         Row: {
           billing_cycle: string
+          billing_provider: string | null
           canceled_at: string | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          external_customer_id: string | null
+          external_subscription_id: string | null
           id: string
           plan_id: string
           status: string
@@ -3899,10 +3902,13 @@ export type Database = {
         }
         Insert: {
           billing_cycle?: string
+          billing_provider?: string | null
           canceled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          external_customer_id?: string | null
+          external_subscription_id?: string | null
           id?: string
           plan_id: string
           status?: string
@@ -3914,10 +3920,13 @@ export type Database = {
         }
         Update: {
           billing_cycle?: string
+          billing_provider?: string | null
           canceled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          external_customer_id?: string | null
+          external_subscription_id?: string | null
           id?: string
           plan_id?: string
           status?: string
