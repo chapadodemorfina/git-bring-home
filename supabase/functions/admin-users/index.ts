@@ -1,14 +1,12 @@
 /**
- * Sistema de gestão técnica i9
- * Desenvolvido por Alvo Sistemas e Gestão
- * 
  * Edge function para gerenciamento administrativo de usuários
+ * Secured: validates JWT via getClaims + tenant context
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-tenant-id",
 };
 
 function jsonResponse(body: any, status = 200) {
@@ -18,11 +16,12 @@ function jsonResponse(body: any, status = 200) {
   });
 }
 
-async function countActiveAdmins(adminClient: any): Promise<number> {
+async function countActiveAdmins(adminClient: any, tenantId: string): Promise<number> {
   const { data: adminRoles } = await adminClient
     .from("user_roles")
     .select("user_id")
-    .eq("role", "admin");
+    .eq("role", "admin")
+    .eq("tenant_id", tenantId);
 
   if (!adminRoles || adminRoles.length === 0) return 0;
 
@@ -44,27 +43,56 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    // --- AUTH: Validate JWT via getClaims ---
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Não autorizado" }, 401);
     }
 
-    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user: caller } } = await anonClient.auth.getUser();
-    if (!caller) {
-      return jsonResponse({ error: "Não autorizado" }, 401);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return jsonResponse({ error: "Token inválido" }, 401);
     }
 
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const callerId = claimsData.claims.sub as string;
+
+    // --- TENANT: Read from header ---
+    const tenantId = req.headers.get("x-tenant-id");
+    if (!tenantId) {
+      return jsonResponse({ error: "Tenant não especificado" }, 400);
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Validate caller belongs to this tenant
+    const { data: tenantLink } = await adminClient
+      .from("tenant_users")
+      .select("tenant_role")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", callerId)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (!tenantLink) {
+      return jsonResponse({ error: "Acesso negado ao tenant" }, 403);
+    }
+
+    // Check caller roles within this tenant
     const { data: callerRoles } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", caller.id);
+      .eq("user_id", callerId)
+      .eq("tenant_id", tenantId);
 
     const roles = (callerRoles || []).map((r: any) => r.role);
     const callerIsAdmin = roles.includes("admin");
@@ -82,7 +110,6 @@ Deno.serve(async (req) => {
       case "create_user": {
         const { email, password, full_name, phone, role } = payload;
 
-        // Managers cannot create admins
         if (!callerIsAdmin && role === "admin") {
           return jsonResponse({ error: "Apenas administradores podem criar outros administradores" }, 403);
         }
@@ -98,7 +125,6 @@ Deno.serve(async (req) => {
           return jsonResponse({ error: createError.message }, 400);
         }
 
-        // Wait for trigger handle_new_user to create profile, then upsert
         const userId = newUser.user.id;
         let profileReady = false;
         for (let i = 0; i < 5; i++) {
@@ -108,31 +134,28 @@ Deno.serve(async (req) => {
             .eq("id", userId)
             .maybeSingle();
 
-          if (existing) {
-            profileReady = true;
-            break;
-          }
+          if (existing) { profileReady = true; break; }
           await new Promise((r) => setTimeout(r, 300));
         }
 
-        // Upsert profile data (phone, etc.) — handles both trigger-created and missing profiles
-        const profileData: any = {
-          id: userId,
-          full_name,
-          email,
-        };
+        const profileData: any = { id: userId, full_name, email };
         if (phone) profileData.phone = phone;
 
         await adminClient
           .from("profiles")
           .upsert(profileData, { onConflict: "id" });
 
-        // Assign role
+        // Assign role WITH tenant_id
         if (role) {
           await adminClient
             .from("user_roles")
-            .insert({ user_id: userId, role });
+            .insert({ user_id: userId, role, tenant_id: tenantId });
         }
+
+        // Add user to this tenant
+        await adminClient
+          .from("tenant_users")
+          .upsert({ tenant_id: tenantId, user_id: userId, tenant_role: "member", is_default: true, is_active: true }, { onConflict: "tenant_id,user_id" });
 
         result = { success: true, user_id: userId };
         break;
@@ -141,48 +164,44 @@ Deno.serve(async (req) => {
       case "update_user": {
         const { user_id, full_name, phone, avatar_url, is_active, roles: newRoles } = payload;
 
-        // --- Last admin protection for role changes ---
         if (newRoles !== undefined) {
-          // Check if target user currently has admin role
           const { data: currentRoles } = await adminClient
             .from("user_roles")
             .select("role")
-            .eq("user_id", user_id);
+            .eq("user_id", user_id)
+            .eq("tenant_id", tenantId);
 
           const currentRoleList = (currentRoles || []).map((r: any) => r.role);
           const hadAdmin = currentRoleList.includes("admin");
           const willHaveAdmin = newRoles.includes("admin");
 
-          // Manager cannot assign or remove admin role
           if (!callerIsAdmin && (hadAdmin || willHaveAdmin)) {
             return jsonResponse({ error: "Apenas administradores podem modificar a role de admin" }, 403);
           }
 
-          // Prevent removing admin from last active admin
           if (hadAdmin && !willHaveAdmin) {
-            const activeAdminCount = await countActiveAdmins(adminClient);
+            const activeAdminCount = await countActiveAdmins(adminClient, tenantId);
             if (activeAdminCount <= 1) {
               return jsonResponse({ error: "Não é possível remover a role admin do último administrador ativo" }, 400);
             }
           }
         }
 
-        // --- Last admin protection for is_active ---
         if (is_active === false) {
           const { data: targetRoles } = await adminClient
             .from("user_roles")
             .select("role")
-            .eq("user_id", user_id);
+            .eq("user_id", user_id)
+            .eq("tenant_id", tenantId);
 
           if ((targetRoles || []).some((r: any) => r.role === "admin")) {
-            const activeAdminCount = await countActiveAdmins(adminClient);
+            const activeAdminCount = await countActiveAdmins(adminClient, tenantId);
             if (activeAdminCount <= 1) {
               return jsonResponse({ error: "Não é possível desativar o último administrador ativo" }, 400);
             }
           }
         }
 
-        // Update profile
         const profileUpdate: any = {};
         if (full_name !== undefined) profileUpdate.full_name = full_name;
         if (phone !== undefined) profileUpdate.phone = phone;
@@ -200,30 +219,27 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Sync auth ban status with is_active
         if (is_active !== undefined) {
           if (is_active === false) {
-            await adminClient.auth.admin.updateUserById(user_id, {
-              ban_duration: "876600h",
-            });
+            await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "876600h" });
           } else {
-            await adminClient.auth.admin.updateUserById(user_id, {
-              ban_duration: "none",
-            });
+            await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "none" });
           }
         }
 
-        // Update roles if provided
+        // Update roles scoped to THIS tenant
         if (newRoles !== undefined) {
           await adminClient
             .from("user_roles")
             .delete()
-            .eq("user_id", user_id);
+            .eq("user_id", user_id)
+            .eq("tenant_id", tenantId);
 
           if (newRoles.length > 0) {
             const roleInserts = newRoles.map((role: string) => ({
               user_id,
               role,
+              tenant_id: tenantId,
             }));
             await adminClient.from("user_roles").insert(roleInserts);
           }
@@ -236,14 +252,14 @@ Deno.serve(async (req) => {
       case "deactivate_user": {
         const { user_id } = payload;
 
-        // Last admin protection
         const { data: targetRoles } = await adminClient
           .from("user_roles")
           .select("role")
-          .eq("user_id", user_id);
+          .eq("user_id", user_id)
+          .eq("tenant_id", tenantId);
 
         if ((targetRoles || []).some((r: any) => r.role === "admin")) {
-          const activeAdminCount = await countActiveAdmins(adminClient);
+          const activeAdminCount = await countActiveAdmins(adminClient, tenantId);
           if (activeAdminCount <= 1) {
             return jsonResponse({ error: "Não é possível desativar o último administrador ativo" }, 400);
           }
@@ -254,9 +270,7 @@ Deno.serve(async (req) => {
           .update({ is_active: false })
           .eq("id", user_id);
 
-        await adminClient.auth.admin.updateUserById(user_id, {
-          ban_duration: "876600h",
-        });
+        await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "876600h" });
 
         result = { success: true };
         break;
@@ -270,9 +284,7 @@ Deno.serve(async (req) => {
           .update({ is_active: true })
           .eq("id", user_id);
 
-        await adminClient.auth.admin.updateUserById(user_id, {
-          ban_duration: "none",
-        });
+        await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "none" });
 
         result = { success: true };
         break;
@@ -281,7 +293,6 @@ Deno.serve(async (req) => {
       case "reset_password_email": {
         const { email } = payload;
 
-        // generateLink generates a recovery link but does NOT send email automatically
         const { data, error } = await adminClient.auth.admin.generateLink({
           type: "recovery",
           email,
@@ -291,13 +302,12 @@ Deno.serve(async (req) => {
           return jsonResponse({ error: error.message }, 400);
         }
 
-        // Return the link explicitly for administrative use
         const actionLink = data?.properties?.action_link || null;
 
         result = {
           success: true,
           recovery_link: actionLink,
-          note: "Link de recuperação gerado. O email NÃO foi enviado automaticamente. Copie o link e envie manualmente ao usuário.",
+          note: "Link de recuperação gerado. O email NÃO foi enviado automaticamente.",
         };
         break;
       }
@@ -318,13 +328,26 @@ Deno.serve(async (req) => {
       }
 
       case "list_users": {
-        // Get all profiles
+        // Get users that belong to this tenant
+        const { data: tenantUserLinks } = await adminClient
+          .from("tenant_users")
+          .select("user_id")
+          .eq("tenant_id", tenantId)
+          .eq("is_active", true);
+
+        const tenantUserIds = (tenantUserLinks || []).map((tu: any) => tu.user_id);
+
+        if (tenantUserIds.length === 0) {
+          result = { users: [], orphaned_auth_users: [] };
+          break;
+        }
+
         const { data: profiles } = await adminClient
           .from("profiles")
           .select("*")
+          .in("id", tenantUserIds)
           .order("created_at", { ascending: false });
 
-        // Get all auth users to detect inconsistencies and get last_sign_in_at
         const { data: authUsersData } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
         const authUsersMap = new Map<string, any>();
         (authUsersData?.users || []).forEach((u: any) => {
@@ -333,7 +356,8 @@ Deno.serve(async (req) => {
 
         const { data: allRoles } = await adminClient
           .from("user_roles")
-          .select("user_id, role");
+          .select("user_id, role")
+          .eq("tenant_id", tenantId);
 
         const rolesMap: Record<string, string[]> = {};
         (allRoles || []).forEach((r: any) => {
@@ -350,17 +374,7 @@ Deno.serve(async (req) => {
           };
         });
 
-        // Detect auth users without profile (orphaned)
-        const profileIds = new Set((profiles || []).map((p: any) => p.id));
-        const orphanedAuthUsers = (authUsersData?.users || [])
-          .filter((u: any) => !profileIds.has(u.id))
-          .map((u: any) => ({
-            id: u.id,
-            email: u.email,
-            created_at: u.created_at,
-          }));
-
-        result = { users, orphaned_auth_users: orphanedAuthUsers };
+        result = { users, orphaned_auth_users: [] };
         break;
       }
 
@@ -376,7 +390,8 @@ Deno.serve(async (req) => {
         const { data: userRoles } = await adminClient
           .from("user_roles")
           .select("role")
-          .eq("user_id", user_id);
+          .eq("user_id", user_id)
+          .eq("tenant_id", tenantId);
 
         result = {
           ...profile,
@@ -389,7 +404,8 @@ Deno.serve(async (req) => {
         const { data: techRoles } = await adminClient
           .from("user_roles")
           .select("user_id")
-          .in("role", ["bench_technician", "field_technician"]);
+          .in("role", ["bench_technician", "field_technician"])
+          .eq("tenant_id", tenantId);
 
         const techIds = [...new Set((techRoles || []).map((r: any) => r.user_id))];
 
