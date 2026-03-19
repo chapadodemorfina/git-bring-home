@@ -128,6 +128,10 @@ import WarrantyReturnsPage from "./modules/repair/pages/WarrantyReturnsPage";
 // Public Tracking
 import PublicTrackingPage from "./modules/tracking/pages/PublicTrackingPage";
 
+// Billing
+import SubscriptionPage from "./modules/billing/pages/SubscriptionPage";
+import AdminSubscriptionPage from "./modules/billing/pages/AdminSubscriptionPage";
+
 // Technician Mobile
 import TechLayout from "./modules/technician/components/TechLayout";
 import TechDashboardPage from "./modules/technician/pages/TechDashboardPage";
