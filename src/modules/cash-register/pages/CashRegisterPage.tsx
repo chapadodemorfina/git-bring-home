@@ -669,20 +669,21 @@ export default function CashRegisterPage() {
                 autoFocus
               />
             </div>
-            {["receipt", "adjustment", "sale"].includes(movType) && (
-              <div>
-                <label className="text-sm font-medium">Forma de Pagamento</label>
-                <Select value={movPayMethod} onValueChange={setMovPayMethod}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Dinheiro</SelectItem>
-                    <SelectItem value="pix">PIX</SelectItem>
-                    <SelectItem value="credit_card">Cartão Crédito</SelectItem>
-                    <SelectItem value="debit_card">Cartão Débito</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div>
+              <label className="text-sm font-medium">Forma de Pagamento</label>
+              <Select value={movPayMethod} onValueChange={handlePayMethodChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Dinheiro</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="credit_card">Cartão Crédito</SelectItem>
+                  <SelectItem value="debit_card">Cartão Débito</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {movPayMethod === "cash" ? "Afeta o caixa físico" : "Afeta a conta bancária"}
+              </p>
+            </div>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={movAffectsCash} onChange={(e) => setMovAffectsCash(e.target.checked)} className="rounded" />
