@@ -164,12 +164,26 @@ export default function CashRegisterPage() {
 
   const openMovementDialog = (type: CashMovementType) => {
     setMovType(type);
-    setMovPayMethod("cash");
+    const defaultMethod = ["withdrawal", "reinforcement"].includes(type) ? "cash" : "cash";
+    setMovPayMethod(defaultMethod);
     setMovAmount("");
     setMovDesc("");
     setMovAffectsCash(true);
     setMovAffectsBank(false);
     setShowMovement(true);
+  };
+
+  // Auto-set affects_cash/affects_bank based on payment method
+  const handlePayMethodChange = (method: string) => {
+    setMovPayMethod(method);
+    if (method === "cash") {
+      setMovAffectsCash(true);
+      setMovAffectsBank(false);
+    } else {
+      // pix, credit_card, debit_card → affects bank
+      setMovAffectsCash(false);
+      setMovAffectsBank(true);
+    }
   };
 
   const printClosingReport = async (registerId: string, registerData: any, summaryData: any) => {
@@ -655,29 +669,28 @@ export default function CashRegisterPage() {
                 autoFocus
               />
             </div>
-            {["receipt", "adjustment", "sale"].includes(movType) && (
-              <div>
-                <label className="text-sm font-medium">Forma de Pagamento</label>
-                <Select value={movPayMethod} onValueChange={setMovPayMethod}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Dinheiro</SelectItem>
-                    <SelectItem value="pix">PIX</SelectItem>
-                    <SelectItem value="credit_card">Cartão Crédito</SelectItem>
-                    <SelectItem value="debit_card">Cartão Débito</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={movAffectsCash} onChange={(e) => setMovAffectsCash(e.target.checked)} className="rounded" />
-                <Banknote className="h-3.5 w-3.5" /> Afeta Caixa
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={movAffectsBank} onChange={(e) => setMovAffectsBank(e.target.checked)} className="rounded" />
-                <Landmark className="h-3.5 w-3.5" /> Afeta Banco
-              </label>
+            <div>
+              <label className="text-sm font-medium">Forma de Pagamento</label>
+              <Select value={movPayMethod} onValueChange={handlePayMethodChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Dinheiro</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="credit_card">Cartão Crédito</SelectItem>
+                  <SelectItem value="debit_card">Cartão Débito</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {movPayMethod === "cash" ? "Afeta o caixa físico" : "Afeta a conta bancária"}
+              </p>
+            </div>
+            <div className="flex items-center gap-4 p-2 rounded-md bg-muted text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Banknote className="h-3.5 w-3.5" /> Caixa: {movAffectsCash ? "✓ Sim" : "✗ Não"}
+              </span>
+              <span className="flex items-center gap-1">
+                <Landmark className="h-3.5 w-3.5" /> Banco: {movAffectsBank ? "✓ Sim" : "✗ Não"}
+              </span>
             </div>
             <div>
               <label className="text-sm font-medium">Descrição / Motivo</label>

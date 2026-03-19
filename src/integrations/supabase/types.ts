@@ -4880,24 +4880,15 @@ export type Database = {
         Args: { _resource_type: string; _tenant_id: string }
         Returns: boolean
       }
-      close_cash_register:
-        | {
-            Args: {
-              _closing_notes?: string
-              _counted_amount: number
-              _register_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              _closing_notes?: string
-              _counted_amount: number
-              _counted_bank_balance?: number
-              _register_id: string
-            }
-            Returns: Json
-          }
+      close_cash_register: {
+        Args: {
+          _closing_notes?: string
+          _counted_amount: number
+          _counted_bank_balance?: number
+          _register_id: string
+        }
+        Returns: Json
+      }
       commission_summary: {
         Args: { _from?: string; _to?: string }
         Returns: Json
