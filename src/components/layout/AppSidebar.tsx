@@ -26,6 +26,7 @@ const mainItems = [
   { title: "Sucata & Reaproveitamento", url: "/inventory/scrap", icon: Recycle },
   { title: "Pontos de Coleta", url: "/collection-points", icon: MapPin },
   { title: "Comissões Parceiros", url: "/collection-points/commissions", icon: DollarSign },
+  { title: "Relatório Parceiros", url: "/collection-points/reports", icon: BarChart3 },
   { title: "Comissões Equipe", url: "/commissions", icon: Percent },
   { title: "Orçamentos", url: "/quotes", icon: Calculator },
   { title: "Garantias", url: "/warranties", icon: ShieldCheck },
