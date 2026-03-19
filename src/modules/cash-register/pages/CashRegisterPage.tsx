@@ -86,6 +86,7 @@ export default function CashRegisterPage() {
   const { data: movements } = useCashMovements(openRegister?.id, movPage);
   const { data: summary } = useCashRegisterSummary(openRegister?.id);
   const { data: history } = useCashRegisterHistory(histPage, histFrom || null, histTo || null);
+  const { data: lastBalances } = useLastClosedBalances();
 
   // Mutations
   const openMut = useOpenCashRegisterMutation();
