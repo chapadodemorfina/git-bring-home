@@ -171,7 +171,7 @@ export default function SelectPlanPage() {
               >
                 {isPopular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 gap-1 px-3 py-1 text-xs font-semibold shadow-sm">
-                    <Sparkles className="h-3 w-3" /> Melhor custo-benefício
+                    <Sparkles className="h-3 w-3" /> ⭐ Melhor custo-benefício
                   </Badge>
                 )}
                 <CardHeader className="text-center pb-1 pt-8">
