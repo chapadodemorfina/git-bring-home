@@ -1,6 +1,6 @@
 export type CommissionEntryStatus = "pending" | "approved" | "paid" | "cancelled";
 export type CommissionSourceType = "sale" | "service_order";
-export type CommissionBaseType = "total_amount" | "labor_cost" | "fixed_per_unit";
+export type CommissionBaseType = "total_amount" | "labor_cost" | "fixed_per_unit" | "net_amount" | "profit" | "received_amount";
 
 export interface CommissionRule {
   id: string;
@@ -12,6 +12,9 @@ export interface CommissionRule {
   fixed_amount: number;
   is_active: boolean;
   notes: string | null;
+  product_id: string | null;
+  category_filter: string | null;
+  only_after_payment: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -32,8 +35,36 @@ export interface CommissionEntry {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  // joined
   user_name?: string;
+}
+
+export interface SalesGoal {
+  id: string;
+  tenant_id: string;
+  user_id: string | null;
+  team_role: string | null;
+  goal_type: "revenue" | "quantity" | "ticket_avg";
+  target_value: number;
+  period_start: string;
+  period_end: string;
+  label: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  user_name?: string;
+}
+
+export interface GoalProgress {
+  goal_id: string;
+  label: string;
+  goal_type: string;
+  target: number;
+  actual: number;
+  percentage: number;
+  user_id: string | null;
+  team_role: string | null;
+  period_start: string;
+  period_end: string;
 }
 
 export const statusLabels: Record<CommissionEntryStatus, string> = {
@@ -66,7 +97,16 @@ export const sourceTypeLabels: Record<CommissionSourceType, string> = {
 };
 
 export const baseTypeLabels: Record<CommissionBaseType, string> = {
-  total_amount: "Valor Total",
+  total_amount: "Valor Total (Bruto)",
+  net_amount: "Valor Líquido",
+  profit: "Lucro",
+  received_amount: "Pagamento Recebido",
   labor_cost: "Mão de Obra",
   fixed_per_unit: "Valor Fixo",
+};
+
+export const goalTypeLabels: Record<string, string> = {
+  revenue: "Faturamento",
+  quantity: "Quantidade de Vendas",
+  ticket_avg: "Ticket Médio",
 };
