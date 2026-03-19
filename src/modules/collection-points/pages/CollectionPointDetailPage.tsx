@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollectionPoint } from "../hooks/useCollectionPoints";
-import { commissionTypeLabels } from "../types";
+import { commissionTypeLabels, defaultCpSettings } from "../types";
 import TransferTracker from "../components/TransferTracker";
 import CommissionsPanel from "../components/CommissionsPanel";
 import OperatorsPanel from "../components/OperatorsPanel";
+import PermissionsPanel from "../components/PermissionsPanel";
 
 export default function CollectionPointDetailPage() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ export default function CollectionPointDetailPage() {
   if (!cp) return <p className="text-destructive">Ponto de coleta não encontrado.</p>;
 
   const addressParts = [cp.street, cp.number, cp.complement, cp.neighborhood, cp.city, cp.state].filter(Boolean);
+  const settings = { ...defaultCpSettings, ...cp.settings };
 
   return (
     <div className="space-y-6">
@@ -69,10 +71,14 @@ export default function CollectionPointDetailPage() {
           <TabsTrigger value="transfers">Transferências</TabsTrigger>
           <TabsTrigger value="commissions">Comissões</TabsTrigger>
           <TabsTrigger value="operators">Operadores</TabsTrigger>
+          <TabsTrigger value="permissions">Permissões</TabsTrigger>
         </TabsList>
         <TabsContent value="transfers"><TransferTracker cpId={id} /></TabsContent>
         <TabsContent value="commissions"><CommissionsPanel cpId={id!} /></TabsContent>
         <TabsContent value="operators"><OperatorsPanel cpId={id!} /></TabsContent>
+        <TabsContent value="permissions">
+          <PermissionsPanel settings={settings} onChange={() => {}} readOnly />
+        </TabsContent>
       </Tabs>
     </div>
   );
