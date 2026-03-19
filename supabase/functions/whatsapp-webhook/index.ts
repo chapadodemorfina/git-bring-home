@@ -137,6 +137,7 @@ Deno.serve(async (req) => {
       await createHandoff(supabase, conversation.id, "ai_unavailable");
     } else {
       const context = await gatherBusinessContext(supabase, customerId);
+      context.tenant_id = conversation.tenant_id || null;
       const aiResult = await classifyAndRespond(lovableApiKey, message, customerName || "Cliente", context, conversation.id);
       intent = aiResult.intent;
       confidence = aiResult.confidence;
@@ -564,8 +565,16 @@ const STATUS_LABELS: Record<string, string> = {
 // ===== AI CLASSIFICATION =====
 
 async function classifyAndRespond(apiKey: string, message: string, customerName: string, context: any, conversationId: string) {
-  const companyNameResult = await supabaseAdmin.from("app_settings").select("value").eq("key", "company_name").maybeSingle();
-  const companyName = companyNameResult?.data?.value || "nossa empresa";
+  // Resolve tenant_id from conversation context
+  const tenantId = context?.tenant_id || null;
+  let companyName = "nossa empresa";
+  if (tenantId) {
+    const companyNameResult = await supabaseAdmin.from("app_settings").select("value").eq("key", "company_name").eq("tenant_id", tenantId).maybeSingle();
+    companyName = companyNameResult?.data?.value || companyName;
+  } else {
+    const companyNameResult = await supabaseAdmin.from("app_settings").select("value").eq("key", "company_name").limit(1).maybeSingle();
+    companyName = companyNameResult?.data?.value || companyName;
+  }
   const systemPrompt = `Você é o assistente virtual da ${companyName}, uma assistência técnica de eletrônicos.
 Seu objetivo é ajudar clientes a consultar informações sobre seus serviços de forma clara e objetiva.
 

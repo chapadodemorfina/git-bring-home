@@ -16,6 +16,7 @@ import {
   Shield, Settings2, Palette, Key, Eye, EyeOff
 } from "lucide-react";
 import { LogoUpload } from "@/components/settings/LogoUpload";
+import { useTenant } from "@/contexts/TenantContext";
 
 const db = supabase as any;
 
@@ -32,6 +33,7 @@ const ALL_KEYS = [
 export default function SettingsPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { activeTenant } = useTenant();
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["app-settings-full"],
@@ -55,8 +57,12 @@ export default function SettingsPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!activeTenant) throw new Error("Nenhum tenant ativo");
       const updates = ALL_KEYS.map((key) =>
-        db.from("app_settings").upsert({ key, value: v[key] || "" }, { onConflict: "key" })
+        db.from("app_settings").upsert(
+          { tenant_id: activeTenant.id, key, value: v[key] || "" },
+          { onConflict: "tenant_id,key" }
+        )
       );
       const results = await Promise.all(updates);
       const err = results.find((r: any) => r.error);
