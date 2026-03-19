@@ -164,12 +164,26 @@ export default function CashRegisterPage() {
 
   const openMovementDialog = (type: CashMovementType) => {
     setMovType(type);
-    setMovPayMethod("cash");
+    const defaultMethod = ["withdrawal", "reinforcement"].includes(type) ? "cash" : "cash";
+    setMovPayMethod(defaultMethod);
     setMovAmount("");
     setMovDesc("");
     setMovAffectsCash(true);
     setMovAffectsBank(false);
     setShowMovement(true);
+  };
+
+  // Auto-set affects_cash/affects_bank based on payment method
+  const handlePayMethodChange = (method: string) => {
+    setMovPayMethod(method);
+    if (method === "cash") {
+      setMovAffectsCash(true);
+      setMovAffectsBank(false);
+    } else {
+      // pix, credit_card, debit_card → affects bank
+      setMovAffectsCash(false);
+      setMovAffectsBank(true);
+    }
   };
 
   const printClosingReport = async (registerId: string, registerData: any, summaryData: any) => {
