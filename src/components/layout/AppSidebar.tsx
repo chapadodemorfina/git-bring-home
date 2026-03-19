@@ -3,7 +3,7 @@
  * Desenvolvido por Alvo Sistemas e Gestão
  */
 import {
-  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone, Landmark, Percent, TrendingUp, Calculator,
+  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone, Landmark, Percent, TrendingUp, Calculator, CreditCard,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -39,12 +39,14 @@ const mainItems = [
 
 const adminOnlyItems = [
   { title: "Gestão de Equipe", url: "/system/users", icon: Users },
+  { title: "Admin Assinatura", url: "/admin/subscription", icon: ShieldCheck },
 ];
 
 const systemItems = [
   { title: "WhatsApp", url: "/whatsapp", icon: MessageSquare },
   { title: "Mensagens Clientes", url: "/message-history", icon: MessageSquare },
   { title: "Notificações", url: "/notifications", icon: Bell },
+  { title: "Assinatura", url: "/subscription", icon: CreditCard },
   { title: "Configurações", url: "/settings", icon: Settings },
   { title: "Logs de Auditoria", url: "/audit-logs", icon: FileText },
 ];

@@ -128,6 +128,10 @@ import WarrantyReturnsPage from "./modules/repair/pages/WarrantyReturnsPage";
 // Public Tracking
 import PublicTrackingPage from "./modules/tracking/pages/PublicTrackingPage";
 
+// Billing
+import SubscriptionPage from "./modules/billing/pages/SubscriptionPage";
+import AdminSubscriptionPage from "./modules/billing/pages/AdminSubscriptionPage";
+
 // Technician Mobile
 import TechLayout from "./modules/technician/components/TechLayout";
 import TechDashboardPage from "./modules/technician/pages/TechDashboardPage";
@@ -167,6 +171,8 @@ const App = () => (
               <Route path="/system/users/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
+              <Route path="/subscription" element={<ProtectedPage><SubscriptionPage /></ProtectedPage>} />
+              <Route path="/admin/subscription" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><AdminSubscriptionPage /></RoleGuard></ProtectedPage>} />
               <Route path="/audit-logs" element={<ProtectedPage><AuditLogsPage /></ProtectedPage>} />
               <Route path="/queues" element={<ProtectedPage><WorkQueuesPage /></ProtectedPage>} />
               <Route path="/notifications" element={<ProtectedPage><NotificationsPage /></ProtectedPage>} />
