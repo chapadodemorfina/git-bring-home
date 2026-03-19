@@ -144,7 +144,7 @@ export default function SelectPlanPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
             Escolha o plano ideal para sua operação
           </h1>
-          <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-base md:text-lg">
+          <p className="text-muted-foreground/80 mt-3 max-w-xl mx-auto text-sm md:text-base">
             Continue usando o sistema com suporte, controle e recursos na medida do seu negócio.
           </p>
         </div>
