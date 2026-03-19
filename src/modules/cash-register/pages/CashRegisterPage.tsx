@@ -684,15 +684,13 @@ export default function CashRegisterPage() {
                 {movPayMethod === "cash" ? "Afeta o caixa físico" : "Afeta a conta bancária"}
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={movAffectsCash} onChange={(e) => setMovAffectsCash(e.target.checked)} className="rounded" />
-                <Banknote className="h-3.5 w-3.5" /> Afeta Caixa
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={movAffectsBank} onChange={(e) => setMovAffectsBank(e.target.checked)} className="rounded" />
-                <Landmark className="h-3.5 w-3.5" /> Afeta Banco
-              </label>
+            <div className="flex items-center gap-4 p-2 rounded-md bg-muted text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Banknote className="h-3.5 w-3.5" /> Caixa: {movAffectsCash ? "✓ Sim" : "✗ Não"}
+              </span>
+              <span className="flex items-center gap-1">
+                <Landmark className="h-3.5 w-3.5" /> Banco: {movAffectsBank ? "✓ Sim" : "✗ Não"}
+              </span>
             </div>
             <div>
               <label className="text-sm font-medium">Descrição / Motivo</label>
