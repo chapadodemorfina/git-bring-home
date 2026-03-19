@@ -18,15 +18,15 @@ export function usePlanUsage() {
   const { activeTenant } = useTenant();
 
   return useQuery<PlanUsage>({
-    queryKey: ["plan-usage", activeTenant],
+    queryKey: ["plan-usage", activeTenant?.id],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_plan_usage", {
-        _tenant_id: activeTenant!,
+        _tenant_id: activeTenant!.id,
       });
       if (error) throw error;
       return data as unknown as PlanUsage;
     },
-    enabled: !!activeTenant,
+    enabled: !!activeTenant?.id,
     staleTime: 60_000,
   });
 }
