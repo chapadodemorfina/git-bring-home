@@ -154,9 +154,11 @@ export default function SelectPlanPage() {
           {plans.map((plan) => {
             const features = FEATURE_LABELS[plan.slug] || [];
             const isPopular = plan.slug === "professional";
+            const isBusiness = plan.slug === "business";
             const isEnterprise = plan.slug === "enterprise";
             const displayName = DISPLAY_NAMES[plan.slug] || plan.name;
             const displayPrice = DISPLAY_PRICES[plan.slug];
+            const microText = MICRO_TEXT[plan.slug];
 
             return (
               <Card
@@ -169,14 +171,14 @@ export default function SelectPlanPage() {
               >
                 {isPopular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 gap-1 px-3 py-1 text-xs font-semibold shadow-sm">
-                    <Sparkles className="h-3 w-3" /> Mais popular
+                    <Sparkles className="h-3 w-3" /> Melhor custo-benefício
                   </Badge>
                 )}
-                <CardHeader className="text-center pb-2 pt-7">
+                <CardHeader className="text-center pb-1 pt-8">
                   <CardTitle className="text-base font-bold uppercase tracking-wide text-muted-foreground">
                     {displayName}
                   </CardTitle>
-                  <CardDescription className="mt-3">
+                  <CardDescription className="mt-4 mb-1">
                     {isEnterprise ? (
                       <span className="text-2xl font-bold text-foreground">Sob consulta</span>
                     ) : (
@@ -188,8 +190,11 @@ export default function SelectPlanPage() {
                       </>
                     )}
                   </CardDescription>
+                  {microText && (
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{microText}</p>
+                  )}
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col pt-4">
+                <CardContent className="flex-1 flex flex-col pt-5">
                   <ul className="space-y-2.5 mb-8 flex-1">
                     {features.map((f) => (
                       <li key={f} className="flex items-start gap-2.5 text-sm">
@@ -201,9 +206,9 @@ export default function SelectPlanPage() {
                   <Button
                     onClick={() => handleSelectPlan(plan)}
                     disabled={!!selecting}
-                    variant={isPopular ? "default" : "outline"}
+                    variant={isPopular ? "default" : isBusiness ? "secondary" : "outline"}
                     size="lg"
-                    className={`w-full font-semibold ${isPopular ? "shadow-md" : ""}`}
+                    className={`w-full font-semibold ${isPopular ? "shadow-md" : isBusiness ? "bg-foreground text-background hover:bg-foreground/90" : ""}`}
                   >
                     {selecting === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isEnterprise ? "Solicitar proposta" : "Começar agora"}
