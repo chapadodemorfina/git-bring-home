@@ -53,6 +53,8 @@ export default function SaleDetailPage() {
   const completeSale = useCompleteSale();
   const addPayment = useAddSalePayment();
   const processReturn = useProcessReturn();
+  const { data: openCashRegister } = useOpenCashRegister();
+  const addCashMovement = useAddCashMovement();
 
   // Cancel dialog
   const [showCancel, setShowCancel] = useState(false);
