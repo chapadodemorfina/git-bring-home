@@ -4952,6 +4952,16 @@ export type Database = {
       }
       mark_overdue_entries: { Args: never; Returns: number }
       mark_overdue_receivables: { Args: never; Returns: number }
+      onboard_tenant: {
+        Args: {
+          _company_name: string
+          _company_slug: string
+          _user_email: string
+          _user_id: string
+          _user_name: string
+        }
+        Returns: Json
+      }
       process_notification_events: { Args: never; Returns: Json }
       process_sale_return: {
         Args: {
