@@ -2635,7 +2635,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           notes?: string | null
-          quote_number?: string
+          quote_number: string
           service_order_id: string
           status?: Database["public"]["Enums"]["quote_status"]
           tenant_id: string
@@ -3720,7 +3720,7 @@ export type Database = {
           intake_channel?: Database["public"]["Enums"]["intake_channel"]
           intake_notes?: string | null
           internal_notes?: string | null
-          order_number?: string
+          order_number: string
           physical_condition?: string | null
           priority?: Database["public"]["Enums"]["service_order_priority"]
           reported_issue?: string | null
@@ -4018,6 +4018,32 @@ export type Database = {
           },
         ]
       }
+      tenant_counters: {
+        Row: {
+          key: string
+          tenant_id: string
+          value: number
+        }
+        Insert: {
+          key: string
+          tenant_id: string
+          value?: number
+        }
+        Update: {
+          key?: string
+          tenant_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_counters_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_users: {
         Row: {
           created_at: string | null
@@ -4203,7 +4229,7 @@ export type Database = {
           terms?: string | null
           updated_at?: string
           void_reason?: string | null
-          warranty_number?: string
+          warranty_number: string
           warranty_type?: string
         }
         Update: {
@@ -4904,6 +4930,10 @@ export type Database = {
           _reported_issue?: string
         }
         Returns: Json
+      }
+      get_next_sequence: {
+        Args: { _key: string; _tenant_id: string }
+        Returns: number
       }
       get_plan_usage: { Args: { _tenant_id: string }; Returns: Json }
       get_user_collection_points: {
