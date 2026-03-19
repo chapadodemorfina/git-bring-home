@@ -138,7 +138,9 @@ const queryClient = new QueryClient();
 
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
-    <AppLayout>{children}</AppLayout>
+    <SubscriptionGate>
+      <AppLayout>{children}</AppLayout>
+    </SubscriptionGate>
   </ProtectedRoute>
 );
 
