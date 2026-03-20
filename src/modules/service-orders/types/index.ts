@@ -77,6 +77,7 @@ export interface ServiceOrder {
   intake_notes: string | null;
   internal_notes: string | null;
   expected_deadline: string | null;
+  estimated_value: number | null;
   assigned_technician_id: string | null;
   created_by: string | null;
   created_at: string;
