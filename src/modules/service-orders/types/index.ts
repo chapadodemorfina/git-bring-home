@@ -150,6 +150,10 @@ export const serviceOrderSchema = z.object({
   internal_notes: z.string().trim().max(2000).optional().or(z.literal("")),
   expected_deadline: z.string().optional().or(z.literal("")),
   assigned_technician_id: z.string().uuid().optional().or(z.literal("")),
+  estimated_value: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : Number(v)),
+    z.number().min(0, "Valor não pode ser negativo").max(999999999999, "Valor muito alto").nullable()
+  ),
 });
 
 export type ServiceOrderFormData = z.infer<typeof serviceOrderSchema>;

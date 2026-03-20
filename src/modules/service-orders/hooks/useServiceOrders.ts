@@ -115,6 +115,7 @@ export function useCreateServiceOrder() {
         internal_notes: data.internal_notes || null,
         expected_deadline: data.expected_deadline || null,
         assigned_technician_id: data.assigned_technician_id || null,
+        estimated_value: data.estimated_value ?? null,
       };
       if (data.device_id) payload.device_id = data.device_id;
 
