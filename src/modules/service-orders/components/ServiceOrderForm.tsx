@@ -45,6 +45,7 @@ export default function ServiceOrderForm({ initialData }: Props) {
       internal_notes: initialData?.internal_notes || "",
       expected_deadline: initialData?.expected_deadline ? initialData.expected_deadline.slice(0, 16) : "",
       assigned_technician_id: initialData?.assigned_technician_id || "",
+      estimated_value: initialData?.estimated_value ?? null,
     },
   });
 
