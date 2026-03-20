@@ -45,6 +45,7 @@ export default function ServiceOrderForm({ initialData }: Props) {
       internal_notes: initialData?.internal_notes || "",
       expected_deadline: initialData?.expected_deadline ? initialData.expected_deadline.slice(0, 16) : "",
       assigned_technician_id: initialData?.assigned_technician_id || "",
+      estimated_value: initialData?.estimated_value ?? null,
     },
   });
 
@@ -188,6 +189,23 @@ export default function ServiceOrderForm({ initialData }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="estimated_value" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Valor Estimado (R$)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0,00"
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? null : e.target.value)}
+                  />
+                </FormControl>
+                <p className="text-[11px] text-muted-foreground">Valor de referência interna. Não gera lançamento financeiro.</p>
                 <FormMessage />
               </FormItem>
             )} />

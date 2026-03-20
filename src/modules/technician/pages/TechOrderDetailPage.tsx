@@ -70,6 +70,13 @@ export default function TechOrderDetailPage() {
               <span>{format(new Date(order.expected_deadline), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
             </div>
           )}
+          {order.estimated_value != null && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground shrink-0 text-xs font-medium">R$</span>
+              <span className="font-mono">{Number(order.estimated_value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-[10px] text-muted-foreground">(estimado)</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

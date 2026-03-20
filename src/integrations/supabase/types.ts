@@ -3892,6 +3892,7 @@ export type Database = {
           created_by: string | null
           customer_id: string
           device_id: string | null
+          estimated_value: number | null
           expected_deadline: string | null
           id: string
           intake_channel: Database["public"]["Enums"]["intake_channel"]
@@ -3913,6 +3914,7 @@ export type Database = {
           created_by?: string | null
           customer_id: string
           device_id?: string | null
+          estimated_value?: number | null
           expected_deadline?: string | null
           id?: string
           intake_channel?: Database["public"]["Enums"]["intake_channel"]
@@ -3934,6 +3936,7 @@ export type Database = {
           created_by?: string | null
           customer_id?: string
           device_id?: string | null
+          estimated_value?: number | null
           expected_deadline?: string | null
           id?: string
           intake_channel?: Database["public"]["Enums"]["intake_channel"]
