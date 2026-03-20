@@ -342,21 +342,11 @@ export default function ServiceOrderDetailPage() {
                   </div>
                 </div>
               )}
-              <div className="flex items-start gap-3">
-                <Tag className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Valor Estimado (referência)</p>
-                  <p className="font-medium font-mono">
-                    {order.estimated_value != null
-                      ? `R$ ${Number(order.estimated_value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      : <span className="text-muted-foreground font-normal">Não informado</span>
-                    }
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">Este não é o valor financeiro oficial</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
+
+          {/* Values Comparison */}
+          <ValuesComparisonPanel serviceOrderId={order.id} estimatedValue={order.estimated_value} />
 
           {/* Details */}
           <Card>
