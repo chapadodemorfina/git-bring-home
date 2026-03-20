@@ -14,6 +14,7 @@ import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuo
 import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
 import DeviceLocationPanel from "../components/DeviceLocationPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
+import ValuesComparisonPanel from "../components/ValuesComparisonPanel";
 import CustomerCommunicationPanel from "../components/CustomerCommunicationPanel";
 import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
 import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
