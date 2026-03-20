@@ -1,0 +1,1 @@
+ALTER TABLE service_orders ADD COLUMN IF NOT EXISTS estimated_value numeric(12,2) NULL;
