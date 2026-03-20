@@ -62,15 +62,16 @@ export default function ServiceOrdersListPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Número</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Dispositivo</TableHead>
+                    <TableHead className="hidden md:table-cell">Dispositivo</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Prioridade</TableHead>
-                    <TableHead>Criado em</TableHead>
+                    <TableHead className="hidden md:table-cell">Prioridade</TableHead>
+                    <TableHead className="hidden lg:table-cell">Valor Est.</TableHead>
+                    <TableHead className="hidden md:table-cell">Criado em</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -78,10 +79,15 @@ export default function ServiceOrdersListPage() {
                     <TableRow key={o.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/service-orders/${o.id}`}>
                       <TableCell className="font-mono font-bold">{o.order_number}</TableCell>
                       <TableCell>{o.customer_name}</TableCell>
-                      <TableCell>{o.device_label || "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{o.device_label || "—"}</TableCell>
                       <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
-                      <TableCell><Badge className={priorityColors[o.priority]}>{priorityLabels[o.priority]}</Badge></TableCell>
-                      <TableCell>{format(new Date(o.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+                      <TableCell className="hidden md:table-cell"><Badge className={priorityColors[o.priority]}>{priorityLabels[o.priority]}</Badge></TableCell>
+                      <TableCell className="hidden lg:table-cell font-mono text-sm">
+                        {o.estimated_value != null
+                          ? `R$ ${Number(o.estimated_value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{format(new Date(o.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
