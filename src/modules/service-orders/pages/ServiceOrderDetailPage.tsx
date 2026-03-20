@@ -5,26 +5,26 @@ import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatu
 import { statusLabels, statusColors, priorityLabels, priorityColors, channelLabels, statusTransitions } from "../types";
 import StatusTimeline from "../components/StatusTimeline";
 import StatusChangeDialog from "../components/StatusChangeDialog";
-import SignatureCapture from "../components/SignatureCapture";
-import AttachmentUpload from "../components/AttachmentUpload";
 import IntakeReceipt from "../components/IntakeReceipt";
 import DeviceIntakeLabel from "../components/DeviceIntakeLabel";
 import WhatsAppIntakeMessage from "../components/WhatsAppIntakeMessage";
-import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuotePanel";
-import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
-import DeviceLocationPanel from "../components/DeviceLocationPanel";
 import PublicLinkManager from "@/modules/tracking/components/PublicLinkManager";
-import ValuesComparisonPanel from "../components/ValuesComparisonPanel";
 import CustomerCommunicationPanel from "../components/CustomerCommunicationPanel";
 import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
 import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
+import IntakeTab from "../components/tabs/IntakeTab";
+import DiagnosisQuoteTab from "../components/tabs/DiagnosisQuoteTab";
+import ExecutionTab from "../components/tabs/ExecutionTab";
+import FinancialTab from "../components/tabs/FinancialTab";
+import LogisticsPartnerTab from "../components/tabs/LogisticsPartnerTab";
 import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Calendar, User, MonitorSmartphone, Tag, FileDown } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
@@ -40,7 +40,6 @@ function buildPdfTerms(settings: CompanySettings, dbTerms: any[] | undefined) {
   if (settings.terms_service) result.push({ title: "Termos de Serviço", content: settings.terms_service });
   if (settings.terms_warranty) result.push({ title: "Condições de Garantia", content: settings.terms_warranty });
   if (settings.terms_abandonment) result.push({ title: "Política de Abandono", content: settings.terms_abandonment });
-  // If no settings terms, fallback to DB terms
   if (result.length === 0 && dbTerms && dbTerms.length > 0) {
     return dbTerms.map((t: any) => ({ title: t.title, content: t.content }));
   }
@@ -51,11 +50,9 @@ function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   if (!el) return;
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
-
   const labelStyles = isLabel
     ? `@page{size:80mm 50mm;margin:0}body{width:80mm;height:50mm;margin:0;overflow:hidden}`
     : ``;
-
   printWindow.document.write(`
     <html><head><title>${title}</title>
     <style>body{margin:0;font-family:Arial,sans-serif}@media print{body{-webkit-print-color-adjust:exact}${labelStyles}}</style>
@@ -65,7 +62,6 @@ function printElement(el: HTMLElement | null, title: string, isLabel = false) {
   printWindow.print();
 }
 
-// Generate QR code as data URL for PDF using hidden canvas element
 function generateQrDataUrl(_url: string): Promise<string | null> {
   return new Promise((resolve) => {
     try {
@@ -92,7 +88,6 @@ export default function ServiceOrderDetailPage() {
   const companySettings = useCompanySettings();
   const generateLink = useGeneratePublicLink();
 
-  // Fetch additional data for PDF
   const { data: statusHistory } = useQuery({
     queryKey: ["so-status-history-pdf", id],
     enabled: !!id,
@@ -163,7 +158,6 @@ export default function ServiceOrderDetailPage() {
 
   const handleExportPdf = async () => {
     if (!order) return;
-
     const company = {
       name: companySettings.company_name,
       legalName: companySettings.company_legal_name,
@@ -173,13 +167,10 @@ export default function ServiceOrderDetailPage() {
       email: companySettings.company_email,
       logoUrl: companySettings.company_logo_url,
     };
-
-    // Try to get QR code image
     let qrCodeImageData: string | null = null;
     if (trackingUrl) {
       qrCodeImageData = await generateQrDataUrl(trackingUrl);
     }
-
     await generateServiceOrderPdf({
       order,
       statusHistory: statusHistory || [],
@@ -252,6 +243,7 @@ export default function ServiceOrderDetailPage() {
           <p className="text-muted-foreground">
             Criado em {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             {" · "}{channelLabels[order.intake_channel]}
+            {order.collection_point_name && ` · ${order.collection_point_name}`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -267,7 +259,7 @@ export default function ServiceOrderDetailPage() {
             <Printer className="mr-2 h-4 w-4" /> Recibo
           </Button>
           <Button variant="outline" onClick={handlePrintLabel} disabled={generateLink.isPending}>
-            <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando link..." : "Etiqueta"}
+            <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando..." : "Etiqueta"}
           </Button>
           {(order.status === "ready_for_pickup" || order.status === "delivered") && (
             <WhatsAppSendButton
@@ -307,122 +299,59 @@ export default function ServiceOrderDetailPage() {
         </div>
       </div>
 
+      {/* Main content: tabs + sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Customer & Device */}
-          <Card>
-            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Cliente</p>
-                  <Link to={`/customers/${order.customer_id}`} className="font-medium hover:underline">
-                    {order.customer_name}
-                  </Link>
-                </div>
-              </div>
-              {order.device_id && (
-                <div className="flex items-start gap-3">
-                  <MonitorSmartphone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Dispositivo</p>
-                    <Link to={`/devices/${order.device_id}`} className="font-medium hover:underline">
-                      {order.device_label || "Ver dispositivo"}
-                    </Link>
-                  </div>
-                </div>
-              )}
-              {order.expected_deadline && (
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Prazo Estimado</p>
-                    <p className="font-medium">{format(new Date(order.expected_deadline), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="intake" className="space-y-4">
+            <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="intake" className="gap-1.5 text-xs sm:text-sm">
+                <ClipboardList className="h-3.5 w-3.5" /> Entrada
+              </TabsTrigger>
+              <TabsTrigger value="diagnosis" className="gap-1.5 text-xs sm:text-sm">
+                <Stethoscope className="h-3.5 w-3.5" /> Diagnóstico
+              </TabsTrigger>
+              <TabsTrigger value="execution" className="gap-1.5 text-xs sm:text-sm">
+                <Wrench className="h-3.5 w-3.5" /> Execução
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="gap-1.5 text-xs sm:text-sm">
+                <DollarSign className="h-3.5 w-3.5" /> Financeiro
+              </TabsTrigger>
+              <TabsTrigger value="logistics" className="gap-1.5 text-xs sm:text-sm">
+                <Truck className="h-3.5 w-3.5" /> Logística
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Values Comparison */}
-          <ValuesComparisonPanel serviceOrderId={order.id} estimatedValue={order.estimated_value} />
+            <TabsContent value="intake">
+              <IntakeTab order={order} />
+            </TabsContent>
 
-          {/* Details */}
-          <Card>
-            <CardHeader><CardTitle>Detalhes</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {order.reported_issue && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Problema Relatado</p>
-                  <p className="text-sm">{order.reported_issue}</p>
-                </div>
-              )}
-              {order.physical_condition && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Condição Física</p>
-                  <div className="text-sm space-y-0.5">
-                    {(() => {
-                      try {
-                        const items = typeof order.physical_condition === "string"
-                          ? JSON.parse(order.physical_condition)
-                          : order.physical_condition;
-                        if (!Array.isArray(items)) return <p>{String(order.physical_condition)}</p>;
-                        const labelMap: Record<string, string> = {
-                          screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
-                          charging: "Carregamento", battery: "Bateria", speakers: "Alto-falantes",
-                          camera: "Câmera", connectivity: "Rede/Wi-Fi", biometrics: "Biometria",
-                        };
-                        const statusMap: Record<string, string> = {
-                          ok: "OK", damaged: "Danificado", not_working: "Não funciona", scratched: "Arranhado",
-                          cracked: "Trincado", missing: "Ausente", not_tested: "Não testado",
-                        };
-                        return items.map((item: any) => (
-                          <p key={item.id} className="flex items-center gap-1.5">
-                            <span className={`inline-block w-2 h-2 rounded-full ${item.status === "ok" ? "bg-green-500" : item.status === "damaged" ? "bg-red-500" : "bg-yellow-500"}`} />
-                            <span className="font-medium">{labelMap[item.id] || item.id}:</span>
-                            <span>{statusMap[item.status] || item.status}</span>
-                            {item.notes && <span className="text-muted-foreground">({item.notes})</span>}
-                          </p>
-                        ));
-                      } catch {
-                        return <p>{String(order.physical_condition)}</p>;
-                      }
-                    })()}
-                  </div>
-                </div>
-              )}
-              {order.accessories_received && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Acessórios Recebidos</p>
-                  <p className="text-sm">{order.accessories_received}</p>
-                </div>
-              )}
-              {order.intake_notes && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Observações de Entrada</p>
-                  <p className="text-sm">{order.intake_notes}</p>
-                </div>
-              )}
-              {order.internal_notes && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Notas Internas</p>
-                  <p className="text-sm bg-muted p-2 rounded">{order.internal_notes}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            <TabsContent value="diagnosis">
+              <DiagnosisQuoteTab
+                serviceOrderId={order.id}
+                deviceType={order.device_type}
+                deviceBrand={order.device_brand}
+                deviceModel={order.device_model}
+                reportedIssue={order.reported_issue}
+              />
+            </TabsContent>
 
-          {/* Diagnosis & Quote */}
-          <DiagnosticQuotePanel serviceOrderId={order.id} deviceType={order.device_type} deviceBrand={order.device_brand} deviceModel={order.device_model} reportedIssue={order.reported_issue} />
+            <TabsContent value="execution">
+              <ExecutionTab serviceOrderId={order.id} orderStatus={order.status} />
+            </TabsContent>
 
-          {/* Repair, Tests & Warranty */}
-          <RepairTestWarrantyPanel serviceOrderId={order.id} orderStatus={order.status} />
-          {/* Attachments */}
-          <AttachmentUpload orderId={order.id} />
+            <TabsContent value="financial">
+              <FinancialTab serviceOrderId={order.id} />
+            </TabsContent>
 
-          {/* Signature */}
-          <SignatureCapture orderId={order.id} />
+            <TabsContent value="logistics">
+              <LogisticsPartnerTab
+                serviceOrderId={order.id}
+                deviceId={order.device_id}
+                collectionPointId={order.collection_point_id}
+                collectionPointName={order.collection_point_name || null}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Sidebar */}
@@ -434,11 +363,8 @@ export default function ServiceOrderDetailPage() {
             </CardContent>
           </Card>
 
-          <DeviceLocationPanel serviceOrderId={order.id} deviceId={order.device_id} />
-
           <PublicLinkManager serviceOrderId={order.id} orderNumber={order.order_number} />
 
-          {/* WhatsApp intake message */}
           <WhatsAppIntakeMessage
             customerName={order.customer_name || "Cliente"}
             customerPhone={order.customer_phone}
@@ -446,14 +372,12 @@ export default function ServiceOrderDetailPage() {
             trackingUrl={trackingUrl}
           />
 
-          {/* Customer Communication */}
           <CustomerCommunicationPanel
             serviceOrderId={order.id}
             customerPhone={order.customer_phone}
             customerName={order.customer_name || "Cliente"}
           />
 
-          {/* WhatsApp Message History */}
           <MessageHistoryPanel referenceType="service_order" referenceId={order.id} />
         </div>
       </div>
@@ -461,12 +385,10 @@ export default function ServiceOrderDetailPage() {
       {/* Status change dialog */}
       <StatusChangeDialog orderId={order.id} currentStatus={order.status} open={statusOpen} onOpenChange={setStatusOpen} />
 
-      {/* Hidden printable receipt */}
+      {/* Hidden printable elements */}
       <div className="hidden">
         <IntakeReceipt ref={receiptRef} order={order} trackingUrl={trackingUrl} />
       </div>
-
-      {/* Hidden printable label */}
       <div className="hidden">
         <DeviceIntakeLabel
           ref={labelRef}
@@ -479,8 +401,6 @@ export default function ServiceOrderDetailPage() {
           collectionPointName={order.collection_point_name}
         />
       </div>
-
-      {/* Hidden QR code canvas for PDF export */}
       {trackingUrl && (
         <div data-qr-pdf style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
           <QRCodeCanvas value={trackingUrl} size={200} level="M" />
