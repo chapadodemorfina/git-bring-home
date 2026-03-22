@@ -339,6 +339,10 @@ export default function ServiceOrderDetailPage() {
               />
             </TabsContent>
 
+            <TabsContent value="items">
+              <ItemsTab serviceOrderId={order.id} />
+            </TabsContent>
+
             <TabsContent value="execution">
               <ExecutionTab serviceOrderId={order.id} orderStatus={order.status} />
             </TabsContent>
