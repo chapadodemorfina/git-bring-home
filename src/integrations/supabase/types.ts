@@ -3680,6 +3680,83 @@ export type Database = {
           },
         ]
       }
+      service_order_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          item_type: Database["public"]["Enums"]["so_item_type"]
+          notes: string | null
+          product_id: string | null
+          quantity: number
+          service_order_id: string
+          sort_order: number
+          tenant_id: string
+          total_price: number | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          item_type?: Database["public"]["Enums"]["so_item_type"]
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number
+          service_order_id: string
+          sort_order?: number
+          tenant_id: string
+          total_price?: number | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          item_type?: Database["public"]["Enums"]["so_item_type"]
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number
+          service_order_id?: string
+          sort_order?: number
+          tenant_id?: string
+          total_price?: number | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "service_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_order_items_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_order_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_order_public_links: {
         Row: {
           access_count: number
@@ -5522,6 +5599,7 @@ export type Database = {
         | "delivered"
         | "cancelled"
         | "warranty_return"
+      so_item_type: "service" | "product" | "labor"
       stock_movement_type:
         | "entry"
         | "exit"
@@ -5837,6 +5915,7 @@ export const Constants = {
         "cancelled",
         "warranty_return",
       ],
+      so_item_type: ["service", "product", "labor"],
       stock_movement_type: [
         "entry",
         "exit",

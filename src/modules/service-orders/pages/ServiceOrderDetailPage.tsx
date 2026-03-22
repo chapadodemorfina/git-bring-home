@@ -14,6 +14,7 @@ import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButto
 import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
 import IntakeTab from "../components/tabs/IntakeTab";
 import DiagnosisQuoteTab from "../components/tabs/DiagnosisQuoteTab";
+import ItemsTab from "../components/tabs/ItemsTab";
 import ExecutionTab from "../components/tabs/ExecutionTab";
 import FinancialTab from "../components/tabs/FinancialTab";
 import LogisticsPartnerTab from "../components/tabs/LogisticsPartnerTab";
@@ -24,7 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck, ShoppingCart } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
@@ -310,6 +311,9 @@ export default function ServiceOrderDetailPage() {
               <TabsTrigger value="diagnosis" className="gap-1.5 text-xs sm:text-sm">
                 <Stethoscope className="h-3.5 w-3.5" /> Diagnóstico
               </TabsTrigger>
+              <TabsTrigger value="items" className="gap-1.5 text-xs sm:text-sm">
+                <ShoppingCart className="h-3.5 w-3.5" /> Itens
+              </TabsTrigger>
               <TabsTrigger value="execution" className="gap-1.5 text-xs sm:text-sm">
                 <Wrench className="h-3.5 w-3.5" /> Execução
               </TabsTrigger>
@@ -333,6 +337,10 @@ export default function ServiceOrderDetailPage() {
                 deviceModel={order.device_model}
                 reportedIssue={order.reported_issue}
               />
+            </TabsContent>
+
+            <TabsContent value="items">
+              <ItemsTab serviceOrderId={order.id} />
             </TabsContent>
 
             <TabsContent value="execution">
