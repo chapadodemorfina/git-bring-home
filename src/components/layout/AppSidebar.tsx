@@ -3,7 +3,7 @@
  * Desenvolvido por Alvo Sistemas e Gestão
  */
 import {
-  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone, Landmark, Percent, TrendingUp, Calculator, CreditCard, BarChart3,
+  LayoutDashboard, Users, ShieldCheck, Settings, FileText, UserRound, Monitor, ClipboardList, Package, MapPin, Truck, DollarSign, ListChecks, Bell, MessageSquare, ScanLine, Recycle, ShoppingBag, MonitorSmartphone, Landmark, Percent, TrendingUp, Calculator, CreditCard, BarChart3, SearchCheck,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
