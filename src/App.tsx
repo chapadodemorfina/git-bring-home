@@ -94,6 +94,7 @@ import FinanceListPage from "./modules/finance/pages/FinanceListPage";
 import FinanceCreatePage from "./modules/finance/pages/FinanceCreatePage";
 import FinanceDetailPage from "./modules/finance/pages/FinanceDetailPage";
 import FinanceEditPage from "./modules/finance/pages/FinanceEditPage";
+import FinancialAuditPage from "./modules/finance/pages/FinancialAuditPage";
 
 // Customer Portal
 import PortalLayout from "./modules/portal/components/PortalLayout";
