@@ -311,6 +311,9 @@ export default function ServiceOrderDetailPage() {
               <TabsTrigger value="diagnosis" className="gap-1.5 text-xs sm:text-sm">
                 <Stethoscope className="h-3.5 w-3.5" /> Diagnóstico
               </TabsTrigger>
+              <TabsTrigger value="items" className="gap-1.5 text-xs sm:text-sm">
+                <ShoppingCart className="h-3.5 w-3.5" /> Itens
+              </TabsTrigger>
               <TabsTrigger value="execution" className="gap-1.5 text-xs sm:text-sm">
                 <Wrench className="h-3.5 w-3.5" /> Execução
               </TabsTrigger>
