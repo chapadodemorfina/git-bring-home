@@ -1547,6 +1547,7 @@ export type Database = {
           due_date: string | null
           entry_type: Database["public"]["Enums"]["financial_entry_type"]
           id: string
+          is_primary_os_revenue: boolean
           notes: string | null
           paid_amount: number
           quote_id: string | null
@@ -1567,6 +1568,7 @@ export type Database = {
           due_date?: string | null
           entry_type: Database["public"]["Enums"]["financial_entry_type"]
           id?: string
+          is_primary_os_revenue?: boolean
           notes?: string | null
           paid_amount?: number
           quote_id?: string | null
@@ -1587,6 +1589,7 @@ export type Database = {
           due_date?: string | null
           entry_type?: Database["public"]["Enums"]["financial_entry_type"]
           id?: string
+          is_primary_os_revenue?: boolean
           notes?: string | null
           paid_amount?: number
           quote_id?: string | null
