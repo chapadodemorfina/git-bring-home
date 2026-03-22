@@ -55,9 +55,9 @@ export default function FinancialTab({ serviceOrderId, totalAmount, orderStatus 
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["so-financial-entries", serviceOrderId] });
-      qc.invalidateQueries({ queryKey: ["so-financial-summary", serviceOrderId] });
       qc.invalidateQueries({ queryKey: ["financial-entries"] });
       qc.invalidateQueries({ queryKey: ["finance-summary"] });
+      qc.invalidateQueries({ queryKey: ["financial-audit"] });
       toast({ title: "Receita principal sincronizada!" });
     },
     onError: (error: Error) => {
