@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { ServiceOrder, ChecklistItem, checklistStatusLabels, checklistStatusColors } from "../../types";
 import ValuesComparisonPanel from "../ValuesComparisonPanel";
+import IntakePhotoUpload from "../IntakePhotoUpload";
+import SignatureCapture from "../SignatureCapture";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, MonitorSmartphone, Calendar, MapPin, Package, AlertTriangle, StickyNote } from "lucide-react";
 import { format } from "date-fns";
