@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, FileText, Calculator } from "lucide-react";
+import { DollarSign, FileText, Calculator, ShoppingCart } from "lucide-react";
 
 const db = supabase as any;
 
@@ -16,6 +16,20 @@ interface Props {
 }
 
 export default function ValuesComparisonPanel({ serviceOrderId, estimatedValue }: Props) {
+  // OS items total
+  const { data: itemsTotal } = useQuery({
+    queryKey: ["so-items-total", serviceOrderId],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("service_order_items")
+        .select("total_price")
+        .eq("service_order_id", serviceOrderId);
+      if (error) throw error;
+      if (!data || data.length === 0) return null;
+      return (data as any[]).reduce((sum: number, e: any) => sum + Number(e.total_price), 0);
+    },
+  });
+
   // Latest quote total
   const { data: quoteTotal } = useQuery({
     queryKey: ["so-quote-total", serviceOrderId],
@@ -50,6 +64,14 @@ export default function ValuesComparisonPanel({ serviceOrderId, estimatedValue }
 
   const blocks = [
     {
+      label: "Total OS",
+      description: "Soma dos itens da OS",
+      value: itemsTotal,
+      emptyText: "Sem itens",
+      icon: ShoppingCart,
+      accent: true,
+    },
+    {
       label: "Estimado",
       description: "Previsão interna",
       value: estimatedValue,
@@ -71,7 +93,7 @@ export default function ValuesComparisonPanel({ serviceOrderId, estimatedValue }
       value: financialTotal,
       emptyText: "Não lançado",
       icon: DollarSign,
-      accent: true,
+      accent: false,
     },
   ];
 
@@ -81,7 +103,7 @@ export default function ValuesComparisonPanel({ serviceOrderId, estimatedValue }
         <CardTitle className="text-base">Resumo de Valores</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {blocks.map((b) => (
             <div
               key={b.label}
@@ -98,7 +120,7 @@ export default function ValuesComparisonPanel({ serviceOrderId, estimatedValue }
                 </span>
                 {b.accent && (
                   <Badge variant="outline" className="text-[9px] h-4 px-1 ml-auto border-primary/30 text-primary">
-                    Oficial
+                    Principal
                   </Badge>
                 )}
               </div>
