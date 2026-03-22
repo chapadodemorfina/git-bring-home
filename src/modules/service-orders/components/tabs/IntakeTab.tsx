@@ -164,6 +164,12 @@ export default function IntakeTab({ order }: Props) {
         </Card>
       )}
 
+      {/* Fotos de Entrada */}
+      <IntakePhotoUpload orderId={order.id} />
+
+      {/* Assinatura do Cliente */}
+      <SignatureCapture orderId={order.id} />
+
       {/* Resumo de Valores */}
       <ValuesComparisonPanel
         serviceOrderId={order.id}
