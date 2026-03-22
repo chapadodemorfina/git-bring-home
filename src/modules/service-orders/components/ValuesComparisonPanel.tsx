@@ -88,7 +88,7 @@ export default function ValuesComparisonPanel({ serviceOrderId, totalAmount, est
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground flex items-center gap-1"><CreditCard className="h-3 w-3" /> Pago</p>
-                <p className="font-mono text-sm font-bold text-green-600">{formatBRL(financialData.paid)}</p>
+                <p className="font-mono text-sm font-bold text-primary">{formatBRL(financialData.paid)}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Pendente</p>
