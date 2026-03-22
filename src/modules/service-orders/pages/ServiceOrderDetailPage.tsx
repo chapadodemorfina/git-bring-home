@@ -348,7 +348,7 @@ export default function ServiceOrderDetailPage() {
             </TabsContent>
 
             <TabsContent value="financial">
-              <FinancialTab serviceOrderId={order.id} />
+              <FinancialTab serviceOrderId={order.id} totalAmount={Number(order.total_amount || 0)} orderStatus={order.status} />
             </TabsContent>
 
             <TabsContent value="logistics">
