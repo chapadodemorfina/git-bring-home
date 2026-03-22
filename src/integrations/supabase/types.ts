@@ -5130,6 +5130,10 @@ export type Database = {
       }
       can_delete_product: { Args: { _product_id: string }; Returns: Json }
       can_delete_supplier: { Args: { _supplier_id: string }; Returns: Json }
+      cancel_os_revenue: {
+        Args: { _service_order_id: string }
+        Returns: undefined
+      }
       cancel_sale: {
         Args: { _reason: string; _sale_id: string }
         Returns: undefined
@@ -5438,6 +5442,10 @@ export type Database = {
           total_revenue: number
           user_id: string
         }[]
+      }
+      upsert_os_revenue: {
+        Args: { _service_order_id: string }
+        Returns: string
       }
       void_warranty: {
         Args: { _reason: string; _warranty_id: string }
