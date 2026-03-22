@@ -11,15 +11,12 @@ import NewCustomerDialog from "./NewCustomerDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Save, ArrowLeft } from "lucide-react";
-import { useState } from "react";
 import NewDeviceDialog from "./NewDeviceDialog";
 import IntakeChecklist from "./IntakeChecklist";
-import PostCreationStep from "./PostCreationStep";
 
 interface Props {
   initialData?: ServiceOrder;
@@ -49,7 +46,6 @@ export default function ServiceOrderForm({ initialData }: Props) {
     },
   });
 
-  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const customerId = form.watch("customer_id");
   const { data: customerDevices } = useDevicesByCustomer(customerId || undefined);
   const { data: technicians } = useTechniciansList();
@@ -60,14 +56,9 @@ export default function ServiceOrderForm({ initialData }: Props) {
       navigate(`/service-orders/${initialData!.id}`);
     } else {
       const so = await createMutation.mutateAsync(data);
-      setCreatedOrderId(so.id);
+      navigate(`/service-orders/${so.id}`);
     }
   };
-
-  // Post-creation: show photo upload + signature step
-  if (createdOrderId) {
-    return <PostCreationStep orderId={createdOrderId} />;
-  }
 
   return (
     <Form {...form}>
