@@ -192,10 +192,22 @@ export function useChangeStatus() {
       });
       if (error) throw error;
     },
-    onSuccess: (_, vars) => {
+    onSuccess: async (_, vars) => {
+      // Auto-cancel revenue when OS is cancelled
+      if (vars.toStatus === "cancelled") {
+        try {
+          await db.rpc("cancel_os_revenue", { _service_order_id: vars.id });
+        } catch (e) {
+          console.warn("Failed to cancel OS revenue:", e);
+        }
+      }
       qc.invalidateQueries({ queryKey: ["service-orders"] });
       qc.invalidateQueries({ queryKey: ["service-order", vars.id] });
       qc.invalidateQueries({ queryKey: ["so-status-history", vars.id] });
+      qc.invalidateQueries({ queryKey: ["so-financial-entries", vars.id] });
+      qc.invalidateQueries({ queryKey: ["so-financial-summary", vars.id] });
+      qc.invalidateQueries({ queryKey: ["financial-entries"] });
+      qc.invalidateQueries({ queryKey: ["finance-summary"] });
       toast({ title: "Status atualizado!" });
     },
     onError: (error: Error) => {

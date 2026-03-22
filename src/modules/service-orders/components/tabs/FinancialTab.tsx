@@ -1,10 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, CreditCard, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DollarSign, CreditCard, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 const db = supabase as any;
 
@@ -22,9 +24,14 @@ const statusLabelsMap: Record<string, { label: string; className: string }> = {
 
 interface Props {
   serviceOrderId: string;
+  totalAmount: number;
+  orderStatus: string;
 }
 
-export default function FinancialTab({ serviceOrderId }: Props) {
+export default function FinancialTab({ serviceOrderId, totalAmount, orderStatus }: Props) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+
   const { data: entries, isLoading } = useQuery({
     queryKey: ["so-financial-entries", serviceOrderId],
     queryFn: async () => {
@@ -38,14 +45,80 @@ export default function FinancialTab({ serviceOrderId }: Props) {
     },
   });
 
-  const revenueEntries = entries?.filter((e: any) => e.entry_type === "revenue") || [];
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await db.rpc("upsert_os_revenue", {
+        _service_order_id: serviceOrderId,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["so-financial-entries", serviceOrderId] });
+      qc.invalidateQueries({ queryKey: ["so-financial-summary", serviceOrderId] });
+      qc.invalidateQueries({ queryKey: ["financial-entries"] });
+      qc.invalidateQueries({ queryKey: ["finance-summary"] });
+      toast({ title: "Receita sincronizada com a OS!" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erro ao sincronizar", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const revenueEntries = entries?.filter((e: any) => e.entry_type === "revenue" && e.status !== "cancelled") || [];
   const expenseEntries = entries?.filter((e: any) => e.entry_type === "expense") || [];
   const totalRevenue = revenueEntries.reduce((s: number, e: any) => s + Number(e.amount), 0);
-  const totalPaid = revenueEntries.filter((e: any) => e.status === "paid").reduce((s: number, e: any) => s + Number(e.amount), 0);
-  const totalPending = totalRevenue - totalPaid;
+  const totalPaidAmount = revenueEntries.reduce((s: number, e: any) => s + Number(e.paid_amount || 0), 0);
+  const totalPending = totalRevenue - totalPaidAmount;
+
+  const isCancelled = orderStatus === "cancelled";
+  const isInSync = revenueEntries.length === 1 && Number(revenueEntries[0].amount) === totalAmount;
+  const canSync = totalAmount > 0 && !isCancelled;
 
   return (
     <div className="space-y-6">
+      {/* Sync bar */}
+      <Card>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Sincronização OS → Financeiro
+              </p>
+              {isInSync ? (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-600 font-medium">
+                    Receita sincronizada — {formatBRL(totalAmount)}
+                  </span>
+                </div>
+              ) : revenueEntries.length === 0 && totalAmount > 0 ? (
+                <p className="text-sm text-amber-600 mt-1">
+                  Nenhuma receita vinculada. Total da OS: {formatBRL(totalAmount)}
+                </p>
+              ) : totalAmount <= 0 ? (
+                <p className="text-sm text-muted-foreground mt-1">
+                  OS sem itens — nada a sincronizar
+                </p>
+              ) : (
+                <p className="text-sm text-amber-600 mt-1">
+                  Receita divergente. Financeiro: {formatBRL(totalRevenue)} | OS: {formatBRL(totalAmount)}
+                </p>
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant={isInSync ? "outline" : "default"}
+              onClick={() => syncMutation.mutate()}
+              disabled={!canSync || syncMutation.isPending}
+            >
+              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncMutation.isPending ? "animate-spin" : ""}`} />
+              {isInSync ? "Ressincronizar" : "Sincronizar Receita"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card>
@@ -63,7 +136,7 @@ export default function FinancialTab({ serviceOrderId }: Props) {
               <CreditCard className="h-4 w-4 text-green-600" />
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Pago</span>
             </div>
-            <p className="text-lg font-bold font-mono text-green-600">{formatBRL(totalPaid)}</p>
+            <p className="text-lg font-bold font-mono text-green-600">{formatBRL(totalPaidAmount)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -90,7 +163,7 @@ export default function FinancialTab({ serviceOrderId }: Props) {
               <DollarSign className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
               <p className="text-muted-foreground">Nenhum lançamento financeiro vinculado a esta OS.</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Os lançamentos são criados quando um orçamento é aprovado ou manualmente pelo módulo Financeiro.
+                Use o botão "Sincronizar Receita" para criar o lançamento automaticamente.
               </p>
             </div>
           ) : (
@@ -101,7 +174,7 @@ export default function FinancialTab({ serviceOrderId }: Props) {
                   <div key={entry.id} className="border rounded-lg p-3 flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{entry.description}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <Badge className={cfg.className}>{cfg.label}</Badge>
                         <span className="text-xs text-muted-foreground">
                           {entry.entry_type === "revenue" ? "Receita" : "Despesa"}
@@ -123,30 +196,6 @@ export default function FinancialTab({ serviceOrderId }: Props) {
           )}
         </CardContent>
       </Card>
-
-      {expenseEntries.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">Despesas vinculadas</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {expenseEntries.map((entry: any) => {
-                const cfg = statusLabelsMap[entry.status] || statusLabelsMap.pending;
-                return (
-                  <div key={entry.id} className="border rounded-lg p-3 flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{entry.description}</p>
-                      <Badge className={cfg.className}>{cfg.label}</Badge>
-                    </div>
-                    <p className="font-mono font-bold text-sm text-red-600 shrink-0">
-                      - {formatBRL(Number(entry.amount))}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
