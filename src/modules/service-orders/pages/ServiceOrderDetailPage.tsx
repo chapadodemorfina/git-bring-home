@@ -14,6 +14,7 @@ import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButto
 import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
 import IntakeTab from "../components/tabs/IntakeTab";
 import DiagnosisQuoteTab from "../components/tabs/DiagnosisQuoteTab";
+import ItemsTab from "../components/tabs/ItemsTab";
 import ExecutionTab from "../components/tabs/ExecutionTab";
 import FinancialTab from "../components/tabs/FinancialTab";
 import LogisticsPartnerTab from "../components/tabs/LogisticsPartnerTab";
