@@ -119,9 +119,13 @@ export default function FinancialTab({ serviceOrderId, totalAmount, orderStatus 
                 <div className="flex items-center gap-1.5 mt-1">
                   <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
                   <span className="text-sm text-green-600 font-medium">
-                    Sincronizada — {formatBRL(totalAmount)}
+                    Sincronizada automaticamente — {formatBRL(totalAmount)}
                   </span>
                 </div>
+              ) : isCancelled && !primaryRevenue ? (
+                <p className="text-sm text-muted-foreground mt-1">
+                  OS cancelada — sem receita ativa
+                </p>
               ) : null}
 
               {isPrimaryPaid && hasDivergence && (
