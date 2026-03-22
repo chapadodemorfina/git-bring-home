@@ -94,6 +94,7 @@ import FinanceListPage from "./modules/finance/pages/FinanceListPage";
 import FinanceCreatePage from "./modules/finance/pages/FinanceCreatePage";
 import FinanceDetailPage from "./modules/finance/pages/FinanceDetailPage";
 import FinanceEditPage from "./modules/finance/pages/FinanceEditPage";
+import FinancialAuditPage from "./modules/finance/pages/FinancialAuditPage";
 
 // Customer Portal
 import PortalLayout from "./modules/portal/components/PortalLayout";
@@ -263,6 +264,7 @@ const App = () => (
               <Route path="/finance/:id" element={<ProtectedPage><FinanceDetailPage /></ProtectedPage>} />
               <Route path="/finance/:id/edit" element={<ProtectedPage><FinanceEditPage /></ProtectedPage>} />
               <Route path="/financial/receivables" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance", "front_desk"]}><ReceivablesPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/financial/audit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><FinancialAuditPage /></RoleGuard></ProtectedPage>} />
 
               {/* Customer Portal */}
               <Route path="/portal/login" element={<PortalLoginPage />} />

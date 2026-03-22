@@ -5115,6 +5115,10 @@ export type Database = {
       }
     }
     Functions: {
+      _internal_sync_os_revenue: {
+        Args: { _so_id: string }
+        Returns: undefined
+      }
       adjust_stock: {
         Args: { _new_quantity: number; _product_id: string; _reason?: string }
         Returns: Json
@@ -5130,6 +5134,26 @@ export type Database = {
           _reason?: string
         }
         Returns: Json
+      }
+      audit_os_financial_inconsistencies: {
+        Args: never
+        Returns: {
+          auxiliary_count: number
+          auxiliary_paid_any: boolean
+          cancelled_os_active_revenue: boolean
+          customer_name: string
+          divergence: number
+          has_auxiliary_revenues: boolean
+          issue_type: string
+          order_number: string
+          os_status: string
+          os_total: number
+          primary_revenue_amount: number
+          primary_revenue_id: string
+          primary_revenue_paid: number
+          primary_revenue_status: string
+          service_order_id: string
+        }[]
       }
       can_delete_product: { Args: { _product_id: string }; Returns: Json }
       can_delete_supplier: { Args: { _supplier_id: string }; Returns: Json }
