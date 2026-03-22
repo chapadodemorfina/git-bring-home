@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
-import { ServiceOrder } from "../../types";
-import { channelLabels } from "../../types";
+import { ServiceOrder, ChecklistItem, checklistStatusLabels, checklistStatusColors } from "../../types";
 import ValuesComparisonPanel from "../ValuesComparisonPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { User, MonitorSmartphone, Calendar, MapPin, Package, AlertTriangle, StickyNote } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -12,41 +10,44 @@ interface Props {
   order: ServiceOrder;
 }
 
-const checklistLabelMap: Record<string, string> = {
+// Backwards-compat for old physical_condition JSON stored as text
+const legacyLabelMap: Record<string, string> = {
   screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
   charging: "Carregamento", battery: "Bateria", speakers: "Alto-falantes",
   camera: "Câmera", connectivity: "Rede/Wi-Fi", biometrics: "Biometria",
 };
-const checklistStatusMap: Record<string, string> = {
-  ok: "OK", damaged: "Danificado", not_working: "Não funciona", scratched: "Arranhado",
-  cracked: "Trincado", missing: "Ausente", not_tested: "Não testado", na: "N/A",
-};
 
-function renderChecklist(raw: string | null) {
+function renderChecklistItems(items: ChecklistItem[]) {
+  return (
+    <div className="space-y-0.5">
+      {items.map((item) => (
+        <p key={item.id} className="flex items-center gap-1.5 text-sm">
+          <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${checklistStatusColors[item.status] || "bg-muted-foreground"}`} />
+          <span className="font-medium">{item.label || legacyLabelMap[item.id] || item.id}:</span>
+          <span>{checklistStatusLabels[item.status] || item.status}</span>
+          {item.notes && <span className="text-muted-foreground">({item.notes})</span>}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function renderChecklist(raw: string | ChecklistItem[] | null) {
   if (!raw) return null;
+  if (Array.isArray(raw)) return renderChecklistItems(raw);
   try {
     const items = JSON.parse(raw);
-    if (!Array.isArray(items)) return <p className="text-sm">{raw}</p>;
-    return (
-      <div className="space-y-0.5">
-        {items.map((item: any) => (
-          <p key={item.id} className="flex items-center gap-1.5 text-sm">
-            <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-              item.status === "ok" ? "bg-green-500" : item.status === "damaged" ? "bg-red-500" : "bg-yellow-500"
-            }`} />
-            <span className="font-medium">{checklistLabelMap[item.id] || item.id}:</span>
-            <span>{checklistStatusMap[item.status] || item.status}</span>
-            {item.notes && <span className="text-muted-foreground">({item.notes})</span>}
-          </p>
-        ))}
-      </div>
-    );
-  } catch {
+    if (Array.isArray(items)) return renderChecklistItems(items);
     return <p className="text-sm">{raw}</p>;
+  } catch {
+    return <p className="text-sm">{String(raw)}</p>;
   }
 }
 
 export default function IntakeTab({ order }: Props) {
+  // Prefer new intake_checklist JSONB field, fallback to legacy physical_condition
+  const checklistData = order.intake_checklist || order.physical_condition;
+
   return (
     <div className="space-y-6">
       {/* Cliente & Dispositivo */}
@@ -118,10 +119,10 @@ export default function IntakeTab({ order }: Props) {
             <p className="text-sm text-muted-foreground">Nenhum defeito relatado.</p>
           )}
 
-          {order.physical_condition && (
+          {checklistData && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1">Checklist de Entrada</p>
-              {renderChecklist(order.physical_condition)}
+              {renderChecklist(checklistData)}
             </div>
           )}
 
@@ -162,7 +163,11 @@ export default function IntakeTab({ order }: Props) {
       )}
 
       {/* Resumo de Valores */}
-      <ValuesComparisonPanel serviceOrderId={order.id} estimatedValue={order.estimated_value} />
+      <ValuesComparisonPanel
+        serviceOrderId={order.id}
+        totalAmount={order.total_amount}
+        estimatedValue={order.estimated_value}
+      />
     </div>
   );
 }

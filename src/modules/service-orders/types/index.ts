@@ -62,6 +62,61 @@ export const channelLabels: Record<IntakeChannel, string> = {
   website: "Website",
 };
 
+// ----- Structured Checklist Types -----
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  status: "ok" | "damaged" | "not_working" | "scratched" | "cracked" | "missing" | "not_tested" | "na";
+  notes?: string;
+}
+
+export const intakeChecklistTemplate: ChecklistItem[] = [
+  { id: "power_on", label: "Aparelho liga?", status: "not_tested" },
+  { id: "screen", label: "Tela quebrada?", status: "not_tested" },
+  { id: "body", label: "Carcaça avariada?", status: "not_tested" },
+  { id: "buttons", label: "Botões funcionando?", status: "not_tested" },
+  { id: "camera", label: "Câmera funcionando?", status: "not_tested" },
+  { id: "sim_card", label: "Com chip?", status: "not_tested" },
+  { id: "memory_card", label: "Com cartão de memória?", status: "not_tested" },
+  { id: "charger", label: "Com carregador?", status: "not_tested" },
+  { id: "biometrics", label: "Biometria funcionando?", status: "not_tested" },
+  { id: "speakers", label: "Alto-falantes funcionando?", status: "not_tested" },
+];
+
+export const deliveryChecklistTemplate: ChecklistItem[] = [
+  { id: "tested", label: "Aparelho testado?", status: "not_tested" },
+  { id: "working", label: "Entregue funcionando?", status: "not_tested" },
+  { id: "screen_ok", label: "Tela OK?", status: "not_tested" },
+  { id: "buttons_ok", label: "Botões OK?", status: "not_tested" },
+  { id: "camera_ok", label: "Câmera OK?", status: "not_tested" },
+  { id: "no_pending", label: "Sem pendências?", status: "not_tested" },
+];
+
+export const checklistStatusLabels: Record<ChecklistItem["status"], string> = {
+  ok: "OK",
+  damaged: "Danificado",
+  not_working: "Não funciona",
+  scratched: "Arranhado",
+  cracked: "Trincado",
+  missing: "Ausente",
+  not_tested: "Não testado",
+  na: "N/A",
+};
+
+export const checklistStatusColors: Record<ChecklistItem["status"], string> = {
+  ok: "bg-green-500",
+  damaged: "bg-red-500",
+  not_working: "bg-red-500",
+  scratched: "bg-yellow-500",
+  cracked: "bg-orange-500",
+  missing: "bg-red-400",
+  not_tested: "bg-muted-foreground",
+  na: "bg-muted-foreground",
+};
+
+// ----- Service Order Interface -----
+
 export interface ServiceOrder {
   id: string;
   order_number: string;
@@ -78,6 +133,9 @@ export interface ServiceOrder {
   internal_notes: string | null;
   expected_deadline: string | null;
   estimated_value: number | null;
+  total_amount: number;
+  intake_checklist: ChecklistItem[] | null;
+  delivery_checklist: ChecklistItem[] | null;
   assigned_technician_id: string | null;
   created_by: string | null;
   created_at: string;
