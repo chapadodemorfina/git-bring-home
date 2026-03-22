@@ -3968,11 +3968,13 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string
+          delivery_checklist: Json | null
           device_id: string | null
           estimated_value: number | null
           expected_deadline: string | null
           id: string
           intake_channel: Database["public"]["Enums"]["intake_channel"]
+          intake_checklist: Json | null
           intake_notes: string | null
           internal_notes: string | null
           order_number: string
@@ -3981,6 +3983,7 @@ export type Database = {
           reported_issue: string | null
           status: Database["public"]["Enums"]["service_order_status"]
           tenant_id: string
+          total_amount: number
           updated_at: string
         }
         Insert: {
@@ -3990,11 +3993,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id: string
+          delivery_checklist?: Json | null
           device_id?: string | null
           estimated_value?: number | null
           expected_deadline?: string | null
           id?: string
           intake_channel?: Database["public"]["Enums"]["intake_channel"]
+          intake_checklist?: Json | null
           intake_notes?: string | null
           internal_notes?: string | null
           order_number: string
@@ -4003,6 +4008,7 @@ export type Database = {
           reported_issue?: string | null
           status?: Database["public"]["Enums"]["service_order_status"]
           tenant_id: string
+          total_amount?: number
           updated_at?: string
         }
         Update: {
@@ -4012,11 +4018,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string
+          delivery_checklist?: Json | null
           device_id?: string | null
           estimated_value?: number | null
           expected_deadline?: string | null
           id?: string
           intake_channel?: Database["public"]["Enums"]["intake_channel"]
+          intake_checklist?: Json | null
           intake_notes?: string | null
           internal_notes?: string | null
           order_number?: string
@@ -4025,6 +4033,7 @@ export type Database = {
           reported_issue?: string | null
           status?: Database["public"]["Enums"]["service_order_status"]
           tenant_id?: string
+          total_amount?: number
           updated_at?: string
         }
         Relationships: [
