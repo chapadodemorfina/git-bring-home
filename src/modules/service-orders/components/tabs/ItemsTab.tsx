@@ -19,6 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Package, Wrench, HardHat, ShoppingCart } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 function formatBRL(value: number) {
   return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -49,6 +50,7 @@ const emptyForm: SOItemFormData = {
 };
 
 export default function ItemsTab({ serviceOrderId }: Props) {
+  const qc = useQueryClient();
   const { data: items, isLoading } = useServiceOrderItems(serviceOrderId);
   const addMutation = useAddSOItem();
   const updateMutation = useUpdateSOItem();
@@ -59,6 +61,12 @@ export default function ItemsTab({ serviceOrderId }: Props) {
   const [form, setForm] = useState<SOItemFormData>(emptyForm);
 
   const total = items?.reduce((s, i) => s + Number(i.total_price), 0) ?? 0;
+
+  const invalidateOsTotal = () => {
+    // Invalidate the service order query to refresh total_amount from DB
+    qc.invalidateQueries({ queryKey: ["service-order", serviceOrderId] });
+    qc.invalidateQueries({ queryKey: ["service-orders"] });
+  };
 
   const openAdd = () => {
     setEditingItem(null);
@@ -85,11 +93,13 @@ export default function ItemsTab({ serviceOrderId }: Props) {
     } else {
       await addMutation.mutateAsync({ serviceOrderId, data: { ...form, sort_order: (items?.length ?? 0) } });
     }
+    invalidateOsTotal();
     setDialogOpen(false);
   };
 
   const handleDelete = async (id: string) => {
     await deleteMutation.mutateAsync({ id, serviceOrderId });
+    invalidateOsTotal();
   };
 
   return (
@@ -101,7 +111,7 @@ export default function ItemsTab({ serviceOrderId }: Props) {
             <div className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5 text-primary" />
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total da OS</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Oficial da OS</p>
                 <p className="text-2xl font-bold font-mono text-primary">{formatBRL(total)}</p>
               </div>
             </div>
@@ -128,7 +138,7 @@ export default function ItemsTab({ serviceOrderId }: Props) {
               <ShoppingCart className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
               <p className="text-muted-foreground">Nenhum item adicionado.</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Adicione serviços, produtos e mão de obra para compor o valor da OS.
+                Adicione serviços, produtos e mão de obra para compor o valor oficial da OS.
               </p>
             </div>
           ) : (

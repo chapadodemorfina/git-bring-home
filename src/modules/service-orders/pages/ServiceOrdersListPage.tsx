@@ -13,6 +13,10 @@ import { Plus, Search, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+function formatBRL(value: number) {
+  return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export default function ServiceOrdersListPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
@@ -62,36 +66,60 @@ export default function ServiceOrdersListPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Número</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead className="hidden md:table-cell">Dispositivo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Prioridade</TableHead>
-                    <TableHead className="hidden lg:table-cell">Valor Est.</TableHead>
-                    <TableHead className="hidden md:table-cell">Criado em</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((o) => (
-                    <TableRow key={o.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/service-orders/${o.id}`}>
-                      <TableCell className="font-mono font-bold">{o.order_number}</TableCell>
-                      <TableCell>{o.customer_name}</TableCell>
-                      <TableCell className="hidden md:table-cell">{o.device_label || "—"}</TableCell>
-                      <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
-                      <TableCell className="hidden md:table-cell"><Badge className={priorityColors[o.priority]}>{priorityLabels[o.priority]}</Badge></TableCell>
-                      <TableCell className="hidden lg:table-cell font-mono text-sm">
-                        {o.estimated_value != null
-                          ? `R$ ${Number(o.estimated_value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                          : "—"}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{format(new Date(o.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+              {/* Desktop table */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Número</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead className="hidden lg:table-cell">Dispositivo</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden lg:table-cell">Prioridade</TableHead>
+                      <TableHead className="text-right">Valor OS</TableHead>
+                      <TableHead className="hidden xl:table-cell">Criado em</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((o) => (
+                      <TableRow key={o.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/service-orders/${o.id}`}>
+                        <TableCell className="font-mono font-bold">{o.order_number}</TableCell>
+                        <TableCell>{o.customer_name}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{o.device_label || "—"}</TableCell>
+                        <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
+                        <TableCell className="hidden lg:table-cell"><Badge className={priorityColors[o.priority]}>{priorityLabels[o.priority]}</Badge></TableCell>
+                        <TableCell className="text-right font-mono text-sm font-semibold">
+                          {o.total_amount > 0 ? formatBRL(o.total_amount) : (
+                            <span className="text-muted-foreground font-normal">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">{format(new Date(o.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-2">
+                {orders.map((o) => (
+                  <Link key={o.id} to={`/service-orders/${o.id}`} className="block border rounded-lg p-3 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-mono font-bold text-sm">{o.order_number}</span>
+                      <Badge className={`text-[10px] ${statusColors[o.status]}`}>{statusLabels[o.status]}</Badge>
+                    </div>
+                    <p className="text-sm font-medium truncate">{o.customer_name}</p>
+                    {o.device_label && <p className="text-xs text-muted-foreground truncate">{o.device_label}</p>}
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-xs text-muted-foreground">{format(new Date(o.created_at), "dd/MM/yy", { locale: ptBR })}</span>
+                      <span className="font-mono text-sm font-semibold text-primary">
+                        {o.total_amount > 0 ? formatBRL(o.total_amount) : "—"}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
               <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
             </div>
           )}
