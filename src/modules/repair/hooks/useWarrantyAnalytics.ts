@@ -70,29 +70,22 @@ export function useWarrantiesPaginated(search?: string, page: number = 1, status
   return useQuery<PaginatedResult<any>>({
     queryKey: ["warranties-paginated", search, page, statusFilter, typeFilter],
     queryFn: async () => {
-      const params: PaginationParams = { page, search };
-      const result = await executePaginatedQuery<any>(params, {
-        table: "warranties",
-        select: "*, service_orders(order_number, customer_id, device_id, customers(full_name), devices(brand, model))",
-        searchColumns: ["warranty_number"],
-        defaultSort: { column: "created_at", ascending: false },
+      const { data, error } = await db.rpc("search_warranties", {
+        _search: search || null,
+        _status_filter: statusFilter || null,
+        _type_filter: typeFilter || null,
+        _page: page,
+        _page_size: 25,
       });
-      
-      // Client-side filter for status/type since executePaginatedQuery doesn't support custom filters
-      let items = result.items;
-      if (statusFilter) {
-        const now = new Date();
-        items = items.filter((w: any) => {
-          if (statusFilter === "active") return !w.is_void && new Date(w.end_date) >= now;
-          if (statusFilter === "expired") return !w.is_void && new Date(w.end_date) < now;
-          if (statusFilter === "voided") return w.is_void;
-          return true;
-        });
-      }
-      if (typeFilter) {
-        items = items.filter((w: any) => w.warranty_type === typeFilter);
-      }
-      return { ...result, items };
+      if (error) throw error;
+      const result = typeof data === "string" ? JSON.parse(data) : data;
+      return {
+        items: (result.items || []) as any[],
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
+      };
     },
   });
 }
