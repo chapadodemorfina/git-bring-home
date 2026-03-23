@@ -6,7 +6,6 @@ import {
 } from "../types";
 import { useToast } from "@/hooks/use-toast";
 import type { PaginatedResult } from "@/components/ui/data-pagination";
-import type { PaginatedResult } from "@/components/ui/data-pagination";
 
 const db = supabase as any;
 
