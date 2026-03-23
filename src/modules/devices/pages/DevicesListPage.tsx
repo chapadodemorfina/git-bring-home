@@ -35,15 +35,12 @@ export default function DevicesListPage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por marca, modelo, serial, IMEI, cor, problema..."
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9"
-              />
-            </div>
+            <SearchInput
+              placeholder="Buscar por marca, modelo, serial, IMEI, cor, problema..."
+              value={search}
+              onSearch={(v) => { setSearch(v); setPage(1); }}
+              className="flex-1"
+            />
             <Select value={filterType || "all"} onValueChange={(v) => { setFilterType(v === "all" ? null : v); setPage(1); }}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Tipo" />

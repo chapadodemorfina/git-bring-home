@@ -81,10 +81,12 @@ export default function ScrapListPage() {
       </Card>
 
       <div className="flex gap-2 flex-wrap">
-        <div className="relative max-w-xs flex-1">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-        </div>
+        <SearchInput
+          placeholder="Buscar por descrição, marca, modelo..."
+          value={search}
+          onSearch={(v) => { setSearch(v); setPage(1); }}
+          className="max-w-xs flex-1"
+        />
         <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>

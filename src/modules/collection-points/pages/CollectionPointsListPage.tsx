@@ -26,10 +26,12 @@ export default function CollectionPointsListPage() {
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar por nome, responsável, cidade, telefone, email..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
-      </div>
+      <SearchInput
+        placeholder="Buscar por nome, responsável, cidade, telefone, email..."
+        value={search}
+        onSearch={(v) => { setSearch(v); setPage(1); }}
+        className="max-w-sm"
+      />
 
       {isLoading ? (
         <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>

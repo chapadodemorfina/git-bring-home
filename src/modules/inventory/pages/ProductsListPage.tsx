@@ -42,10 +42,12 @@ export default function ProductsListPage() {
       <LowStockAlert />
 
       <div className="flex gap-2 items-center flex-wrap">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Buscar por nome, SKU ou marca..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
-        </div>
+        <SearchInput
+          placeholder="Buscar por nome, SKU ou marca..."
+          value={search}
+          onSearch={(v) => { setSearch(v); setPage(1); }}
+          className="flex-1 max-w-sm"
+        />
         <Button variant="outline" onClick={() => navigate("/inventory/suppliers")}>Fornecedores</Button>
         <Button variant="outline" onClick={() => navigate("/inventory/movements")}>Movimentações</Button>
         <div className="flex items-center gap-2 ml-auto">
