@@ -4,12 +4,12 @@ import { useServiceOrders } from "../hooks/useServiceOrders";
 import { statusLabels, statusColors, priorityLabels, priorityColors, ServiceOrderStatus } from "../types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataPagination from "@/components/ui/data-pagination";
-import { Plus, Search, ClipboardList } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
+import { Plus, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
