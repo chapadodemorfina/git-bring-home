@@ -26,7 +26,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck, ShoppingCart, MoreHorizontal, MessageCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import ServiceOrderStepper from "../components/ServiceOrderStepper";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
@@ -235,70 +237,96 @@ export default function ServiceOrderDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold font-mono">{order.order_number}</h1>
-            <Badge className={statusColors[order.status]}>{statusLabels[order.status]}</Badge>
-            <Badge className={priorityColors[order.priority]}>{priorityLabels[order.priority]}</Badge>
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h1 className="text-xl sm:text-2xl font-bold font-mono">{order.order_number}</h1>
+              <Badge className={statusColors[order.status]}>{statusLabels[order.status]}</Badge>
+              <Badge className={priorityColors[order.priority]}>{priorityLabels[order.priority]}</Badge>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Criado em {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              {" · "}{channelLabels[order.intake_channel]}
+              {order.collection_point_name && ` · ${order.collection_point_name}`}
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            Criado em {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-            {" · "}{channelLabels[order.intake_channel]}
-            {order.collection_point_name && ` · ${order.collection_point_name}`}
-          </p>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {canChangeStatus && (
+              <Button onClick={() => setStatusOpen(true)} className="gap-2">
+                <RefreshCw className="h-4 w-4" /> Avançar Status
+              </Button>
+            )}
+
+            {(order.status === "ready_for_pickup" || order.status === "delivered") && (
+              <WhatsAppSendButton
+                customerId={order.customer_id}
+                customerPhone={order.customer_phone}
+                customerName={order.customer_name || "Cliente"}
+                eventType="os_ready"
+                referenceType="service_order"
+                referenceId={order.id}
+                templateKey="os_ready_whatsapp"
+                variables={{
+                  order_number: order.order_number,
+                  status: order.status === "ready_for_pickup" ? "Pronto para retirada" : "Concluído",
+                  final_notes: order.internal_notes || "",
+                }}
+                label="WhatsApp"
+              />
+            )}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleExportPdf}>
+                  <FileDown className="mr-2 h-4 w-4" /> Exportar PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => printElement(receiptRef.current, order.order_number)}>
+                  <Printer className="mr-2 h-4 w-4" /> Imprimir Recibo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePrintLabel} disabled={generateLink.isPending}>
+                  <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando..." : "Imprimir Etiqueta"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to={`/service-orders/${order.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" /> Editar OS
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="icon" className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir OS?</AlertDialogTitle>
+                  <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {canChangeStatus && (
-            <Button variant="outline" onClick={() => setStatusOpen(true)}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Alterar Status
-            </Button>
-          )}
-          <Button variant="outline" onClick={handleExportPdf}>
-            <FileDown className="mr-2 h-4 w-4" /> PDF
-          </Button>
-          <Button variant="outline" onClick={() => printElement(receiptRef.current, order.order_number)}>
-            <Printer className="mr-2 h-4 w-4" /> Recibo
-          </Button>
-          <Button variant="outline" onClick={handlePrintLabel} disabled={generateLink.isPending}>
-            <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando..." : "Etiqueta"}
-          </Button>
-          {(order.status === "ready_for_pickup" || order.status === "delivered") && (
-            <WhatsAppSendButton
-              customerId={order.customer_id}
-              customerPhone={order.customer_phone}
-              customerName={order.customer_name || "Cliente"}
-              eventType="os_ready"
-              referenceType="service_order"
-              referenceId={order.id}
-              templateKey="os_ready_whatsapp"
-              variables={{
-                order_number: order.order_number,
-                status: order.status === "ready_for_pickup" ? "Pronto para retirada" : "Concluído",
-                final_notes: order.internal_notes || "",
-              }}
-              label="WhatsApp"
-            />
-          )}
-          <Button variant="outline" asChild>
-            <Link to={`/service-orders/${order.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar</Link>
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Excluir OS?</AlertDialogTitle>
-                <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+
+        {/* Progress Stepper */}
+        <Card className="p-3 sm:p-4">
+          <ServiceOrderStepper currentStatus={order.status} />
+        </Card>
       </div>
 
       {/* Main content: tabs + sidebar */}
