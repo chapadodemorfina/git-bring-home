@@ -15,7 +15,8 @@ import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPa
 import IntakeTab from "../components/tabs/IntakeTab";
 import DiagnosisQuoteTab from "../components/tabs/DiagnosisQuoteTab";
 import ItemsTab from "../components/tabs/ItemsTab";
-import ExecutionTab from "../components/tabs/ExecutionTab";
+import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
+import AttachmentUpload from "../components/AttachmentUpload";
 import FinancialTab from "../components/tabs/FinancialTab";
 import LogisticsPartnerTab from "../components/tabs/LogisticsPartnerTab";
 import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
