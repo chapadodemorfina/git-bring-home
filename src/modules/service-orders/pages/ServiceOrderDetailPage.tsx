@@ -15,7 +15,8 @@ import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPa
 import IntakeTab from "../components/tabs/IntakeTab";
 import DiagnosisQuoteTab from "../components/tabs/DiagnosisQuoteTab";
 import ItemsTab from "../components/tabs/ItemsTab";
-import ExecutionTab from "../components/tabs/ExecutionTab";
+import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
+import AttachmentUpload from "../components/AttachmentUpload";
 import FinancialTab from "../components/tabs/FinancialTab";
 import LogisticsPartnerTab from "../components/tabs/LogisticsPartnerTab";
 import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
@@ -303,62 +304,59 @@ export default function ServiceOrderDetailPage() {
       {/* Main content: tabs + sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Tabs defaultValue="intake" className="space-y-4">
+          <Tabs defaultValue="summary" className="space-y-4">
             <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
-              <TabsTrigger value="intake" className="gap-1.5 text-xs sm:text-sm">
-                <ClipboardList className="h-3.5 w-3.5" /> Entrada
+              <TabsTrigger value="summary" className="gap-1.5 text-xs sm:text-sm">
+                <ClipboardList className="h-3.5 w-3.5" /> Resumo
               </TabsTrigger>
-              <TabsTrigger value="diagnosis" className="gap-1.5 text-xs sm:text-sm">
-                <Stethoscope className="h-3.5 w-3.5" /> Diagnóstico
+              <TabsTrigger value="technical" className="gap-1.5 text-xs sm:text-sm">
+                <Stethoscope className="h-3.5 w-3.5" /> Técnico
               </TabsTrigger>
-              <TabsTrigger value="items" className="gap-1.5 text-xs sm:text-sm">
-                <ShoppingCart className="h-3.5 w-3.5" /> Itens
+              <TabsTrigger value="commercial" className="gap-1.5 text-xs sm:text-sm">
+                <ShoppingCart className="h-3.5 w-3.5" /> Comercial
               </TabsTrigger>
-              <TabsTrigger value="execution" className="gap-1.5 text-xs sm:text-sm">
-                <Wrench className="h-3.5 w-3.5" /> Execução
-              </TabsTrigger>
-              <TabsTrigger value="financial" className="gap-1.5 text-xs sm:text-sm">
-                <DollarSign className="h-3.5 w-3.5" /> Financeiro
-              </TabsTrigger>
-              <TabsTrigger value="logistics" className="gap-1.5 text-xs sm:text-sm">
-                <Truck className="h-3.5 w-3.5" /> Logística
-              </TabsTrigger>
+              {order.collection_point_id && (
+                <TabsTrigger value="logistics" className="gap-1.5 text-xs sm:text-sm">
+                  <Truck className="h-3.5 w-3.5" /> Logística
+                </TabsTrigger>
+              )}
             </TabsList>
 
-            <TabsContent value="intake">
+            <TabsContent value="summary">
               <IntakeTab order={order} />
             </TabsContent>
 
-            <TabsContent value="diagnosis">
-              <DiagnosisQuoteTab
-                serviceOrderId={order.id}
-                deviceType={order.device_type}
-                deviceBrand={order.device_brand}
-                deviceModel={order.device_model}
-                reportedIssue={order.reported_issue}
-              />
+            <TabsContent value="technical">
+              <div className="space-y-6">
+                <DiagnosisQuoteTab
+                  serviceOrderId={order.id}
+                  deviceType={order.device_type}
+                  deviceBrand={order.device_brand}
+                  deviceModel={order.device_model}
+                  reportedIssue={order.reported_issue}
+                />
+                <RepairTestWarrantyPanel serviceOrderId={order.id} orderStatus={order.status} />
+                <AttachmentUpload orderId={order.id} />
+              </div>
             </TabsContent>
 
-            <TabsContent value="items">
-              <ItemsTab serviceOrderId={order.id} />
+            <TabsContent value="commercial">
+              <div className="space-y-6">
+                <ItemsTab serviceOrderId={order.id} />
+                <FinancialTab serviceOrderId={order.id} totalAmount={Number(order.total_amount || 0)} orderStatus={order.status} />
+              </div>
             </TabsContent>
 
-            <TabsContent value="execution">
-              <ExecutionTab serviceOrderId={order.id} orderStatus={order.status} />
-            </TabsContent>
-
-            <TabsContent value="financial">
-              <FinancialTab serviceOrderId={order.id} totalAmount={Number(order.total_amount || 0)} orderStatus={order.status} />
-            </TabsContent>
-
-            <TabsContent value="logistics">
-              <LogisticsPartnerTab
-                serviceOrderId={order.id}
-                deviceId={order.device_id}
-                collectionPointId={order.collection_point_id}
-                collectionPointName={order.collection_point_name || null}
-              />
-            </TabsContent>
+            {order.collection_point_id && (
+              <TabsContent value="logistics">
+                <LogisticsPartnerTab
+                  serviceOrderId={order.id}
+                  deviceId={order.device_id}
+                  collectionPointId={order.collection_point_id}
+                  collectionPointName={order.collection_point_name || null}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
 
