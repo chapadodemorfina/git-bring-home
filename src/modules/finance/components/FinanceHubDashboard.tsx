@@ -70,7 +70,7 @@ export default function FinanceHubDashboard() {
   return (
     <div className="space-y-4">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3">
         {kpis.map((kpi) => (
           <Card key={kpi.label}>
             <CardContent className="pt-3 pb-2 px-4">
