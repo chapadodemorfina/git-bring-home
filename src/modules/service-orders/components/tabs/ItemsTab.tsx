@@ -53,7 +53,7 @@ const emptyForm: SOItemFormData = {
   notes: null,
 };
 
-export default function ItemsTab({ serviceOrderId }: Props) {
+export default function ItemsTab({ serviceOrderId, hideSummary = false }: Props) {
   const qc = useQueryClient();
   const { data: items, isLoading } = useServiceOrderItems(serviceOrderId);
   const addMutation = useAddSOItem();
