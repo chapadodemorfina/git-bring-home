@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,10 +54,12 @@ export default function WarrantyReturnsPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por motivo..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-            </div>
+            <SearchInput
+              value={search}
+              onSearch={(v) => { setSearch(v); setPage(1); }}
+              placeholder="Buscar por motivo, garantia, cliente, OS..."
+              containerClassName="max-w-sm"
+            />
             <Select value={statusFilter} onValueChange={v => { setStatusFilter(v === "all" ? "" : v); setPage(1); }}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
@@ -96,10 +99,10 @@ export default function WarrantyReturnsPage() {
                       <TableRow key={r.id}>
                         <TableCell>
                           <Link to={`/warranties/${r.warranty_id}`} className="font-mono text-sm text-primary hover:underline">
-                            {r.warranties?.warranty_number || "—"}
+                            {r.warranty_number || r.warranties?.warranty_number || "—"}
                           </Link>
                         </TableCell>
-                        <TableCell className="text-sm">{r.warranties?.service_orders?.customers?.full_name || "—"}</TableCell>
+                        <TableCell className="text-sm">{r.customer_name || r.warranties?.service_orders?.customers?.full_name || "—"}</TableCell>
                         <TableCell className="text-sm max-w-[200px] truncate">{r.reason}</TableCell>
                         <TableCell><Badge variant="outline" className="text-xs">{r.return_cause || "—"}</Badge></TableCell>
                         <TableCell><Badge variant="secondary" className="text-xs">{returnOutcomeLabels[r.outcome] || r.outcome || "pendente"}</Badge></TableCell>

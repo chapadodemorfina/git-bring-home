@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -112,10 +113,12 @@ export default function WarrantiesPage() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[200px] max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Buscar por nº garantia..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-                </div>
+                <SearchInput
+                  value={search}
+                  onSearch={(v) => { setSearch(v); setPage(1); }}
+                  placeholder="Buscar por nº garantia, cliente, OS, dispositivo..."
+                  containerClassName="max-w-sm"
+                />
                 <Select value={statusFilter} onValueChange={v => { setStatusFilter(v === "all" ? "" : v); setPage(1); }}>
                   <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
@@ -167,12 +170,12 @@ export default function WarrantiesPage() {
                             <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
                             <TableCell>
                               <Link to={`/service-orders/${w.service_order_id}`} className="text-primary hover:underline text-sm">
-                                {w.service_orders?.order_number}
+                                {w.order_number || w.service_orders?.order_number}
                               </Link>
                             </TableCell>
-                            <TableCell className="text-sm">{w.service_orders?.customers?.full_name || "—"}</TableCell>
+                            <TableCell className="text-sm">{w.customer_name || w.service_orders?.customers?.full_name || "—"}</TableCell>
                             <TableCell className="text-sm">
-                              {w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—"}
+                              {w.device_label || (w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—")}
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" className="text-xs">

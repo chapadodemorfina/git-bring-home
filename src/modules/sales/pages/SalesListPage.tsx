@@ -4,13 +4,14 @@ import { useSales, useSalesDashboard } from "../hooks/useSales";
 import { saleStatusLabels, saleStatusColors, paymentStatusLabels, SaleStatus, SalePaymentStatus } from "../types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import DataPagination from "@/components/ui/data-pagination";
-import { Plus, Search, ShoppingBag, DollarSign, TrendingUp, BarChart3 } from "lucide-react";
+import { Plus, ShoppingBag, DollarSign, TrendingUp, BarChart3 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -119,11 +120,11 @@ export default function SalesListPage() {
         <CardHeader>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col lg:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por número, observações..." value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-              </div>
+              <SearchInput
+                value={search}
+                onSearch={(v) => { setSearch(v); setPage(1); }}
+                placeholder="Buscar por número, cliente, vendedor..."
+              />
               <Input placeholder="Filtrar por vendedor..." value={sellerFilter}
                 onChange={(e) => setSellerFilter(e.target.value)} className="lg:w-[200px]" />
             </div>

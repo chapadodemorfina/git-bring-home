@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { executePaginatedQuery } from "@/hooks/usePaginatedQuery";
+
 import type { PaginatedResult } from "@/components/ui/data-pagination";
 import type { AccountReceivable, ReceivablePayment, ReceivableStatus } from "../types";
 
@@ -16,34 +16,21 @@ export function useReceivablesPaginated(
   return useQuery<PaginatedResult<AccountReceivable>>({
     queryKey: ["receivables-paginated", status, search, overdueOnly, page],
     queryFn: async () => {
-      const result = await executePaginatedQuery<any>({
-        page,
-        search,
-      }, {
-        table: "accounts_receivable",
-        select: "*, customers(full_name)",
-        searchColumns: ["description"],
-        defaultSort: { column: "due_date", ascending: true },
-        additionalFilters: (q: any) => {
-          let query = q;
-          if (status) query = query.eq("status", status);
-          if (overdueOnly) query = query.eq("status", "overdue");
-          return query;
-        },
-        countFilters: (q: any) => {
-          let query = q;
-          if (status) query = query.eq("status", status);
-          if (overdueOnly) query = query.eq("status", "overdue");
-          return query;
-        },
+      const { data, error } = await db.rpc("search_receivables", {
+        _search: search || null,
+        _status: status || null,
+        _overdue_only: overdueOnly || false,
+        _page: page,
+        _page_size: 25,
       });
+      if (error) throw error;
+      const result = typeof data === "string" ? JSON.parse(data) : data;
       return {
-        ...result,
-        items: result.items.map((d: any) => ({
-          ...d,
-          customer_name: d.customers?.full_name,
-          customers: undefined,
-        })),
+        items: (result.items || []) as AccountReceivable[],
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
       };
     },
   });

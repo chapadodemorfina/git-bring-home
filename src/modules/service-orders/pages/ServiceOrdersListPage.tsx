@@ -4,12 +4,12 @@ import { useServiceOrders } from "../hooks/useServiceOrders";
 import { statusLabels, statusColors, priorityLabels, priorityColors, ServiceOrderStatus } from "../types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataPagination from "@/components/ui/data-pagination";
-import { Plus, Search, ClipboardList } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
+import { Plus, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -42,8 +42,11 @@ export default function ServiceOrdersListPage() {
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por número, problema, notas..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
+              <SearchInput
+                value={search}
+                onSearch={(v) => { setSearch(v); setPage(1); }}
+                placeholder="Buscar por número, cliente, dispositivo, problema..."
+              />
             </div>
             <Select value={filterStatus || "all"} onValueChange={(v) => { setFilterStatus(v === "all" ? null : v); setPage(1); }}>
               <SelectTrigger className="w-[220px]"><SelectValue placeholder="Todos os status" /></SelectTrigger>

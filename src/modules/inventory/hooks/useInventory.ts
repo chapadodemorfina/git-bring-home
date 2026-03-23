@@ -221,30 +221,25 @@ export function useUpdateSupplier() {
 }
 
 // ── Stock Movements ──
-export function useStockMovements(productId?: string, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+export function useStockMovements(productId?: string, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE, search?: string, movementType?: string) {
   return useQuery({
-    queryKey: ["stock_movements", productId, page, pageSize],
+    queryKey: ["stock_movements", productId, page, pageSize, search, movementType],
     queryFn: async () => {
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      let countQuery = sb.from("stock_movements").select("id", { count: "exact", head: true });
-      let dataQuery = sb.from("stock_movements").select("*, products(name, sku)").order("created_at", { ascending: false }).range(from, to);
-
-      if (productId) {
-        dataQuery = dataQuery.eq("product_id", productId);
-        countQuery = countQuery.eq("product_id", productId);
-      }
-
-      const [{ data, error }, { count }] = await Promise.all([dataQuery, countQuery]);
+      const { data, error } = await sb.rpc("search_stock_movements", {
+        _search: search || null,
+        _product_id: productId || null,
+        _movement_type: movementType || null,
+        _page: page,
+        _page_size: pageSize,
+      });
       if (error) throw error;
-      const total = count || 0;
+      const result = typeof data === "string" ? JSON.parse(data) : data;
       return {
-        items: (data || []) as StockMovement[],
-        total,
-        page,
-        pageSize,
-        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+        items: (result.items || []) as StockMovement[],
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
       } as PaginatedResult<StockMovement>;
     },
   });

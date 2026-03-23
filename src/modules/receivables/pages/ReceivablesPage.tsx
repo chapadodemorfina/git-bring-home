@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -82,10 +83,11 @@ export default function ReceivablesPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4 flex flex-col md:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar descrição..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-          </div>
+          <SearchInput
+            value={search}
+            onSearch={(v) => { setSearch(v); setPage(1); }}
+            placeholder="Buscar por descrição, cliente, telefone, documento..."
+          />
           <Select value={status} onValueChange={v => { setStatus(v); setPage(1); }}>
             <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
