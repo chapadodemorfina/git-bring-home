@@ -3,7 +3,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataPagination from "@/components/ui/data-pagination";
+import { SearchInput } from "@/components/ui/search-input";
 import { useStockMovements } from "../hooks/useInventory";
 import { movementTypeLabels, type StockMovementType } from "../types";
 
@@ -21,45 +23,72 @@ const movementColors: Record<StockMovementType, string> = {
 
 export default function StockMovementsTable({ productId }: { productId?: string }) {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useStockMovements(productId, page);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const { data, isLoading } = useStockMovements(productId, page, 25, search, typeFilter || undefined);
 
   const movements = data?.items || [];
   const total = data?.total || 0;
 
-  if (isLoading) return <p className="text-muted-foreground text-sm py-4">Carregando movimentações...</p>;
-  if (!movements.length) return <p className="text-muted-foreground text-sm py-4">Nenhuma movimentação registrada.</p>;
-
   return (
-    <div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Data</TableHead>
-            {!productId && <TableHead>Produto</TableHead>}
-            <TableHead>Tipo</TableHead>
-            <TableHead className="text-right">Qtd</TableHead>
-            <TableHead className="text-right">Anterior</TableHead>
-            <TableHead className="text-right">Novo</TableHead>
-            <TableHead>Observações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {movements.map(m => (
-            <TableRow key={m.id}>
-              <TableCell className="whitespace-nowrap">{format(new Date(m.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
-              {!productId && <TableCell>{m.products?.sku} — {m.products?.name}</TableCell>}
-              <TableCell>
-                <Badge variant="secondary" className={movementColors[m.movement_type]}>{movementTypeLabels[m.movement_type]}</Badge>
-              </TableCell>
-              <TableCell className="text-right font-mono">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</TableCell>
-              <TableCell className="text-right font-mono">{m.previous_quantity}</TableCell>
-              <TableCell className="text-right font-mono">{m.new_quantity}</TableCell>
-              <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate">{m.notes}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+    <div className="space-y-3">
+      {!productId && (
+        <div className="flex flex-wrap items-center gap-3">
+          <SearchInput
+            value={search}
+            onSearch={(v) => { setSearch(v); setPage(1); }}
+            placeholder="Buscar por produto, SKU, notas..."
+            containerClassName="max-w-sm"
+          />
+          <Select value={typeFilter} onValueChange={v => { setTypeFilter(v === "all" ? "" : v); setPage(1); }}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              {(Object.entries(movementTypeLabels) as [StockMovementType, string][]).map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {isLoading ? (
+        <p className="text-muted-foreground text-sm py-4">Carregando movimentações...</p>
+      ) : !movements.length ? (
+        <p className="text-muted-foreground text-sm py-4">Nenhuma movimentação encontrada.</p>
+      ) : (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                {!productId && <TableHead>Produto</TableHead>}
+                <TableHead>Tipo</TableHead>
+                <TableHead className="text-right">Qtd</TableHead>
+                <TableHead className="text-right">Anterior</TableHead>
+                <TableHead className="text-right">Novo</TableHead>
+                <TableHead>Observações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {movements.map(m => (
+                <TableRow key={m.id}>
+                  <TableCell className="whitespace-nowrap">{format(new Date(m.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
+                  {!productId && <TableCell>{m.products?.sku} — {m.products?.name}</TableCell>}
+                  <TableCell>
+                    <Badge variant="secondary" className={movementColors[m.movement_type]}>{movementTypeLabels[m.movement_type]}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-mono">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</TableCell>
+                  <TableCell className="text-right font-mono">{m.previous_quantity}</TableCell>
+                  <TableCell className="text-right font-mono">{m.new_quantity}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate">{m.notes}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <DataPagination page={page} pageSize={data?.pageSize || 25} total={total} onPageChange={setPage} />
+        </>
+      )}
     </div>
   );
 }

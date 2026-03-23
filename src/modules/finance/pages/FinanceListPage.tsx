@@ -73,10 +73,12 @@ export default function FinanceListPage() {
                 </TabsList>
               </Tabs>
 
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por descrição, categoria, notas..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-              </div>
+              <SearchInput
+                value={search}
+                onSearch={(v) => { setSearch(v); setPage(1); }}
+                placeholder="Buscar por descrição, cliente, fornecedor, OS..."
+                containerClassName="min-w-[200px]"
+              />
             </div>
 
             <Select value={filterStatus || "all"} onValueChange={(v) => { setFilterStatus(v === "all" ? null : v); setPage(1); }}>
