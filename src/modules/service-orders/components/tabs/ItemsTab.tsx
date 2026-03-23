@@ -57,6 +57,7 @@ export default function ItemsTab({ serviceOrderId }: Props) {
   const addMutation = useAddSOItem();
   const updateMutation = useUpdateSOItem();
   const deleteMutation = useDeleteSOItem();
+  const { data: products } = useAllProducts();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ServiceOrderItem | null>(null);
