@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataPagination from "@/components/ui/data-pagination";
+import { SearchInput } from "@/components/ui/search-input";
 import { MessageSquare, RefreshCw, CheckCircle, XCircle, Clock, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,6 +29,7 @@ const eventLabels: Record<string, string> = {
 export default function MessageHistoryPage() {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [eventType, setEventType] = useState("all");
   const [status, setStatus] = useState("all");
   const resend = useResendMessage();
@@ -36,6 +38,7 @@ export default function MessageHistoryPage() {
     {
       eventType: eventType === "all" ? undefined : eventType,
       status: status === "all" ? undefined : status,
+      search: search || undefined,
     },
     page,
   );
@@ -56,6 +59,12 @@ export default function MessageHistoryPage() {
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
+        <SearchInput
+          placeholder="Buscar por telefone, mensagem..."
+          value={search}
+          onSearch={(v) => { setSearch(v); setPage(1); }}
+          className="flex-1 min-w-[200px]"
+        />
         <Select value={eventType} onValueChange={(v) => { setEventType(v); setPage(1); }}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Tipo de evento" /></SelectTrigger>
           <SelectContent>

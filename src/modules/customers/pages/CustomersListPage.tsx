@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCustomers, useDeleteCustomer } from "../hooks/useCustomers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -39,11 +39,11 @@ export default function CustomersListPage() {
         <CardHeader>
           <CardTitle className="text-base">Lista de Clientes</CardTitle>
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por nome, telefone, CPF/CNPJ, email, WhatsApp..." value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
-            </div>
+            <SearchInput
+              placeholder="Buscar por nome, telefone, CPF/CNPJ, email, WhatsApp..."
+              value={search}
+              onSearch={(v) => { setSearch(v); setPage(1); }}
+            />
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>

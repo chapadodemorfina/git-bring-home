@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -107,15 +108,12 @@ export default function UsersListPage() {
       <Card>
         <CardHeader>
           <CardTitle>Membros da Equipe</CardTitle>
-          <div className="relative max-w-sm pt-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 mt-1 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, email ou função..."
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            placeholder="Buscar por nome, email ou função..."
+            value={search}
+            onSearch={handleSearchChange}
+            className="max-w-sm"
+          />
         </CardHeader>
         <CardContent>
           {isLoading ? (

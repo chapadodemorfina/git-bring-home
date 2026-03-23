@@ -5,7 +5,7 @@ import { quoteStatusLabels, quoteStatusColors, CommercialQuoteStatus } from "../
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -74,11 +74,12 @@ export default function QuotesListPage() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por número ou título..." value={search}
-            onChange={(e) => handleSearch(e.target.value)} className="pl-9" />
-        </div>
+        <SearchInput
+          placeholder="Buscar por número ou título..."
+          value={search}
+          onSearch={handleSearch}
+          className="flex-1"
+        />
         <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
