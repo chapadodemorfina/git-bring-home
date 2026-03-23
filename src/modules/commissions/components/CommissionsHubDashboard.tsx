@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import {
   DollarSign, Clock, CheckCircle2, AlertTriangle,
-  Users, Building2, FileText, Filter,
+  Users, Building2, FileText,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,8 +66,6 @@ export default function CommissionsHubDashboard() {
     { label: "Parceiros", icon: Building2, onClick: () => go("partners") },
     { label: "Relatórios", icon: FileText, onClick: () => go("reports") },
     { label: "Equipe", icon: Users, onClick: () => go("team") },
-    { label: "Pendentes", icon: Filter, onClick: () => go("partners") },
-    { label: "Pagas", icon: CheckCircle2, onClick: () => go("partners") },
   ];
 
   const alerts: { label: string; color: string }[] = [];

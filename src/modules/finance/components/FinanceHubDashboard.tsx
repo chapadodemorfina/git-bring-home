@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign, TrendingUp, TrendingDown, Wallet,
   Banknote, Landmark, ArrowUpRight, ArrowDownRight,
-  AlertTriangle, Receipt, ListChecks, Filter, Clock,
+  AlertTriangle, Receipt, ListChecks,
 } from "lucide-react";
 
 const fmt = (v: number) =>
@@ -46,8 +46,6 @@ export default function FinanceHubDashboard() {
     { label: "Contas a Receber", icon: Receipt, onClick: () => goTab("receivables") },
     { label: "Controle de Caixa", icon: Banknote, onClick: () => goTab("cash-register") },
     { label: "Lançamentos", icon: ListChecks, onClick: () => goTab("entries") },
-    { label: "Pendentes", icon: Filter, onClick: () => goTab("entries") },
-    { label: "Vencidos", icon: Clock, onClick: () => goTab("receivables") },
   ];
 
   const alerts = [
@@ -72,7 +70,7 @@ export default function FinanceHubDashboard() {
   return (
     <div className="space-y-4">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3">
         {kpis.map((kpi) => (
           <Card key={kpi.label}>
             <CardContent className="pt-3 pb-2 px-4">
@@ -87,7 +85,7 @@ export default function FinanceHubDashboard() {
                     <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
                     <span className="text-[11px] font-medium text-muted-foreground">{kpi.label}</span>
                   </div>
-                  <p className="text-lg font-bold">{kpi.value}</p>
+                  <p className="text-base sm:text-lg font-bold truncate">{kpi.value}</p>
                   {kpi.sub && <p className="text-[10px] text-muted-foreground">{kpi.sub}</p>}
                 </>
               )}
