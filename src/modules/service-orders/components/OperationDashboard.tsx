@@ -4,14 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ClipboardList, Plus, ScanLine, ListChecks, ShieldCheck,
-  AlertTriangle, Clock, CheckCircle, Wrench, Stethoscope,
-  PackageCheck, Search,
+  AlertTriangle, Clock, Wrench, Stethoscope, PackageCheck,
 } from "lucide-react";
-import { useState } from "react";
 
 const db = supabase as any;
 
@@ -26,13 +23,8 @@ interface OperationMetrics {
 }
 
 const defaultMetrics: OperationMetrics = {
-  total_open: 0,
-  in_diagnosis: 0,
-  awaiting_approval: 0,
-  in_execution: 0,
-  ready_for_pickup: 0,
-  overdue: 0,
-  awaiting_parts: 0,
+  total_open: 0, in_diagnosis: 0, awaiting_approval: 0,
+  in_execution: 0, ready_for_pickup: 0, overdue: 0, awaiting_parts: 0,
 };
 
 function useOperationMetrics() {
@@ -44,23 +36,16 @@ function useOperationMetrics() {
         .from("service_orders")
         .select("status, priority, updated_at")
         .not("status", "in", '("delivered","cancelled")');
-
       if (error) throw error;
       const rows = (data || []) as { status: string; priority: string; updated_at: string }[];
-
       const now = Date.now();
       let overdue = 0;
       const counts: Record<string, number> = {};
-
       rows.forEach((r) => {
         counts[r.status] = (counts[r.status] || 0) + 1;
-        // Simple overdue heuristic: >72h in same status
         const hoursInStatus = (now - new Date(r.updated_at).getTime()) / 3600000;
-        if (hoursInStatus > 72 && !["received", "ready_for_pickup"].includes(r.status)) {
-          overdue++;
-        }
+        if (hoursInStatus > 72 && !["received", "ready_for_pickup"].includes(r.status)) overdue++;
       });
-
       return {
         total_open: rows.length,
         in_diagnosis: (counts["awaiting_diagnosis"] || 0) + (counts["triage"] || 0),
@@ -78,14 +63,6 @@ export function OperationDashboard() {
   const { data: metrics, isLoading } = useOperationMetrics();
   const m = metrics || defaultMetrics;
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-
-  const handleSearch = (v: string) => {
-    setSearch(v);
-    if (v.trim()) {
-      navigate(`/operation?tab=orders`);
-    }
-  };
 
   const kpis = [
     { label: "Abertas", value: m.total_open, icon: ClipboardList, color: "text-primary" },
@@ -120,7 +97,7 @@ export function OperationDashboard() {
               {isLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-7 w-10" />
+                  <Skeleton className="h-6 w-12" />
                 </div>
               ) : (
                 <>
@@ -128,7 +105,7 @@ export function OperationDashboard() {
                     <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
                     <span className="text-[11px] font-medium text-muted-foreground">{kpi.label}</span>
                   </div>
-                  <p className="text-xl font-bold">{kpi.value}</p>
+                  <p className="text-lg font-bold">{kpi.value}</p>
                 </>
               )}
             </CardContent>
@@ -136,19 +113,14 @@ export function OperationDashboard() {
         ))}
       </div>
 
-      {/* Quick Actions + Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex flex-wrap gap-2">
-          {shortcuts.map((s) => (
-            <Button key={s.label} variant={s.variant} size="sm" onClick={s.onClick} className="gap-1.5">
-              <s.icon className="h-4 w-4" />
-              {s.label}
-            </Button>
-          ))}
-        </div>
-        <div className="sm:ml-auto w-full sm:w-64">
-          <SearchInput value={search} onSearch={handleSearch} placeholder="Buscar OS..." />
-        </div>
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-2">
+        {shortcuts.map((s) => (
+          <Button key={s.label} variant={s.variant} size="sm" onClick={s.onClick} className="gap-1.5">
+            <s.icon className="h-4 w-4" />
+            {s.label}
+          </Button>
+        ))}
       </div>
 
       {/* Attention Alerts */}
@@ -156,6 +128,7 @@ export function OperationDashboard() {
         <div className="flex flex-wrap gap-2">
           {alerts.map((a) => (
             <Badge key={a.label} variant="outline" className={`${a.color} text-xs py-1 px-2.5 font-medium`}>
+              <AlertTriangle className="h-3 w-3 mr-1" />
               {a.label}
             </Badge>
           ))}

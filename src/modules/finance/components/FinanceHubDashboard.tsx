@@ -1,7 +1,7 @@
 import { useFinanceSummary } from "../hooks/useFinance";
 import { useFinancialBalances } from "@/modules/cash-register/hooks/useCashRegister";
 import { useReceivablesSummary } from "@/modules/receivables/hooks/useReceivables";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign, TrendingUp, TrendingDown, Wallet,
   Banknote, Landmark, ArrowUpRight, ArrowDownRight,
-  AlertTriangle, Receipt, ListChecks, Filter,
-  Clock,
+  AlertTriangle, Receipt, ListChecks, Filter, Clock,
 } from "lucide-react";
 
 const fmt = (v: number) =>
@@ -20,7 +19,6 @@ export default function FinanceHubDashboard() {
   const { data: summary, isLoading: loadingSummary } = useFinanceSummary();
   const { data: balances, isLoading: loadingBalances } = useFinancialBalances();
   const { data: recSummary, isLoading: loadingRec } = useReceivablesSummary();
-  const navigate = useNavigate();
   const [, setParams] = useSearchParams();
 
   const isLoading = loadingSummary || loadingBalances || loadingRec;
@@ -45,11 +43,11 @@ export default function FinanceHubDashboard() {
   const goTab = (tab: string) => setParams({ tab }, { replace: true });
 
   const shortcuts = [
-    { label: "Contas a Receber", icon: Receipt, onClick: () => goTab("receivables"), variant: "outline" as const },
-    { label: "Controle de Caixa", icon: Banknote, onClick: () => goTab("cash-register"), variant: "outline" as const },
-    { label: "Lançamentos", icon: ListChecks, onClick: () => goTab("entries"), variant: "outline" as const },
-    { label: "Pendentes", icon: Filter, onClick: () => goTab("entries"), variant: "outline" as const },
-    { label: "Vencidos", icon: Clock, onClick: () => goTab("receivables"), variant: "outline" as const },
+    { label: "Contas a Receber", icon: Receipt, onClick: () => goTab("receivables") },
+    { label: "Controle de Caixa", icon: Banknote, onClick: () => goTab("cash-register") },
+    { label: "Lançamentos", icon: ListChecks, onClick: () => goTab("entries") },
+    { label: "Pendentes", icon: Filter, onClick: () => goTab("entries") },
+    { label: "Vencidos", icon: Clock, onClick: () => goTab("receivables") },
   ];
 
   const alerts = [
@@ -81,7 +79,7 @@ export default function FinanceHubDashboard() {
               {isLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-12" />
                 </div>
               ) : (
                 <>
@@ -101,7 +99,7 @@ export default function FinanceHubDashboard() {
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-2">
         {shortcuts.map((s) => (
-          <Button key={s.label} variant={s.variant} size="sm" onClick={s.onClick} className="gap-1.5">
+          <Button key={s.label} variant="outline" size="sm" onClick={s.onClick} className="gap-1.5">
             <s.icon className="h-4 w-4" />
             {s.label}
           </Button>
