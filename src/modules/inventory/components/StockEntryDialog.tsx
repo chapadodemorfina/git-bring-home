@@ -38,12 +38,15 @@ export default function StockEntryDialog({ open, onOpenChange, preselectedProduc
             <FormField control={form.control} name="product_id" render={({ field }) => (
               <FormItem>
                 <FormLabel>Produto *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    {products?.map(p => <SelectItem key={p.id} value={p.id}>{p.sku} — {p.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <ProductCombobox
+                    products={products ?? []}
+                    value={field.value}
+                    onValueChange={(id) => field.onChange(id)}
+                    showStock
+                    placeholder="Buscar produto por nome ou SKU..."
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
