@@ -361,6 +361,9 @@ export default function ServiceOrderDetailPage() {
                 <DropdownMenuItem onClick={() => printElement(receiptRef.current, order.order_number)}>
                   <Printer className="mr-2 h-4 w-4" /> Imprimir Recibo
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePaymentReceipt}>
+                  <Receipt className="mr-2 h-4 w-4" /> Recibo de Pagamento
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handlePrintLabel} disabled={generateLink.isPending}>
                   <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando..." : "Imprimir Etiqueta"}
                 </DropdownMenuItem>
