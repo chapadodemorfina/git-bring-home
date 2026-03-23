@@ -180,15 +180,16 @@ export function useAutoSendMessage() {
 
 // ── Hook: Message history (paginated) ──
 export function useCustomerMessageEvents(
-  filters?: { eventType?: string; status?: string; customerId?: string },
+  filters?: { eventType?: string; status?: string; customerId?: string; search?: string },
   page: number = 1,
 ) {
   return useQuery<PaginatedResult<any>>({
     queryKey: ["customer-message-events", filters, page],
     queryFn: async () => {
-      return executePaginatedQuery<any>({ page }, {
+      return executePaginatedQuery<any>({ page, search: filters?.search }, {
         table: "customer_message_events",
         select: "*, customers(full_name)",
+        searchColumns: ["phone", "message_text", "template_key", "reference_id"],
         defaultSort: { column: "created_at", ascending: false },
         additionalFilters: (q: any) => {
           let query = q;

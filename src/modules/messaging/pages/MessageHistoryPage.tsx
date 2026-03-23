@@ -59,6 +59,12 @@ export default function MessageHistoryPage() {
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
+        <SearchInput
+          placeholder="Buscar por telefone, mensagem..."
+          value={search}
+          onSearch={(v) => { setSearch(v); setPage(1); }}
+          className="flex-1 min-w-[200px]"
+        />
         <Select value={eventType} onValueChange={(v) => { setEventType(v); setPage(1); }}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Tipo de evento" /></SelectTrigger>
           <SelectContent>
