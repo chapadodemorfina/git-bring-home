@@ -45,6 +45,7 @@ interface Props {
 
 const emptyForm: SOItemFormData = {
   item_type: "service",
+  product_id: null,
   description: "",
   quantity: 1,
   unit_price: 0,
