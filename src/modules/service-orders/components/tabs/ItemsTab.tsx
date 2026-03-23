@@ -82,6 +82,7 @@ export default function ItemsTab({ serviceOrderId }: Props) {
     setEditingItem(item);
     setForm({
       item_type: item.item_type,
+      product_id: item.product_id,
       description: item.description,
       quantity: Number(item.quantity),
       unit_price: Number(item.unit_price),
