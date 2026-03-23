@@ -366,10 +366,11 @@ export default function ServiceOrderDetailPage() {
             </TabsContent>
 
             <TabsContent value="commercial">
-              <div className="space-y-6">
-                <ItemsTab serviceOrderId={order.id} />
-                <FinancialTab serviceOrderId={order.id} totalAmount={Number(order.total_amount || 0)} orderStatus={order.status} />
-              </div>
+              <CommercialTab
+                serviceOrderId={order.id}
+                totalAmount={Number(order.total_amount || 0)}
+                orderStatus={order.status}
+              />
             </TabsContent>
 
             {order.collection_point_id && (
