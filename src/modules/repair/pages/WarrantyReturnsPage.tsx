@@ -99,10 +99,10 @@ export default function WarrantyReturnsPage() {
                       <TableRow key={r.id}>
                         <TableCell>
                           <Link to={`/warranties/${r.warranty_id}`} className="font-mono text-sm text-primary hover:underline">
-                            {r.warranties?.warranty_number || "—"}
+                            {r.warranty_number || r.warranties?.warranty_number || "—"}
                           </Link>
                         </TableCell>
-                        <TableCell className="text-sm">{r.warranties?.service_orders?.customers?.full_name || "—"}</TableCell>
+                        <TableCell className="text-sm">{r.customer_name || r.warranties?.service_orders?.customers?.full_name || "—"}</TableCell>
                         <TableCell className="text-sm max-w-[200px] truncate">{r.reason}</TableCell>
                         <TableCell><Badge variant="outline" className="text-xs">{r.return_cause || "—"}</Badge></TableCell>
                         <TableCell><Badge variant="secondary" className="text-xs">{returnOutcomeLabels[r.outcome] || r.outcome || "pendente"}</Badge></TableCell>

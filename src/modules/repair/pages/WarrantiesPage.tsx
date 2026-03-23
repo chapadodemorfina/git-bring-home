@@ -170,12 +170,12 @@ export default function WarrantiesPage() {
                             <TableCell className="font-mono text-sm">{w.warranty_number}</TableCell>
                             <TableCell>
                               <Link to={`/service-orders/${w.service_order_id}`} className="text-primary hover:underline text-sm">
-                                {w.service_orders?.order_number}
+                                {w.order_number || w.service_orders?.order_number}
                               </Link>
                             </TableCell>
-                            <TableCell className="text-sm">{w.service_orders?.customers?.full_name || "—"}</TableCell>
+                            <TableCell className="text-sm">{w.customer_name || w.service_orders?.customers?.full_name || "—"}</TableCell>
                             <TableCell className="text-sm">
-                              {w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—"}
+                              {w.device_label || (w.service_orders?.devices ? `${w.service_orders.devices.brand || ""} ${w.service_orders.devices.model || ""}`.trim() : "—")}
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" className="text-xs">
