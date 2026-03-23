@@ -260,6 +260,24 @@ export default function ServiceOrderDetailPage() {
               </Button>
             )}
 
+            {(order.status === "ready_for_pickup" || order.status === "delivered") && (
+              <WhatsAppSendButton
+                customerId={order.customer_id}
+                customerPhone={order.customer_phone}
+                customerName={order.customer_name || "Cliente"}
+                eventType="os_ready"
+                referenceType="service_order"
+                referenceId={order.id}
+                templateKey="os_ready_whatsapp"
+                variables={{
+                  order_number: order.order_number,
+                  status: order.status === "ready_for_pickup" ? "Pronto para retirada" : "Concluído",
+                  final_notes: order.internal_notes || "",
+                }}
+                label="WhatsApp"
+              />
+            )}
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">
