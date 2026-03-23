@@ -25,12 +25,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck, ShoppingCart, MoreHorizontal, MessageCircle } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck, ShoppingCart, MoreHorizontal, MessageCircle, Receipt } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ServiceOrderStepper from "../components/ServiceOrderStepper";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
+import { generatePaymentReceiptPdf } from "@/lib/pdf-generators/service-order-payment-receipt-pdf";
 import { useCompanySettings, settingIsTrue, type CompanySettings } from "@/hooks/useCompanySettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,6 +155,38 @@ export default function ServiceOrderDetailPage() {
   const { data: signatures } = useOrderSignatures(id);
   const { data: terms } = useActiveTerms();
   const { data: publicLinks } = useServiceOrderPublicLinks(id);
+
+  // Financial data for payment receipt
+  const { data: financialEntries } = useQuery({
+    queryKey: ["so-financial-entries", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("financial_entries")
+        .select("*")
+        .eq("service_order_id", id!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+
+  const { data: financialPayments } = useQuery({
+    queryKey: ["so-financial-payments", id],
+    enabled: !!id && (financialEntries || []).length > 0,
+    queryFn: async () => {
+      const entryIds = (financialEntries || []).map((e: any) => e.id);
+      if (entryIds.length === 0) return [];
+      const { data, error } = await db
+        .from("financial_payments")
+        .select("*")
+        .in("financial_entry_id", entryIds)
+        .order("paid_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+
   const activeLink = publicLinks?.find((l: any) => l.status === "active");
   const trackingUrl = activeLink
     ? `${window.location.origin}/track/${activeLink.public_token}`
@@ -220,6 +253,44 @@ export default function ServiceOrderDetailPage() {
     } else {
       printElement(labelRef.current, `Etiqueta ${order.order_number}`, true);
     }
+  };
+
+  const handlePaymentReceipt = async () => {
+    if (!order) return;
+    const company = {
+      name: companySettings.company_name,
+      legalName: companySettings.company_legal_name,
+      cnpj: companySettings.company_cnpj,
+      address: companySettings.company_address,
+      phone: companySettings.company_phone,
+      email: companySettings.company_email,
+      logoUrl: companySettings.company_logo_url,
+    };
+    const allEntries = financialEntries || [];
+    const allPayments = financialPayments || [];
+    await generatePaymentReceiptPdf({
+      orderNumber: order.order_number,
+      customerName: order.customer_name || "Consumidor",
+      customerPhone: order.customer_phone,
+      customerDocument: order.customer_document,
+      deviceLabel: [order.device_brand, order.device_model].filter(Boolean).join(" ") || order.device_label || undefined,
+      totalAmount: Number(order.total_amount || 0),
+      entries: allEntries
+        .filter((e: any) => e.status !== "cancelled")
+        .map((e: any) => ({
+          description: e.description,
+          amount: Number(e.amount),
+          paidAmount: Number(e.paid_amount || 0),
+          status: e.status,
+          isPrimary: !!e.is_primary_os_revenue,
+        })),
+      payments: allPayments.map((p: any) => ({
+        amount: Number(p.amount),
+        method: p.payment_method,
+        paidAt: p.paid_at,
+        notes: p.notes,
+      })),
+    }, company);
   };
 
   const handleDelete = async () => {
@@ -289,6 +360,9 @@ export default function ServiceOrderDetailPage() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => printElement(receiptRef.current, order.order_number)}>
                   <Printer className="mr-2 h-4 w-4" /> Imprimir Recibo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePaymentReceipt}>
+                  <Receipt className="mr-2 h-4 w-4" /> Recibo de Pagamento
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handlePrintLabel} disabled={generateLink.isPending}>
                   <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando..." : "Imprimir Etiqueta"}
