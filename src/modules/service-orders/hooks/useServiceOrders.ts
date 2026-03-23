@@ -11,45 +11,24 @@ import { DEFAULT_PAGE_SIZE, type PaginatedResult } from "@/components/ui/data-pa
 const db = supabase as any;
 
 export function useServiceOrders(search?: string, filterStatus?: string | null, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
-  return useQuery({
+  return useQuery<PaginatedResult<ServiceOrder>>({
     queryKey: ["service-orders", search, filterStatus, page, pageSize],
     queryFn: async () => {
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      let countQuery = db.from("service_orders").select("id", { count: "exact", head: true });
-      let query = db
-        .from("service_orders")
-        .select("*, customers!inner(full_name), devices(brand, model)")
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (search) {
-        const filter = `order_number.ilike.%${search}%,reported_issue.ilike.%${search}%,intake_notes.ilike.%${search}%,internal_notes.ilike.%${search}%`;
-        query = query.or(filter);
-        countQuery = countQuery.or(filter);
-      }
-      if (filterStatus) {
-        query = query.eq("status", filterStatus);
-        countQuery = countQuery.eq("status", filterStatus);
-      }
-
-      const [{ data, error }, { count }] = await Promise.all([query, countQuery]);
+      const { data, error } = await db.rpc("search_service_orders", {
+        _search: search || null,
+        _status: filterStatus || null,
+        _page: page,
+        _page_size: pageSize,
+      });
       if (error) throw error;
-      const total = count || 0;
+      const result = typeof data === "string" ? JSON.parse(data) : data;
       return {
-        items: (data as any[]).map((d) => ({
-          ...d,
-          customer_name: d.customers?.full_name,
-          device_label: d.devices ? `${d.devices.brand || ""} ${d.devices.model || ""}`.trim() : null,
-          customers: undefined,
-          devices: undefined,
-        })) as ServiceOrder[],
-        total,
-        page,
-        pageSize,
-        totalPages: Math.max(1, Math.ceil(total / pageSize)),
-      } as PaginatedResult<ServiceOrder>;
+        items: (result.items || []) as ServiceOrder[],
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
+      };
     },
   });
 }
