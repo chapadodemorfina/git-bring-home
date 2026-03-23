@@ -29,7 +29,7 @@ interface Props {
   hideSummary?: boolean;
 }
 
-export default function FinancialTab({ serviceOrderId, totalAmount, orderStatus }: Props) {
+export default function FinancialTab({ serviceOrderId, totalAmount, orderStatus, hideSummary = false }: Props) {
   const qc = useQueryClient();
   const { toast } = useToast();
 
