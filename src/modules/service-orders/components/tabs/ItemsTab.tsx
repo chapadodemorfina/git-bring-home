@@ -41,6 +41,7 @@ const typeColors: Record<SOItemType, string> = {
 
 interface Props {
   serviceOrderId: string;
+  hideSummary?: boolean;
 }
 
 const emptyForm: SOItemFormData = {
@@ -52,7 +53,7 @@ const emptyForm: SOItemFormData = {
   notes: null,
 };
 
-export default function ItemsTab({ serviceOrderId }: Props) {
+export default function ItemsTab({ serviceOrderId, hideSummary = false }: Props) {
   const qc = useQueryClient();
   const { data: items, isLoading } = useServiceOrderItems(serviceOrderId);
   const addMutation = useAddSOItem();
@@ -109,23 +110,25 @@ export default function ItemsTab({ serviceOrderId }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Total summary */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-primary" />
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Oficial da OS</p>
-                <p className="text-2xl font-bold font-mono text-primary">{formatBRL(total)}</p>
+      {/* Total summary — hidden when embedded in CommercialTab */}
+      {!hideSummary && (
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Oficial da OS</p>
+                  <p className="text-2xl font-bold font-mono text-primary">{formatBRL(total)}</p>
+                </div>
               </div>
+              <Badge variant="outline" className="text-xs">
+                {items?.length ?? 0} {(items?.length ?? 0) === 1 ? "item" : "itens"}
+              </Badge>
             </div>
-            <Badge variant="outline" className="text-xs">
-              {items?.length ?? 0} {(items?.length ?? 0) === 1 ? "item" : "itens"}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Items list */}
       <Card>
