@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import DataPagination from "@/components/ui/data-pagination";
-import { Plus, Search, ShoppingBag, DollarSign, TrendingUp, BarChart3 } from "lucide-react";
+import { Plus, ShoppingBag, DollarSign, TrendingUp, BarChart3 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
