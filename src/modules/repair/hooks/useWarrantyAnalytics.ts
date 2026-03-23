@@ -126,18 +126,21 @@ export function useWarrantyReturnsList(search?: string, page: number = 1, status
   return useQuery<PaginatedResult<any>>({
     queryKey: ["warranty-returns-list", search, page, statusFilter],
     queryFn: async () => {
-      const params: PaginationParams = { page, search };
-      const result = await executePaginatedQuery<any>(params, {
-        table: "warranty_returns",
-        select: "*, warranties(warranty_number, customer_id, service_order_id, service_orders(order_number, customers(full_name)))",
-        searchColumns: ["reason"],
-        defaultSort: { column: "created_at", ascending: false },
+      const { data, error } = await db.rpc("search_warranty_returns", {
+        _search: search || null,
+        _status: statusFilter || null,
+        _page: page,
+        _page_size: 25,
       });
-      let items = result.items;
-      if (statusFilter) {
-        items = items.filter((r: any) => r.status === statusFilter);
-      }
-      return { ...result, items };
+      if (error) throw error;
+      const result = typeof data === "string" ? JSON.parse(data) : data;
+      return {
+        items: (result.items || []) as any[],
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
+      };
     },
   });
 }

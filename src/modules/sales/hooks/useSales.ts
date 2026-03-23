@@ -19,38 +19,24 @@ export function useSales(
   return useQuery<PaginatedResult<Sale>>({
     queryKey: ["sales", search, statusFilter, paymentFilter, dateFrom, dateTo, page],
     queryFn: async () => {
-      const filters: Record<string, any> = {};
-      if (statusFilter) filters.status = statusFilter;
-      if (paymentFilter) filters.payment_status = paymentFilter;
-
-      return executePaginatedQuery<Sale>(
-        { page, search: search || undefined, filters },
-        {
-          table: "sales",
-          select: "*, customers(full_name), profiles!sales_seller_user_id_fkey(full_name)",
-          searchColumns: ["sale_number", "notes"],
-          defaultSort: { column: "created_at", ascending: false },
-          additionalFilters: (q: any) => {
-            if (dateFrom) q = q.gte("created_at", dateFrom);
-            if (dateTo) q = q.lte("created_at", dateTo + "T23:59:59");
-            return q;
-          },
-          countFilters: (q: any) => {
-            if (dateFrom) q = q.gte("created_at", dateFrom);
-            if (dateTo) q = q.lte("created_at", dateTo + "T23:59:59");
-            return q;
-          },
-        }
-      ).then(result => ({
-        ...result,
-        items: result.items.map((s: any) => ({
-          ...s,
-          customer_name: s.customers?.full_name || null,
-          seller_name: s.profiles?.full_name || null,
-          customers: undefined,
-          profiles: undefined,
-        })),
-      }));
+      const { data, error } = await db.rpc("search_sales", {
+        _search: search || null,
+        _status: statusFilter || null,
+        _payment_status: paymentFilter || null,
+        _date_from: dateFrom || null,
+        _date_to: dateTo || null,
+        _page: page,
+        _page_size: 25,
+      });
+      if (error) throw error;
+      const result = typeof data === "string" ? JSON.parse(data) : data;
+      return {
+        items: (result.items || []) as Sale[],
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
+      };
     },
   });
 }
