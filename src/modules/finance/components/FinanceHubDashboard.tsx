@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign, TrendingUp, TrendingDown, Wallet,
   Banknote, Landmark, ArrowUpRight, ArrowDownRight,
-  AlertTriangle, Receipt, ListChecks, Filter, Clock,
+  AlertTriangle, Receipt, ListChecks,
 } from "lucide-react";
 
 const fmt = (v: number) =>
