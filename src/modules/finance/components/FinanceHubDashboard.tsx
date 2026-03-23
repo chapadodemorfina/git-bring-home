@@ -46,8 +46,6 @@ export default function FinanceHubDashboard() {
     { label: "Contas a Receber", icon: Receipt, onClick: () => goTab("receivables") },
     { label: "Controle de Caixa", icon: Banknote, onClick: () => goTab("cash-register") },
     { label: "Lançamentos", icon: ListChecks, onClick: () => goTab("entries") },
-    { label: "Pendentes", icon: Filter, onClick: () => goTab("entries") },
-    { label: "Vencidos", icon: Clock, onClick: () => goTab("receivables") },
   ];
 
   const alerts = [
