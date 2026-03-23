@@ -58,7 +58,6 @@ export default function CommunicationHubDashboard() {
     { label: "WhatsApp", icon: MessageSquare, onClick: () => goTab("whatsapp") },
     { label: "Mensagens", icon: Mail, onClick: () => goTab("messages") },
     { label: "Notificações", icon: Bell, onClick: () => goTab("notifications") },
-    { label: "Histórico", icon: MessagesSquare, onClick: () => goTab("whatsapp") },
   ];
 
   const alerts: { label: string; color: string }[] = [];

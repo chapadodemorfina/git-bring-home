@@ -39,19 +39,23 @@ export default function ModulePage({ title, description, icon: Icon, tabs, defau
       )}
 
       <Tabs value={currentTab} onValueChange={handleTabChange}>
-        <div className="overflow-x-auto -mx-6 px-6 scrollbar-hide">
-          <TabsList className={cn("inline-flex h-10 w-auto min-w-full sm:min-w-0")}>
-            {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.key}
-                value={tab.key}
-                className="whitespace-nowrap gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
-              >
-                {tab.icon && <tab.icon className="h-3.5 w-3.5" />}
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="relative -mx-6 px-6">
+          <div className="overflow-x-auto scrollbar-hide">
+            <TabsList className={cn("inline-flex h-10 w-auto min-w-full sm:min-w-0")}>
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.key}
+                  value={tab.key}
+                  className="whitespace-nowrap gap-1.5 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+                >
+                  {tab.icon && <tab.icon className="h-3.5 w-3.5" />}
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          {/* Fade indicators for mobile scroll */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden" />
         </div>
 
         {tabs.map((tab) => (

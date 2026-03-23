@@ -66,8 +66,6 @@ export default function CommissionsHubDashboard() {
     { label: "Parceiros", icon: Building2, onClick: () => go("partners") },
     { label: "Relatórios", icon: FileText, onClick: () => go("reports") },
     { label: "Equipe", icon: Users, onClick: () => go("team") },
-    { label: "Pendentes", icon: Filter, onClick: () => go("partners") },
-    { label: "Pagas", icon: CheckCircle2, onClick: () => go("partners") },
   ];
 
   const alerts: { label: string; color: string }[] = [];

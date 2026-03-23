@@ -85,7 +85,7 @@ export default function FinanceHubDashboard() {
                     <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
                     <span className="text-[11px] font-medium text-muted-foreground">{kpi.label}</span>
                   </div>
-                  <p className="text-lg font-bold">{kpi.value}</p>
+                  <p className="text-base sm:text-lg font-bold truncate">{kpi.value}</p>
                   {kpi.sub && <p className="text-[10px] text-muted-foreground">{kpi.sub}</p>}
                 </>
               )}
