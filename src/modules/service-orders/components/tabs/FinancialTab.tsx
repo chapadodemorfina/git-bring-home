@@ -26,6 +26,7 @@ interface Props {
   serviceOrderId: string;
   totalAmount: number;
   orderStatus: string;
+  hideSummary?: boolean;
 }
 
 export default function FinancialTab({ serviceOrderId, totalAmount, orderStatus }: Props) {
