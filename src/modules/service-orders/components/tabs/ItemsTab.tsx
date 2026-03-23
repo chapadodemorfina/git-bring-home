@@ -268,7 +268,7 @@ export default function ItemsTab({ serviceOrderId }: Props) {
           <div className="space-y-4">
             <div>
               <Label>Tipo *</Label>
-              <Select value={form.item_type} onValueChange={(v) => setForm((f) => ({ ...f, item_type: v as SOItemType }))}>
+              <Select value={form.item_type} onValueChange={(v) => setForm((f) => ({ ...f, item_type: v as SOItemType, product_id: undefined, description: v !== f.item_type ? "" : f.description, unit_price: v !== f.item_type ? 0 : f.unit_price }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(itemTypeLabels).map(([k, v]) => (
@@ -277,14 +277,46 @@ export default function ItemsTab({ serviceOrderId }: Props) {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Descrição *</Label>
-              <Input
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Troca de tela, mão de obra, etc."
-              />
-            </div>
+            {form.item_type === "product" ? (
+              <>
+                <div>
+                  <Label>Produto do Catálogo</Label>
+                  <ProductCombobox
+                    products={products ?? []}
+                    value={form.product_id || ""}
+                    onValueChange={(id, prod) => {
+                      if (prod) {
+                        setForm((f) => ({
+                          ...f,
+                          product_id: id,
+                          description: `${prod.sku} — ${prod.name}`,
+                          unit_price: prod.sale_price ?? f.unit_price,
+                        }));
+                      }
+                    }}
+                    showStock
+                    placeholder="Buscar produto por nome ou SKU..."
+                  />
+                </div>
+                <div>
+                  <Label>Descrição *</Label>
+                  <Input
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    placeholder="Preenchido automaticamente ao selecionar produto"
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <Label>Descrição *</Label>
+                <Input
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Troca de tela, mão de obra, etc."
+                />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Quantidade</Label>
