@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProductCombobox } from "@/components/ui/product-combobox";
 import { Button } from "@/components/ui/button";
 import { useAllProducts, useAddStockEntry } from "../hooks/useInventory";
 import { stockEntrySchema, type StockEntryFormData } from "../types";
@@ -38,12 +38,15 @@ export default function StockEntryDialog({ open, onOpenChange, preselectedProduc
             <FormField control={form.control} name="product_id" render={({ field }) => (
               <FormItem>
                 <FormLabel>Produto *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    {products?.map(p => <SelectItem key={p.id} value={p.id}>{p.sku} — {p.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <ProductCombobox
+                    products={products ?? []}
+                    value={field.value}
+                    onValueChange={(id) => field.onChange(id)}
+                    showStock
+                    placeholder="Buscar produto por nome ou SKU..."
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />

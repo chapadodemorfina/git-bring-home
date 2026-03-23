@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProductCombobox } from "@/components/ui/product-combobox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -53,16 +53,15 @@ export default function ConsumePartPanel({ serviceOrderId }: Props) {
                 <FormField control={form.control} name="product_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Peça *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {products?.filter(p => p.quantity > 0).map(p => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.sku} — {p.name} (estoque: {p.quantity})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <ProductCombobox
+                        products={products ?? []}
+                        value={field.value}
+                        onValueChange={(id) => field.onChange(id)}
+                        filterInStock
+                        placeholder="Buscar peça por nome ou SKU..."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
