@@ -255,6 +255,44 @@ export default function ServiceOrderDetailPage() {
     }
   };
 
+  const handlePaymentReceipt = async () => {
+    if (!order) return;
+    const company = {
+      name: companySettings.company_name,
+      legalName: companySettings.company_legal_name,
+      cnpj: companySettings.company_cnpj,
+      address: companySettings.company_address,
+      phone: companySettings.company_phone,
+      email: companySettings.company_email,
+      logoUrl: companySettings.company_logo_url,
+    };
+    const allEntries = financialEntries || [];
+    const allPayments = financialPayments || [];
+    await generatePaymentReceiptPdf({
+      orderNumber: order.order_number,
+      customerName: order.customer_name || "Consumidor",
+      customerPhone: order.customer_phone,
+      customerDocument: order.customer_document,
+      deviceLabel: [order.device_brand, order.device_model].filter(Boolean).join(" ") || order.device_label || undefined,
+      totalAmount: Number(order.total_amount || 0),
+      entries: allEntries
+        .filter((e: any) => e.status !== "cancelled")
+        .map((e: any) => ({
+          description: e.description,
+          amount: Number(e.amount),
+          paidAmount: Number(e.paid_amount || 0),
+          status: e.status,
+          isPrimary: !!e.is_primary_os_revenue,
+        })),
+      payments: allPayments.map((p: any) => ({
+        amount: Number(p.amount),
+        method: p.payment_method,
+        paidAt: p.paid_at,
+        notes: p.notes,
+      })),
+    }, company);
+  };
+
   const handleDelete = async () => {
     if (!id) return;
     await deleteMutation.mutateAsync(id);
