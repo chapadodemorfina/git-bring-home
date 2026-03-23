@@ -41,6 +41,7 @@ const typeColors: Record<SOItemType, string> = {
 
 interface Props {
   serviceOrderId: string;
+  hideSummary?: boolean;
 }
 
 const emptyForm: SOItemFormData = {
