@@ -29,6 +29,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ArrowLeft, Edit, Trash2, Printer, RefreshCw, Tag, FileDown, ClipboardList, Stethoscope, Wrench, DollarSign, Truck, ShoppingCart, MoreHorizontal, MessageCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ServiceOrderStepper from "../components/ServiceOrderStepper";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateServiceOrderPdf } from "@/lib/pdf-generators/service-order-pdf";
 import { useCompanySettings, settingIsTrue, type CompanySettings } from "@/hooks/useCompanySettings";
