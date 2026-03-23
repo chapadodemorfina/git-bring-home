@@ -155,6 +155,38 @@ export default function ServiceOrderDetailPage() {
   const { data: signatures } = useOrderSignatures(id);
   const { data: terms } = useActiveTerms();
   const { data: publicLinks } = useServiceOrderPublicLinks(id);
+
+  // Financial data for payment receipt
+  const { data: financialEntries } = useQuery({
+    queryKey: ["so-financial-entries", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("financial_entries")
+        .select("*")
+        .eq("service_order_id", id!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+
+  const { data: financialPayments } = useQuery({
+    queryKey: ["so-financial-payments", id],
+    enabled: !!id && (financialEntries || []).length > 0,
+    queryFn: async () => {
+      const entryIds = (financialEntries || []).map((e: any) => e.id);
+      if (entryIds.length === 0) return [];
+      const { data, error } = await db
+        .from("financial_payments")
+        .select("*")
+        .in("financial_entry_id", entryIds)
+        .order("paid_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+
   const activeLink = publicLinks?.find((l: any) => l.status === "active");
   const trackingUrl = activeLink
     ? `${window.location.origin}/track/${activeLink.public_token}`
