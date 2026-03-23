@@ -53,16 +53,15 @@ export default function ConsumePartPanel({ serviceOrderId }: Props) {
                 <FormField control={form.control} name="product_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Peça *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {products?.filter(p => p.quantity > 0).map(p => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.sku} — {p.name} (estoque: {p.quantity})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <ProductCombobox
+                        products={products ?? []}
+                        value={field.value}
+                        onValueChange={(id) => field.onChange(id)}
+                        filterInStock
+                        placeholder="Buscar peça por nome ou SKU..."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
