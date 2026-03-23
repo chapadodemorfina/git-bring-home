@@ -4,14 +4,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  UserRound, Monitor, MapPin, Users, Plus, Search,
+  UserRound, Monitor, MapPin, Users, Plus,
   Clock, ArrowRight,
 } from "lucide-react";
-import { SearchInput } from "@/components/ui/search-input";
-import { useState } from "react";
 import { format } from "date-fns";
 
 const db = supabase as any;
@@ -37,7 +34,6 @@ function useRegistrationCounts() {
         db.from("customers").select("id, full_name, created_at").order("created_at", { ascending: false }).limit(5),
         db.from("devices").select("id, brand, model, created_at, customers!inner(full_name)").order("created_at", { ascending: false }).limit(5),
       ]);
-
       return {
         customers: customersRes.count ?? 0,
         devices: devicesRes.count ?? 0,
@@ -45,10 +41,7 @@ function useRegistrationCounts() {
         users: usersRes.count ?? 0,
         recentCustomers: recentCustRes.data ?? [],
         recentDevices: (recentDevRes.data ?? []).map((d: any) => ({
-          id: d.id,
-          brand: d.brand,
-          model: d.model,
-          created_at: d.created_at,
+          id: d.id, brand: d.brand, model: d.model, created_at: d.created_at,
           customer_name: d.customers?.full_name,
         })),
       };
@@ -62,10 +55,8 @@ export default function RegistrationsHubDashboard() {
   const { hasRole } = useAuth();
   const navigate = useNavigate();
   const [, setParams] = useSearchParams();
-  const [search, setSearch] = useState("");
 
   const isAdminOrManager = hasRole("admin") || hasRole("manager");
-
   const d = data || { customers: 0, devices: 0, collectionPoints: 0, users: 0, recentCustomers: [], recentDevices: [] };
 
   const kpis = [
@@ -81,13 +72,6 @@ export default function RegistrationsHubDashboard() {
 
   const goTab = (tab: string) => setParams({ tab }, { replace: true });
 
-  const handleSearch = (v: string) => {
-    setSearch(v);
-    if (v.trim()) {
-      goTab("customers");
-    }
-  };
-
   const shortcuts = [
     { label: "Novo Cliente", icon: UserRound, onClick: () => navigate("/customers/new") },
     { label: "Novo Dispositivo", icon: Monitor, onClick: () => navigate("/devices/new") },
@@ -102,7 +86,7 @@ export default function RegistrationsHubDashboard() {
   return (
     <div className="space-y-4">
       {/* KPI Cards */}
-      <div className={`grid gap-3 grid-cols-2 ${isAdminOrManager ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}>
+      <div className={`grid gap-3 grid-cols-2 ${isAdminOrManager ? "sm:grid-cols-4" : "sm:grid-cols-2"}`}>
         {kpis.map((kpi) => (
           <Card key={kpi.label}>
             <CardContent className="pt-3 pb-2 px-4">
@@ -125,25 +109,18 @@ export default function RegistrationsHubDashboard() {
         ))}
       </div>
 
-      {/* Quick Actions + Search */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-2">
         {shortcuts.map((s) => (
           <Button key={s.label} variant="outline" size="sm" onClick={s.onClick} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             {s.label}
           </Button>
         ))}
-        <SearchInput
-          value={search}
-          onSearch={handleSearch}
-          placeholder="Buscar cadastro..."
-          containerClassName="max-w-xs"
-        />
       </div>
 
       {/* Recent Records */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        {/* Recent Customers */}
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -181,7 +158,6 @@ export default function RegistrationsHubDashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Devices */}
         <Card>
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
