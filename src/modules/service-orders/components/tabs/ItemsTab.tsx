@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Package, Wrench, HardHat, ShoppingCart } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAllProducts } from "@/modules/inventory/hooks/useInventory";
+import { ProductCombobox } from "@/components/ui/product-combobox";
 
 function formatBRL(value: number) {
   return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
