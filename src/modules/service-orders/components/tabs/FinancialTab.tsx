@@ -148,36 +148,38 @@ export default function FinancialTab({ serviceOrderId, totalAmount, orderStatus,
         </CardContent>
       </Card>
 
-      {/* Primary revenue summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Receita Principal</span>
-            </div>
-            <p className="text-lg font-bold font-mono">{formatBRL(primaryAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <CreditCard className="h-4 w-4 text-green-600" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pago</span>
-            </div>
-            <p className="text-lg font-bold font-mono text-green-600">{formatBRL(primaryPaid)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pendente</span>
-            </div>
-            <p className={`text-lg font-bold font-mono ${primaryPending > 0 ? "text-amber-600" : ""}`}>{formatBRL(Math.max(0, primaryPending))}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Primary revenue summary — hidden when embedded in CommercialTab */}
+      {!hideSummary && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Receita Principal</span>
+              </div>
+              <p className="text-lg font-bold font-mono">{formatBRL(primaryAmount)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <CreditCard className="h-4 w-4 text-green-600" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pago</span>
+              </div>
+              <p className="text-lg font-bold font-mono text-green-600">{formatBRL(primaryPaid)}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pendente</span>
+              </div>
+              <p className={`text-lg font-bold font-mono ${primaryPending > 0 ? "text-amber-600" : ""}`}>{formatBRL(Math.max(0, primaryPending))}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Auxiliary revenues warning */}
       {auxiliaryRevenues.length > 0 && (
