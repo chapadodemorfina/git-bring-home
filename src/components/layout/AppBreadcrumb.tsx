@@ -6,13 +6,20 @@ import {
 
 const routeLabels: Record<string, string> = {
   dashboard: "Dashboard",
+  operation: "Operação",
+  registrations: "Cadastros",
+  stock: "Estoque",
+  commercial: "Comercial",
+  financial: "Financeiro",
+  "commissions-hub": "Comissões",
+  communication: "Comunicação",
+  "admin-hub": "Administração",
   customers: "Clientes",
   devices: "Dispositivos",
   "service-orders": "Ordens de Serviço",
   new: "Novo",
   edit: "Editar",
   users: "Usuários",
-  roles: "Perfis de Acesso",
   settings: "Configurações",
   "audit-logs": "Logs de Auditoria",
   inventory: "Estoque",
@@ -22,6 +29,11 @@ const routeLabels: Record<string, string> = {
   "collection-points": "Pontos de Coleta",
   logistics: "Logística",
   finance: "Financeiro",
+  quotes: "Orçamentos",
+  sales: "Vendas",
+  warranties: "Garantias",
+  scrap: "Sucata",
+  system: "Sistema",
 };
 
 export function AppBreadcrumb() {
