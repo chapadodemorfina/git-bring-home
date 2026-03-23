@@ -28,13 +28,15 @@ export default function ModulePage({ title, description, icon: Icon, tabs, defau
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          {Icon && <Icon className="h-6 w-6" />}
-          {title}
-        </h1>
-        {description && <p className="text-muted-foreground text-sm mt-1">{description}</p>}
-      </div>
+      {title && (
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            {Icon && <Icon className="h-6 w-6" />}
+            {title}
+          </h1>
+          {description && <p className="text-muted-foreground text-sm mt-1">{description}</p>}
+        </div>
+      )}
 
       <Tabs value={currentTab} onValueChange={handleTabChange}>
         <div className="overflow-x-auto -mx-6 px-6 scrollbar-hide">
