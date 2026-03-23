@@ -4,6 +4,8 @@ import CustomersListPage from "@/modules/customers/pages/CustomersListPage";
 import DevicesListPage from "@/modules/devices/pages/DevicesListPage";
 import CollectionPointsListPage from "@/modules/collection-points/pages/CollectionPointsListPage";
 import UsersListPage from "@/modules/users/pages/UsersListPage";
+import RegistrationsHubDashboard from "@/components/registrations/RegistrationsHubDashboard";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function RegistrationsModulePage() {
@@ -22,11 +24,20 @@ export default function RegistrationsModulePage() {
   ];
 
   return (
-    <ModulePage
-      title="Cadastros"
-      description="Clientes, dispositivos, pontos de coleta e equipe"
-      icon={UserRound}
-      tabs={tabs}
-    />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <UserRound className="h-6 w-6" />
+          Cadastros
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">Clientes, dispositivos, pontos de coleta e equipe</p>
+      </div>
+
+      <RegistrationsHubDashboard />
+
+      <Separator />
+
+      <ModulePage title="" tabs={tabs} />
+    </div>
   );
 }
