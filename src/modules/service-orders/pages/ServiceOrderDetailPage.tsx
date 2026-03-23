@@ -14,10 +14,7 @@ import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButto
 import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
 import IntakeTab from "../components/tabs/IntakeTab";
 import DiagnosisQuoteTab from "../components/tabs/DiagnosisQuoteTab";
-import ItemsTab from "../components/tabs/ItemsTab";
-import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
-import AttachmentUpload from "../components/AttachmentUpload";
-import FinancialTab from "../components/tabs/FinancialTab";
+import CommercialTab from "../components/tabs/CommercialTab";
 import LogisticsPartnerTab from "../components/tabs/LogisticsPartnerTab";
 import { useServiceOrderPublicLinks, useGeneratePublicLink } from "@/modules/tracking/hooks/usePublicTracking";
 import { Badge } from "@/components/ui/badge";
