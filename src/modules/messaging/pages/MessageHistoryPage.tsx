@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataPagination from "@/components/ui/data-pagination";
+import { SearchInput } from "@/components/ui/search-input";
 import { MessageSquare, RefreshCw, CheckCircle, XCircle, Clock, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,6 +29,7 @@ const eventLabels: Record<string, string> = {
 export default function MessageHistoryPage() {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [eventType, setEventType] = useState("all");
   const [status, setStatus] = useState("all");
   const resend = useResendMessage();
@@ -36,6 +38,7 @@ export default function MessageHistoryPage() {
     {
       eventType: eventType === "all" ? undefined : eventType,
       status: status === "all" ? undefined : status,
+      search: search || undefined,
     },
     page,
   );
