@@ -5452,6 +5452,76 @@ export type Database = {
         Returns: Json
       }
       scrap_dashboard_summary: { Args: never; Returns: Json }
+      search_financial_entries: {
+        Args: {
+          _entry_type?: string
+          _page?: number
+          _page_size?: number
+          _search?: string
+          _status?: string
+        }
+        Returns: Json
+      }
+      search_receivables: {
+        Args: {
+          _overdue_only?: boolean
+          _page?: number
+          _page_size?: number
+          _search?: string
+          _status?: string
+        }
+        Returns: Json
+      }
+      search_sales: {
+        Args: {
+          _date_from?: string
+          _date_to?: string
+          _page?: number
+          _page_size?: number
+          _payment_status?: string
+          _search?: string
+          _status?: string
+        }
+        Returns: Json
+      }
+      search_service_orders: {
+        Args: {
+          _page?: number
+          _page_size?: number
+          _search?: string
+          _status?: string
+        }
+        Returns: Json
+      }
+      search_stock_movements: {
+        Args: {
+          _movement_type?: string
+          _page?: number
+          _page_size?: number
+          _product_id?: string
+          _search?: string
+        }
+        Returns: Json
+      }
+      search_warranties: {
+        Args: {
+          _page?: number
+          _page_size?: number
+          _search?: string
+          _status_filter?: string
+          _type_filter?: string
+        }
+        Returns: Json
+      }
+      search_warranty_returns: {
+        Args: {
+          _page?: number
+          _page_size?: number
+          _search?: string
+          _status?: string
+        }
+        Returns: Json
+      }
       set_tenant_context: { Args: { _tenant_id: string }; Returns: undefined }
       switch_tenant: { Args: { _tenant_id: string }; Returns: Json }
       team_ranking_data: {
