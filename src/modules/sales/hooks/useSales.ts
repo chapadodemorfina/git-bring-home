@@ -49,14 +49,26 @@ export function useSale(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await db
         .from("sales")
-        .select("*, customers(full_name), profiles!sales_seller_user_id_fkey(full_name)")
+        .select("*, customers(full_name)")
         .eq("id", id!)
         .single();
       if (error) throw error;
+
+      // Fetch seller name separately since there's no FK to profiles
+      let sellerName: string | null = null;
+      if (data.seller_user_id) {
+        const { data: profile } = await db
+          .from("profiles")
+          .select("full_name")
+          .eq("id", data.seller_user_id)
+          .maybeSingle();
+        sellerName = profile?.full_name || null;
+      }
+
       return {
         ...data,
         customer_name: data.customers?.full_name || null,
-        seller_name: data.profiles?.full_name || null,
+        seller_name: sellerName,
       } as Sale;
     },
   });
