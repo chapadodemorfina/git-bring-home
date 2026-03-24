@@ -1551,6 +1551,7 @@ export type Database = {
           notes: string | null
           paid_amount: number
           quote_id: string | null
+          sale_id: string | null
           service_order_id: string | null
           status: Database["public"]["Enums"]["financial_entry_status"]
           supplier_id: string | null
@@ -1572,6 +1573,7 @@ export type Database = {
           notes?: string | null
           paid_amount?: number
           quote_id?: string | null
+          sale_id?: string | null
           service_order_id?: string | null
           status?: Database["public"]["Enums"]["financial_entry_status"]
           supplier_id?: string | null
@@ -1593,6 +1595,7 @@ export type Database = {
           notes?: string | null
           paid_amount?: number
           quote_id?: string | null
+          sale_id?: string | null
           service_order_id?: string | null
           status?: Database["public"]["Enums"]["financial_entry_status"]
           supplier_id?: string | null
@@ -1626,6 +1629,13 @@ export type Database = {
             columns: ["quote_id"]
             isOneToOne: false
             referencedRelation: "repair_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_entries_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
             referencedColumns: ["id"]
           },
           {
@@ -5385,6 +5395,10 @@ export type Database = {
       }
       public_track_order: { Args: { _token: string }; Returns: Json }
       quotes_summary: { Args: never; Returns: Json }
+      recalculate_sale_payment_status: {
+        Args: { _sale_id: string }
+        Returns: undefined
+      }
       receivables_summary: { Args: never; Returns: Json }
       recover_scrap_part: {
         Args: { _recovered_part_id: string }
