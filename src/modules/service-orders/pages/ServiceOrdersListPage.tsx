@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataPagination from "@/components/ui/data-pagination";
 import { SearchInput } from "@/components/ui/search-input";
-import { Plus, ClipboardList } from "lucide-react";
+import { Plus, ClipboardList, MapPin, Store } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -80,6 +80,7 @@ export default function ServiceOrdersListPage() {
                       <TableHead>Status</TableHead>
                       <TableHead className="hidden lg:table-cell">Prioridade</TableHead>
                       <TableHead className="hidden lg:table-cell">Responsável</TableHead>
+                      <TableHead className="hidden lg:table-cell">Origem</TableHead>
                       <TableHead className="text-right">Valor OS</TableHead>
                       <TableHead className="hidden xl:table-cell">Criado em</TableHead>
                     </TableRow>
@@ -93,7 +94,19 @@ export default function ServiceOrdersListPage() {
                         <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
                         <TableCell className="hidden lg:table-cell"><Badge className={priorityColors[o.priority]}>{priorityLabels[o.priority]}</Badge></TableCell>
                         <TableCell className="hidden lg:table-cell text-muted-foreground">{o.technician_name || "—"}</TableCell>
-                        <TableCell className="text-right font-mono text-sm font-semibold">
+                        <TableCell className="hidden lg:table-cell">
+                          {o.collection_point_name ? (
+                            <span className="inline-flex items-center gap-1 text-sm">
+                              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                              {o.collection_point_name}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                              <Store className="h-3.5 w-3.5" />
+                              Balcão
+                            </span>
+                          )}
+                        </TableCell>
                           {o.total_amount > 0 ? formatBRL(o.total_amount) : (
                             <span className="text-muted-foreground font-normal">—</span>
                           )}
