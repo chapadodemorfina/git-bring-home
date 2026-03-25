@@ -107,6 +107,7 @@ export default function ServiceOrdersListPage() {
                             </span>
                           )}
                         </TableCell>
+                        <TableCell className="text-right font-mono text-sm font-semibold">
                           {o.total_amount > 0 ? formatBRL(o.total_amount) : (
                             <span className="text-muted-foreground font-normal">—</span>
                           )}
