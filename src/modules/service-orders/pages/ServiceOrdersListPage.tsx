@@ -79,6 +79,7 @@ export default function ServiceOrdersListPage() {
                       <TableHead className="hidden lg:table-cell">Dispositivo</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="hidden lg:table-cell">Prioridade</TableHead>
+                      <TableHead className="hidden lg:table-cell">Responsável</TableHead>
                       <TableHead className="text-right">Valor OS</TableHead>
                       <TableHead className="hidden xl:table-cell">Criado em</TableHead>
                     </TableRow>
@@ -91,6 +92,7 @@ export default function ServiceOrdersListPage() {
                         <TableCell className="hidden lg:table-cell">{o.device_label || "—"}</TableCell>
                         <TableCell><Badge className={statusColors[o.status]}>{statusLabels[o.status]}</Badge></TableCell>
                         <TableCell className="hidden lg:table-cell"><Badge className={priorityColors[o.priority]}>{priorityLabels[o.priority]}</Badge></TableCell>
+                        <TableCell className="hidden lg:table-cell text-muted-foreground">{o.technician_name || "—"}</TableCell>
                         <TableCell className="text-right font-mono text-sm font-semibold">
                           {o.total_amount > 0 ? formatBRL(o.total_amount) : (
                             <span className="text-muted-foreground font-normal">—</span>
