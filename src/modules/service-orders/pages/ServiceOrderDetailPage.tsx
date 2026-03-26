@@ -91,6 +91,7 @@ export default function ServiceOrderDetailPage() {
   const labelRef = useRef<HTMLDivElement>(null);
   const companySettings = useCompanySettings();
   const generateLink = useGeneratePublicLink();
+  const { data: orderAttachments } = useOrderAttachments(id);
 
   const { data: statusHistory } = useQuery({
     queryKey: ["so-status-history-pdf", id],
