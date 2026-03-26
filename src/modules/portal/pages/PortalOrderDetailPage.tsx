@@ -200,18 +200,7 @@ export default function PortalOrderDetailPage() {
       </Card>
 
       {/* Attachments */}
-      {attachments && attachments.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Paperclip className="h-4 w-4" /> Anexos</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(attachments as any[]).map((att: any) => (
-                <PortalAttachmentLink key={att.id} att={att} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <PortalAttachmentGallery attachments={attachments as any[]} />
     </div>
   );
 }
