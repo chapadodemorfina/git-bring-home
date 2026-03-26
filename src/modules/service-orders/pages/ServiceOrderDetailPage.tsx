@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatures } from "../hooks/useServiceOrders";
+import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatures, useOrderAttachments } from "../hooks/useServiceOrders";
 import { statusLabels, statusColors, priorityLabels, priorityColors, channelLabels, statusTransitions } from "../types";
 import StatusTimeline from "../components/StatusTimeline";
 import StatusChangeDialog from "../components/StatusChangeDialog";
