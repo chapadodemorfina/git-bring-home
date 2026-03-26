@@ -101,7 +101,7 @@ function parsePhysicalCondition(raw: string | null | undefined): ChecklistItem[]
 // ─── Main Generator ───────────────────────────────────────────
 export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const { order, statusHistory, company, diagnostic, quoteData, quoteItems,
-          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions } = opts;
+          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions, attachmentPhotos } = opts;
 
   const doc = createPdf();
   const col1 = 16;
