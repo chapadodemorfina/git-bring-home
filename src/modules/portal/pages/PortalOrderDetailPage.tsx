@@ -7,24 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, CheckCircle2, ArrowRight, Paperclip, Download, Stethoscope, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ArrowRight, Stethoscope, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useSignedUrl } from "@/hooks/useSignedUrl";
 import OrderProgressStepper from "../components/OrderProgressStepper";
-
-function PortalAttachmentLink({ att }: { att: any }) {
-  const url = useSignedUrl("service-order-attachments", att.storage_path);
-  return (
-    <a href={url || "#"} target="_blank" rel="noopener noreferrer"
-      className="flex items-center gap-2 text-sm text-primary hover:underline"
-    >
-      <Download className="h-4 w-4" />
-      {att.file_name}
-    </a>
-  );
-}
+import PortalAttachmentGallery from "../components/PortalAttachmentGallery";
 
 const viabilityLabels: Record<string, string> = {
   repairable: "Reparável",
@@ -212,18 +200,7 @@ export default function PortalOrderDetailPage() {
       </Card>
 
       {/* Attachments */}
-      {attachments && attachments.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Paperclip className="h-4 w-4" /> Anexos</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(attachments as any[]).map((att: any) => (
-                <PortalAttachmentLink key={att.id} att={att} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <PortalAttachmentGallery attachments={attachments as any[]} />
     </div>
   );
 }

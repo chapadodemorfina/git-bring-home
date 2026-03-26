@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatures } from "../hooks/useServiceOrders";
+import { useServiceOrder, useDeleteServiceOrder, useActiveTerms, useOrderSignatures, useOrderAttachments } from "../hooks/useServiceOrders";
 import { statusLabels, statusColors, priorityLabels, priorityColors, channelLabels, statusTransitions } from "../types";
 import StatusTimeline from "../components/StatusTimeline";
 import StatusChangeDialog from "../components/StatusChangeDialog";
@@ -91,6 +91,7 @@ export default function ServiceOrderDetailPage() {
   const labelRef = useRef<HTMLDivElement>(null);
   const companySettings = useCompanySettings();
   const generateLink = useGeneratePublicLink();
+  const { data: orderAttachments } = useOrderAttachments(id);
 
   const { data: statusHistory } = useQuery({
     queryKey: ["so-status-history-pdf", id],
@@ -207,6 +208,26 @@ export default function ServiceOrderDetailPage() {
     if (trackingUrl) {
       qrCodeImageData = await generateQrDataUrl(trackingUrl);
     }
+
+    // Fetch attached image photos as data URLs for PDF embedding
+    const imageAttachments = (orderAttachments || []).filter((a: any) => a.file_type?.startsWith("image/"));
+    const attachmentPhotos: { dataUrl: string; fileName: string }[] = [];
+    if (imageAttachments.length > 0) {
+      const { getSignedStorageUrl } = await import("@/lib/storage");
+      const photoPromises = imageAttachments.slice(0, 12).map(async (att: any) => {
+        try {
+          const signedUrl = await getSignedStorageUrl("service-order-attachments", att.storage_path);
+          if (!signedUrl) return null;
+          const { fetchImageAsDataUrl } = await import("@/lib/pdf-utils");
+          const dataUrl = await fetchImageAsDataUrl(signedUrl);
+          if (dataUrl) return { dataUrl, fileName: att.file_name || att.caption || "foto" };
+        } catch { /* skip */ }
+        return null;
+      });
+      const results = await Promise.all(photoPromises);
+      results.forEach((r) => { if (r) attachmentPhotos.push(r); });
+    }
+
     await generateServiceOrderPdf({
       order,
       statusHistory: statusHistory || [],
@@ -236,6 +257,7 @@ export default function ServiceOrderDetailPage() {
       terms: buildPdfTerms(companySettings, terms),
       qrCodeImageData,
       trackingUrl,
+      attachmentPhotos: attachmentPhotos.length > 0 ? attachmentPhotos : undefined,
       displayOptions: {
         showQrCode: settingIsTrue(companySettings.pdf_show_qrcode),
         showSignatures: settingIsTrue(companySettings.pdf_show_signatures),

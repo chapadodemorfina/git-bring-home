@@ -66,6 +66,8 @@ export interface ServiceOrderPdfOptions {
   qrCodeImageData?: string | null;
   trackingUrl?: string | null;
   displayOptions?: PdfDisplayOptions;
+  /** Base64 data URLs of attached photos to embed in the PDF */
+  attachmentPhotos?: { dataUrl: string; fileName: string }[];
 }
 
 // ─── Maps ─────────────────────────────────────────────────────
@@ -99,7 +101,7 @@ function parsePhysicalCondition(raw: string | null | undefined): ChecklistItem[]
 // ─── Main Generator ───────────────────────────────────────────
 export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const { order, statusHistory, company, diagnostic, quoteData, quoteItems,
-          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions } = opts;
+          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions, attachmentPhotos } = opts;
 
   const doc = createPdf();
   const col1 = 16;
@@ -272,6 +274,44 @@ export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
         h.notes || "—",
       ])
     );
+  }
+
+  // ── FOTOS ANEXADAS ──
+  if (attachmentPhotos && attachmentPhotos.length > 0) {
+    y = addSection(doc, `Fotos Anexadas (${attachmentPhotos.length})`, y);
+    const imgW = 50; // mm width per photo
+    const imgH = 38; // mm height per photo
+    const gap = 4;
+    const cols = 3;
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const startX = col1;
+
+    let col = 0;
+    for (const photo of attachmentPhotos) {
+      // Check page break
+      if (y + imgH + 8 > pageH - 20) {
+        doc.addPage();
+        y = addContinuationHeader(doc, order.order_number, order.customer_name || "—");
+      }
+      const x = startX + col * (imgW + gap);
+      try {
+        doc.addImage(photo.dataUrl, "JPEG", x, y, imgW, imgH);
+        // Caption below
+        doc.setFontSize(5);
+        doc.setTextColor(100, 116, 139);
+        const label = photo.fileName.length > 20 ? photo.fileName.substring(0, 20) + "…" : photo.fileName;
+        doc.text(label, x + imgW / 2, y + imgH + 2.5, { align: "center" });
+      } catch {
+        // Skip if image can't be embedded
+      }
+      col++;
+      if (col >= cols) {
+        col = 0;
+        y += imgH + gap + 3;
+      }
+    }
+    if (col > 0) y += imgH + gap + 3; // finish partial row
   }
 
   // ── TERMOS E GARANTIA ──
