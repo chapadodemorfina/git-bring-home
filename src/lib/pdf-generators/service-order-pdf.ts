@@ -66,6 +66,8 @@ export interface ServiceOrderPdfOptions {
   qrCodeImageData?: string | null;
   trackingUrl?: string | null;
   displayOptions?: PdfDisplayOptions;
+  /** Base64 data URLs of attached photos to embed in the PDF */
+  attachmentPhotos?: { dataUrl: string; fileName: string }[];
 }
 
 // ─── Maps ─────────────────────────────────────────────────────
