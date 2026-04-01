@@ -120,10 +120,17 @@ export function useCreateFinancialEntry() {
 
   return useMutation({
     mutationFn: async (formData: FinancialEntryFormData) => {
+      // Get current user for created_by
+      const { data: { user } } = await supabase.auth.getUser();
+
       const payload: any = { ...formData };
       Object.keys(payload).forEach((k) => {
         if (payload[k] === "" || payload[k] === undefined) payload[k] = null;
       });
+
+      if (user?.id) {
+        payload.created_by = user.id;
+      }
 
       const { data, error } = await db.from("financial_entries").insert(payload).select().single();
       if (error) throw error;
