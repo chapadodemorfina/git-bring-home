@@ -2,18 +2,28 @@ import { useNavigate } from "react-router-dom";
 import { useCreateFinancialEntry } from "../hooks/useFinance";
 import FinancialEntryForm from "../components/FinancialEntryForm";
 import { FinancialEntryFormData } from "../types";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function FinanceCreatePage() {
   const navigate = useNavigate();
   const createMutation = useCreateFinancialEntry();
+  const { loading: tenantLoading, activeTenant } = useTenant();
 
   const handleSubmit = async (data: FinancialEntryFormData) => {
     const result = await createMutation.mutateAsync(data);
     navigate(`/finance/${result.id}`);
   };
+
+  if (tenantLoading || !activeTenant) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
