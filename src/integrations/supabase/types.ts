@@ -2585,6 +2585,235 @@ export type Database = {
           },
         ]
       }
+      quote_history: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          quote_id: string
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          quote_id: string
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          quote_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_history_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_history_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          item_type: string
+          product_id: string | null
+          profit_amount: number | null
+          quantity: number
+          quote_id: string
+          tenant_id: string
+          total_cost: number | null
+          total_price: number | null
+          unit_cost: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          item_type?: string
+          product_id?: string | null
+          profit_amount?: number | null
+          quantity?: number
+          quote_id: string
+          tenant_id: string
+          total_cost?: number | null
+          total_price?: number | null
+          unit_cost?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          item_type?: string
+          product_id?: string | null
+          profit_amount?: number | null
+          quantity?: number
+          quote_id?: string
+          tenant_id?: string
+          total_cost?: number | null
+          total_price?: number | null
+          unit_cost?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "mv_inventory_usage"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          description: string | null
+          device_id: string | null
+          discount_amount: number
+          estimated_profit: number
+          id: string
+          quote_number: string
+          rejected_at: string | null
+          rejection_reason: string | null
+          service_order_id: string | null
+          status: string
+          subtotal_labor: number
+          subtotal_other: number
+          subtotal_parts: number
+          tenant_id: string
+          title: string
+          total_amount: number
+          total_cost: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          device_id?: string | null
+          discount_amount?: number
+          estimated_profit?: number
+          id?: string
+          quote_number?: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          service_order_id?: string | null
+          status?: string
+          subtotal_labor?: number
+          subtotal_other?: number
+          subtotal_parts?: number
+          tenant_id: string
+          title: string
+          total_amount?: number
+          total_cost?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          device_id?: string | null
+          discount_amount?: number
+          estimated_profit?: number
+          id?: string
+          quote_number?: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          service_order_id?: string | null
+          status?: string
+          subtotal_labor?: number
+          subtotal_other?: number
+          subtotal_parts?: number
+          tenant_id?: string
+          title?: string
+          total_amount?: number
+          total_cost?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_service_order_id_fkey"
+            columns: ["service_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receivable_payments: {
         Row: {
           amount: number
@@ -5395,6 +5624,10 @@ export type Database = {
       }
       public_track_order: { Args: { _token: string }; Returns: Json }
       quotes_summary: { Args: never; Returns: Json }
+      recalculate_quote_totals: {
+        Args: { _quote_id: string }
+        Returns: undefined
+      }
       recalculate_sale_payment_status: {
         Args: { _sale_id: string }
         Returns: undefined
