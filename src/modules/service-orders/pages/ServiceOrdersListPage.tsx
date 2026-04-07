@@ -57,7 +57,7 @@ export default function ServiceOrdersListPage() {
             <SearchInput
               value={search}
               onSearch={(v) => { setSearch(v); setPage(1); }}
-              placeholder="Buscar por número, cliente, dispositivo, problema..."
+              placeholder="Buscar por número, cliente, dispositivo, ponto de coleta..."
               className="flex-1"
             />
             <ServiceOrderFilters filters={filters} onChange={handleFilterChange} />
