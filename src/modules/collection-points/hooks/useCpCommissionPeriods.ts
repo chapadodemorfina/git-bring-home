@@ -27,10 +27,11 @@ export function useCpCommissionPeriods(
   status?: string,
   periodStart?: string,
   periodEnd?: string,
-  page: number = 1
+  page: number = 1,
+  cpId?: string,
 ) {
   return useQuery<PaginatedResult<CpCommissionPeriod>>({
-    queryKey: ["cp-commission-periods", status, periodStart, periodEnd, page],
+    queryKey: ["cp-commission-periods", status, periodStart, periodEnd, page, cpId],
     queryFn: async () => {
       const params: PaginationParams = { page };
       return executePaginatedQuery<CpCommissionPeriod>(params, {
@@ -42,6 +43,7 @@ export function useCpCommissionPeriods(
           if (status && status !== "all") query = query.eq("status", status);
           if (periodStart) query = query.gte("period_start", periodStart);
           if (periodEnd) query = query.lte("period_end", periodEnd);
+          if (cpId) query = query.eq("collection_point_id", cpId);
           return query;
         },
         countFilters: (q: any) => {
@@ -49,9 +51,33 @@ export function useCpCommissionPeriods(
           if (status && status !== "all") query = query.eq("status", status);
           if (periodStart) query = query.gte("period_start", periodStart);
           if (periodEnd) query = query.lte("period_end", periodEnd);
+          if (cpId) query = query.eq("collection_point_id", cpId);
           return query;
         },
       });
+    },
+  });
+}
+
+export function usePeriodOrders(cpId?: string, periodStart?: string, periodEnd?: string) {
+  return useQuery({
+    queryKey: ["cp-period-orders", cpId, periodStart, periodEnd],
+    enabled: !!cpId && !!periodStart && !!periodEnd,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("service_orders")
+        .select("id, order_number, status, total_amount, created_at, customers(full_name)")
+        .eq("collection_point_id", cpId!)
+        .gte("created_at", periodStart! + "T00:00:00")
+        .lte("created_at", periodEnd! + "T23:59:59")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data as any[]).map((o) => ({
+        ...o,
+        customer_name: o.customers?.full_name || "—",
+        customers: undefined,
+      }));
     },
   });
 }
