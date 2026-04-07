@@ -1,6 +1,7 @@
-import { Percent, DollarSign, BarChart3 } from "lucide-react";
+import { Percent, DollarSign, BarChart3, CalendarClock } from "lucide-react";
 import ModulePage from "@/components/layout/ModulePage";
 import CommissionManagementPage from "@/modules/collection-points/pages/CommissionManagementPage";
+import CpCommissionPeriodsPage from "@/modules/collection-points/pages/CpCommissionPeriodsPage";
 import CpReportsPage from "@/modules/collection-points/pages/CpReportsPage";
 import CommissionsPage from "@/modules/commissions/pages/CommissionsPage";
 import CommissionsHubDashboard from "@/modules/commissions/components/CommissionsHubDashboard";
@@ -24,7 +25,8 @@ export default function CommissionsModulePage() {
       <ModulePage
         title=""
         tabs={[
-          { key: "partners", label: "Comissões Parceiros", icon: DollarSign, content: <CommissionManagementPage /> },
+          { key: "periods", label: "Fechamento Parceiros", icon: CalendarClock, content: <CpCommissionPeriodsPage /> },
+          { key: "partners", label: "Comissões Individuais", icon: DollarSign, content: <CommissionManagementPage /> },
           { key: "reports", label: "Relatório Parceiros", icon: BarChart3, content: <CpReportsPage /> },
           { key: "team", label: "Comissões Equipe", icon: Percent, content: <CommissionsPage /> },
         ]}
