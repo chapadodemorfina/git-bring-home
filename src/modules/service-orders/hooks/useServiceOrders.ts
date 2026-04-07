@@ -7,16 +7,33 @@ import {
 } from "../types";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_PAGE_SIZE, type PaginatedResult } from "@/components/ui/data-pagination";
+import type { ServiceOrderFilterValues } from "../components/ServiceOrderFilters";
 
 const db = supabase as any;
 
-export function useServiceOrders(search?: string, filterStatus?: string | null, page: number = 1, pageSize: number = DEFAULT_PAGE_SIZE) {
+export function useServiceOrders(
+  search?: string,
+  filters?: ServiceOrderFilterValues | null,
+  page: number = 1,
+  pageSize: number = DEFAULT_PAGE_SIZE,
+) {
   return useQuery<PaginatedResult<ServiceOrder>>({
-    queryKey: ["service-orders", search, filterStatus, page, pageSize],
+    queryKey: ["service-orders", search, filters, page, pageSize],
     queryFn: async () => {
       const { data, error } = await db.rpc("search_service_orders", {
         _search: search || null,
-        _status: filterStatus || null,
+        _status: filters?.status || null,
+        _priority: filters?.priority || null,
+        _origin: filters?.origin || null,
+        _collection_point_id: filters?.collectionPointId || null,
+        _technician_id: filters?.technicianId || null,
+        _date_from: filters?.dateFrom
+          ? filters.dateFrom.toISOString().split("T")[0]
+          : null,
+        _date_to: filters?.dateTo
+          ? filters.dateTo.toISOString().split("T")[0]
+          : null,
+        _intake_channel: filters?.intakeChannel || null,
         _page: page,
         _page_size: pageSize,
       });
@@ -45,7 +62,6 @@ export function useServiceOrder(id: string | undefined) {
         .single();
       if (error) throw error;
 
-      // Fetch collection point name separately (no FK exists)
       let collection_point_name: string | null = null;
       if (data.collection_point_id) {
         const { data: cp } = await db
@@ -101,14 +117,12 @@ export function useCreateServiceOrder() {
       const { data: so, error } = await db.from("service_orders").insert(payload).select().single();
       if (error) throw error;
 
-      // Log initial status
       await db.from("service_order_status_history").insert({
         service_order_id: so.id,
         to_status: "received",
         notes: "Ordem de serviço criada",
       });
 
-      // Auto-generate public tracking token
       try {
         await db.rpc("generate_public_tracking_token", {
           _service_order_id: so.id,
@@ -172,7 +186,6 @@ export function useChangeStatus() {
       if (error) throw error;
     },
     onSuccess: async (_, vars) => {
-      // Auto-cancel revenue when OS is cancelled
       if (vars.toStatus === "cancelled") {
         try {
           await db.rpc("cancel_os_revenue", { _service_order_id: vars.id });

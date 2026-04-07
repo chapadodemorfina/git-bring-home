@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useServiceOrders } from "../hooks/useServiceOrders";
-import { statusLabels, statusColors, priorityLabels, priorityColors, ServiceOrderStatus } from "../types";
+import { statusLabels, statusColors, priorityLabels, priorityColors } from "../types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataPagination from "@/components/ui/data-pagination";
 import { SearchInput } from "@/components/ui/search-input";
+import ServiceOrderFilters, { defaultFilters, type ServiceOrderFilterValues } from "../components/ServiceOrderFilters";
 import { Plus, ClipboardList, MapPin, Store } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -19,12 +19,25 @@ function formatBRL(value: number) {
 
 export default function ServiceOrdersListPage() {
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ServiceOrderFilterValues>({ ...defaultFilters });
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useServiceOrders(search, filterStatus, page);
+  const { data, isLoading } = useServiceOrders(search, filters, page);
 
   const orders = data?.items || [];
   const total = data?.total || 0;
+
+  const handleFilterChange = (f: ServiceOrderFilterValues) => {
+    setFilters(f);
+    setPage(1);
+  };
+
+  // Active filter chips for visibility
+  const activeChips: { label: string; onRemove: () => void }[] = [];
+  if (filters.status) activeChips.push({ label: `Status: ${statusLabels[filters.status as keyof typeof statusLabels]}`, onRemove: () => handleFilterChange({ ...filters, status: null }) });
+  if (filters.priority) activeChips.push({ label: `Prioridade: ${priorityLabels[filters.priority as keyof typeof priorityLabels]}`, onRemove: () => handleFilterChange({ ...filters, priority: null }) });
+  if (filters.origin) activeChips.push({ label: `Origem: ${filters.origin === "counter" ? "Balcão" : "Parceiro"}`, onRemove: () => handleFilterChange({ ...filters, origin: null, collectionPointId: null }) });
+  if (filters.dateFrom) activeChips.push({ label: `De: ${format(filters.dateFrom, "dd/MM/yy")}`, onRemove: () => handleFilterChange({ ...filters, dateFrom: undefined }) });
+  if (filters.dateTo) activeChips.push({ label: `Até: ${format(filters.dateTo, "dd/MM/yy")}`, onRemove: () => handleFilterChange({ ...filters, dateTo: undefined }) });
 
   return (
     <div className="space-y-6">
@@ -41,23 +54,23 @@ export default function ServiceOrdersListPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-              <SearchInput
-                value={search}
-                onSearch={(v) => { setSearch(v); setPage(1); }}
-                placeholder="Buscar por número, cliente, dispositivo, problema..."
-              />
-            </div>
-            <Select value={filterStatus || "all"} onValueChange={(v) => { setFilterStatus(v === "all" ? null : v); setPage(1); }}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Todos os status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                {Object.entries(statusLabels).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchInput
+              value={search}
+              onSearch={(v) => { setSearch(v); setPage(1); }}
+              placeholder="Buscar por número, cliente, dispositivo, problema..."
+              className="flex-1"
+            />
+            <ServiceOrderFilters filters={filters} onChange={handleFilterChange} />
           </div>
+          {activeChips.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {activeChips.map((chip) => (
+                <Badge key={chip.label} variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/10" onClick={chip.onRemove}>
+                  {chip.label} ✕
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
