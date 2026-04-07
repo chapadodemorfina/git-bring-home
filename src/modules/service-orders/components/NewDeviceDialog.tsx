@@ -88,7 +88,7 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
           <DialogTitle>Cadastro Rápido de Dispositivo</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={(e) => { e.stopPropagation(); form.handleSubmit(onSubmit)(e); }} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="device_type" render={({ field }) => (
                 <FormItem className="col-span-2">
