@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // --- AUTH: Validate JWT via getClaims ---
+    // --- AUTH: Validate JWT via getUser ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Não autorizado" }, 401);
@@ -56,13 +56,12 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await anonClient.auth.getUser();
+    if (userError || !user) {
       return jsonResponse({ error: "Token inválido" }, 401);
     }
 
-    const callerId = claimsData.claims.sub as string;
+    const callerId = user.id;
 
     // --- TENANT: Read from header ---
     const tenantId = req.headers.get("x-tenant-id");
