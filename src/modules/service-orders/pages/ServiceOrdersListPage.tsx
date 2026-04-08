@@ -10,14 +10,14 @@ import DataPagination from "@/components/ui/data-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import ServiceOrderFilters, { defaultFilters, type ServiceOrderFilterValues } from "../components/ServiceOrderFilters";
 import { Plus, ClipboardList, MapPin, Store, CircleDollarSign } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const paymentStatusConfig: Record<string, { label: string; className: string }> = {
   paid: { label: "Pago", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
   partial: { label: "Parcial", className: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
   pending: { label: "Pendente", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
 };
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 function formatBRL(value: number) {
   return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
