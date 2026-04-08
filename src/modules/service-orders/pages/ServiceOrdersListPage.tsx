@@ -9,9 +9,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import DataPagination from "@/components/ui/data-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import ServiceOrderFilters, { defaultFilters, type ServiceOrderFilterValues } from "../components/ServiceOrderFilters";
-import { Plus, ClipboardList, MapPin, Store } from "lucide-react";
+import { Plus, ClipboardList, MapPin, Store, CircleDollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+const paymentStatusConfig: Record<string, { label: string; className: string }> = {
+  paid: { label: "Pago", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
+  partial: { label: "Parcial", className: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
+  pending: { label: "Pendente", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
+};
 
 function formatBRL(value: number) {
   return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -95,6 +101,7 @@ export default function ServiceOrdersListPage() {
                       <TableHead className="hidden lg:table-cell">Responsável</TableHead>
                       <TableHead className="hidden lg:table-cell">Origem</TableHead>
                       <TableHead className="text-right">Valor OS</TableHead>
+                      <TableHead className="hidden lg:table-cell">Financeiro</TableHead>
                       <TableHead className="hidden xl:table-cell">Criado em</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -125,6 +132,15 @@ export default function ServiceOrdersListPage() {
                             <span className="text-muted-foreground font-normal">—</span>
                           )}
                         </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {o.payment_status ? (
+                            <Badge className={paymentStatusConfig[o.payment_status]?.className || "bg-muted text-muted-foreground"}>
+                              {paymentStatusConfig[o.payment_status]?.label || o.payment_status}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
                         <TableCell className="hidden xl:table-cell">{format(new Date(o.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
                       </TableRow>
                     ))}
@@ -143,7 +159,14 @@ export default function ServiceOrdersListPage() {
                     <p className="text-sm font-medium truncate">{o.customer_name}</p>
                     {o.device_label && <p className="text-xs text-muted-foreground truncate">{o.device_label}</p>}
                     <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-xs text-muted-foreground">{format(new Date(o.created_at), "dd/MM/yy", { locale: ptBR })}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">{format(new Date(o.created_at), "dd/MM/yy", { locale: ptBR })}</span>
+                        {o.payment_status && (
+                          <Badge className={`text-[10px] ${paymentStatusConfig[o.payment_status]?.className || ""}`}>
+                            {paymentStatusConfig[o.payment_status]?.label || o.payment_status}
+                          </Badge>
+                        )}
+                      </div>
                       <span className="font-mono text-sm font-semibold text-primary">
                         {o.total_amount > 0 ? formatBRL(o.total_amount) : "—"}
                       </span>
