@@ -27,6 +27,7 @@ export function useUsersList() {
       const data = await callAdminUsers("list_users");
       return data.users;
     },
+    enabled: !!getActiveTenantId(),
   });
 }
 
@@ -37,6 +38,7 @@ export function useOrphanedAuthUsers() {
       const data = await callAdminUsers("list_users");
       return data.orphaned_auth_users || [];
     },
+    enabled: !!getActiveTenantId(),
   });
 }
 
@@ -44,7 +46,7 @@ export function useUserDetail(userId: string | undefined) {
   return useQuery<UserProfile>({
     queryKey: ["admin-users", userId],
     queryFn: () => callAdminUsers("get_user", { user_id: userId }),
-    enabled: !!userId,
+    enabled: !!userId && !!getActiveTenantId(),
   });
 }
 
@@ -56,6 +58,7 @@ export function useTechniciansList() {
       return data.technicians as { id: string; full_name: string; email: string; phone: string | null; is_active: boolean }[];
     },
     staleTime: 5 * 60 * 1000,
+    enabled: !!getActiveTenantId(),
   });
 }
 
