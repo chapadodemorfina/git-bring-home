@@ -24,6 +24,7 @@ export interface CreateUserPayload {
   full_name: string;
   phone?: string;
   role: AppRole;
+  collection_point_id?: string;
 }
 
 export interface UpdateUserPayload {
