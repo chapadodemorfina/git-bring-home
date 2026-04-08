@@ -5757,22 +5757,6 @@ export type Database = {
             }
             Returns: Json
           }
-        | {
-            Args: {
-              _collection_point_id?: string
-              _date_from?: string
-              _date_to?: string
-              _intake_channel?: string
-              _origin?: string
-              _page?: number
-              _page_size?: number
-              _priority?: string
-              _search?: string
-              _status?: string
-              _technician_id?: string
-            }
-            Returns: Json
-          }
       search_stock_movements: {
         Args: {
           _movement_type?: string
