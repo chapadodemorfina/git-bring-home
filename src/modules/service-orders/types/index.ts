@@ -153,6 +153,7 @@ export interface ServiceOrder {
   device_model?: string | null;
   collection_point_name?: string | null;
   technician_name?: string;
+  payment_status?: string | null;
 }
 
 export interface StatusHistoryEntry {

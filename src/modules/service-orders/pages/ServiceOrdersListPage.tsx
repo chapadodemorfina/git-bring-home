@@ -9,7 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import DataPagination from "@/components/ui/data-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import ServiceOrderFilters, { defaultFilters, type ServiceOrderFilterValues } from "../components/ServiceOrderFilters";
-import { Plus, ClipboardList, MapPin, Store } from "lucide-react";
+import { Plus, ClipboardList, MapPin, Store, CircleDollarSign } from "lucide-react";
+
+const paymentStatusConfig: Record<string, { label: string; className: string }> = {
+  paid: { label: "Pago", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
+  partial: { label: "Parcial", className: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
+  pending: { label: "Pendente", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
+};
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
