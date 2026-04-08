@@ -12,12 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { useAllCollectionPoints } from "@/modules/collection-points/hooks/useCollectionPoints";
 
 const creatableRoles: AppRole[] = ["admin", "manager", "front_desk", "bench_technician", "field_technician", "finance", "collection_point_operator"];
 
 export default function UserCreatePage() {
   const navigate = useNavigate();
   const createMutation = useCreateUser();
+  const { data: collectionPoints, isLoading: cpLoading } = useAllCollectionPoints();
 
   const [form, setForm] = useState({
     full_name: "",
@@ -25,11 +27,15 @@ export default function UserCreatePage() {
     phone: "",
     password: "",
     role: "" as AppRole | "",
+    collection_point_id: "",
   });
+
+  const showCpSelector = form.role === "collection_point_operator";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email || !form.password || !form.full_name || !form.role) return;
+    if (showCpSelector && !form.collection_point_id) return;
 
     await createMutation.mutateAsync({
       email: form.email,
@@ -37,6 +43,7 @@ export default function UserCreatePage() {
       full_name: form.full_name,
       phone: form.phone || undefined,
       role: form.role as AppRole,
+      collection_point_id: showCpSelector ? form.collection_point_id : undefined,
     });
 
     navigate("/system/users");
@@ -104,7 +111,7 @@ export default function UserCreatePage() {
 
               <div className="space-y-2">
                 <Label>Função Principal *</Label>
-                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as AppRole })}>
+                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as AppRole, collection_point_id: "" })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma função" />
                   </SelectTrigger>
@@ -115,6 +122,26 @@ export default function UserCreatePage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {showCpSelector && (
+                <div className="space-y-2">
+                  <Label>Ponto de Coleta *</Label>
+                  <Select value={form.collection_point_id} onValueChange={(v) => setForm({ ...form, collection_point_id: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={cpLoading ? "Carregando..." : "Selecione o ponto de coleta"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(collectionPoints || [])
+                        .filter((cp) => cp.is_active)
+                        .map((cp) => (
+                          <SelectItem key={cp.id} value={cp.id}>
+                            {cp.name}{cp.company_name ? ` — ${cp.company_name}` : ""}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
