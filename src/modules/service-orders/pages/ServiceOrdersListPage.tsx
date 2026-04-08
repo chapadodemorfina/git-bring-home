@@ -101,6 +101,7 @@ export default function ServiceOrdersListPage() {
                       <TableHead className="hidden lg:table-cell">Responsável</TableHead>
                       <TableHead className="hidden lg:table-cell">Origem</TableHead>
                       <TableHead className="text-right">Valor OS</TableHead>
+                      <TableHead className="hidden lg:table-cell">Financeiro</TableHead>
                       <TableHead className="hidden xl:table-cell">Criado em</TableHead>
                     </TableRow>
                   </TableHeader>
