@@ -132,6 +132,15 @@ export default function ServiceOrdersListPage() {
                             <span className="text-muted-foreground font-normal">—</span>
                           )}
                         </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {o.payment_status ? (
+                            <Badge className={paymentStatusConfig[o.payment_status]?.className || "bg-muted text-muted-foreground"}>
+                              {paymentStatusConfig[o.payment_status]?.label || o.payment_status}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
                         <TableCell className="hidden xl:table-cell">{format(new Date(o.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</TableCell>
                       </TableRow>
                     ))}
