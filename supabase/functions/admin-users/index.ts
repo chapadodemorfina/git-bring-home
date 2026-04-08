@@ -156,6 +156,21 @@ Deno.serve(async (req) => {
           .from("tenant_users")
           .upsert({ tenant_id: tenantId, user_id: userId, tenant_role: "member", is_default: true, is_active: true }, { onConflict: "tenant_id,user_id" });
 
+        // Link to collection point if provided
+        if (payload.collection_point_id) {
+          await adminClient
+            .from("collection_point_users")
+            .upsert(
+              { collection_point_id: payload.collection_point_id, user_id: userId, tenant_id: tenantId, is_active: true },
+              { onConflict: "collection_point_id,user_id" }
+            );
+          // Also set collection_point_id on profile for RLS shortcuts
+          await adminClient
+            .from("profiles")
+            .update({ collection_point_id: payload.collection_point_id })
+            .eq("id", userId);
+        }
+
         result = { success: true, user_id: userId };
         break;
       }
