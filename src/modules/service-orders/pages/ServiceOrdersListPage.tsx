@@ -159,7 +159,14 @@ export default function ServiceOrdersListPage() {
                     <p className="text-sm font-medium truncate">{o.customer_name}</p>
                     {o.device_label && <p className="text-xs text-muted-foreground truncate">{o.device_label}</p>}
                     <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-xs text-muted-foreground">{format(new Date(o.created_at), "dd/MM/yy", { locale: ptBR })}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">{format(new Date(o.created_at), "dd/MM/yy", { locale: ptBR })}</span>
+                        {o.payment_status && (
+                          <Badge className={`text-[10px] ${paymentStatusConfig[o.payment_status]?.className || ""}`}>
+                            {paymentStatusConfig[o.payment_status]?.label || o.payment_status}
+                          </Badge>
+                        )}
+                      </div>
                       <span className="font-mono text-sm font-semibold text-primary">
                         {o.total_amount > 0 ? formatBRL(o.total_amount) : "—"}
                       </span>
