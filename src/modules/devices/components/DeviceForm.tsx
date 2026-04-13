@@ -84,6 +84,15 @@ export function DeviceForm({ defaultValues, onSubmit, isSubmitting, isEdit }: De
               </FormItem>
             )} />
 
+            {deviceType === "other" && (
+              <FormField control={form.control} name="custom_device_type" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Especifique o Tipo *</FormLabel>
+                  <FormControl><Input placeholder="Ex: Fonte, Drone, Scanner..." {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
             <FormField control={form.control} name="brand" render={({ field }) => (
               <FormItem>
                 <FormLabel>Marca</FormLabel>
