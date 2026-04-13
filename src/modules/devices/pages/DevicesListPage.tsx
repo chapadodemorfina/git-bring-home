@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, Monitor, Eye, Loader2 } from "lucide-react";
-import { deviceTypeLabels, DeviceType, getDeviceTypeLabel } from "../types";
 import { useDevices } from "../hooks/useDevices";
 import { deviceTypeLabels, DeviceType, getDeviceTypeLabel } from "../types";
 
