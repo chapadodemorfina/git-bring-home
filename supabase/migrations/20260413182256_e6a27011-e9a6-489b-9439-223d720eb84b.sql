@@ -1,0 +1,1 @@
+ALTER TABLE public.devices ADD COLUMN custom_device_type text;

@@ -1212,6 +1212,7 @@ export type Database = {
           color: string | null
           created_at: string
           created_by: string | null
+          custom_device_type: string | null
           customer_id: string
           device_type: Database["public"]["Enums"]["device_type"]
           id: string
@@ -1231,6 +1232,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           created_by?: string | null
+          custom_device_type?: string | null
           customer_id: string
           device_type?: Database["public"]["Enums"]["device_type"]
           id?: string
@@ -1250,6 +1252,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           created_by?: string | null
+          custom_device_type?: string | null
           customer_id?: string
           device_type?: Database["public"]["Enums"]["device_type"]
           id?: string
