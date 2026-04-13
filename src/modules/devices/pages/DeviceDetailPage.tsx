@@ -56,7 +56,7 @@ export default function DeviceDetailPage() {
             </div>
             <p className="text-muted-foreground flex items-center gap-1">
               <Monitor className="h-3.5 w-3.5" />
-              {deviceTypeLabels[device.device_type]}
+              {getDeviceTypeLabel(device)}
               {device.customer_name && (
                 <>
                   <span className="mx-1">•</span>
@@ -107,7 +107,7 @@ export default function DeviceDetailPage() {
             <CardHeader><CardTitle className="text-base">Identificação</CardTitle></CardHeader>
             <CardContent>
               <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <InfoRow label="Tipo" value={deviceTypeLabels[device.device_type]} />
+                <InfoRow label="Tipo" value={getDeviceTypeLabel(device)} />
                 <InfoRow label="Marca" value={device.brand} />
                 <InfoRow label="Modelo" value={device.model} />
                 <InfoRow label="Número de Série" value={device.serial_number} />
