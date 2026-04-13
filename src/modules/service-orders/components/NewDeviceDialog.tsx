@@ -41,6 +41,7 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
     resolver: zodResolver(quickDeviceSchema),
     defaultValues: {
       device_type: "smartphone",
+      custom_device_type: "",
       brand: "",
       model: "",
       serial_number: "",
@@ -56,6 +57,7 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
     const device = await createDevice.mutateAsync({
       customer_id: customerId,
       device_type: data.device_type,
+      custom_device_type: data.device_type === 'other' ? (data.custom_device_type || "") : "",
       brand: data.brand || "",
       model: data.model || "",
       serial_number: data.serial_number || "",
