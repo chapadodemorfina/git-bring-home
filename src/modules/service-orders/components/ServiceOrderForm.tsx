@@ -114,7 +114,6 @@ export default function ServiceOrderForm({ initialData }: Props) {
                           </SelectItem>
                           );
                         })}
-                        ))}
                       </SelectContent>
                     </Select>
                   ) : (
