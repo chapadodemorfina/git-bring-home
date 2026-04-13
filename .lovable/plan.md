@@ -1,45 +1,35 @@
 
 
-## Diagnóstico: Erro RLS ao criar lançamento financeiro
+# Plano: Relatório PDF de Comissões de Parceiros
 
-### Causa raiz
+## Problema
+Ao gerar comissões na aba "Fechamento Parceiros", o sistema calcula e exibe os dados, mas nao permite exportar um relatório detalhado em PDF com as OS vinculadas para enviar ao lider/parceiro.
 
-O erro "new row violates row-level security policy for table financial_entries" ocorre de forma **intermitente** quando o cabeçalho `x-tenant-id` ainda não foi definido no momento da requisição. Isso acontece em dois cenários:
+## O que sera feito
 
-1. **Race condition**: O usuário navega para `/finance/new` antes do `TenantContext` terminar de carregar os tenants
-2. **Acesso direto via URL**: O usuário abre a URL diretamente no navegador (bookmark, link), e a requisição de INSERT acontece antes do tenant estar resolvido
+### 1. Criar gerador PDF de comissoes de parceiro
+Novo arquivo `src/lib/pdf-generators/cp-commission-report-pdf.ts` que gera um PDF profissional contendo:
+- Cabecalho com nome da empresa e periodo
+- Nome do parceiro (ponto de coleta)
+- Resumo: total de OS, faturamento, tipo de comissao, valor da comissao
+- Tabela detalhada com todas as OS do periodo (numero, cliente, status, valor)
+- Total geral ao final
+- Rodape com creditos
 
-Quando o header está ausente, a função `get_active_tenant_id()` faz fallback para o tenant padrão do usuário (passo 3 da função). Porém, o trigger `set_tenant_id_on_insert` também usa `get_active_tenant_id()`, e **ambos devem concordar** para o `WITH CHECK` da policy RESTRICTIVE passar. Se houver qualquer timing diferente entre trigger e policy evaluation, o check falha.
+Utilizara os helpers existentes de `pdf-utils.ts` (createPdf, addHeader, addTable, addTotalBox, savePdf) para manter consistencia visual com os demais PDFs do sistema.
 
-A função `has_any_role()` também depende de `get_active_tenant_id()` — se retornar NULL no contexto da policy permissiva, o INSERT é negado.
+### 2. Adicionar botao "Exportar PDF" no painel de detalhes
+No `CpCommissionPeriodsPage.tsx`, dentro do Sheet de detalhes (que ja exibe as OS do parceiro), adicionar um botao "Exportar PDF" que:
+- Coleta os dados do periodo selecionado + lista de OS
+- Chama o gerador PDF
+- Faz o download automatico do arquivo
 
-### Plano de correção
+### 3. Adicionar botao "Exportar PDF" na linha da tabela
+Na tabela principal de comissoes, ao lado dos botoes "Detalhes/Aprovar/Pagar", adicionar um botao de download rapido que abre o sheet de detalhes ou gera o PDF diretamente.
 
-#### 1. Proteção no frontend: bloquear mutations antes do tenant carregar
-
-No hook `useCreateFinancialEntry`, adicionar verificação de que o tenant está ativo antes de permitir o INSERT. No `FinanceCreatePage`, mostrar loading enquanto tenant não carregou.
-
-**Arquivo**: `src/modules/finance/pages/FinanceCreatePage.tsx`
-- Importar `useTenant` do TenantContext
-- Se `loading` estiver true ou `activeTenant` for null, mostrar skeleton/loading
-- Desabilitar o botão "Salvar" se tenant não estiver definido
-
-#### 2. Incluir `created_by` no payload de criação
-
-O campo `created_by` é nullable, mas preenchê-lo com `auth.uid()` melhora rastreabilidade e pode evitar problemas futuros com policies que dependam do criador.
-
-**Arquivo**: `src/modules/finance/hooks/useFinance.ts`
-- No `useCreateFinancialEntry`, buscar o `user` do `useAuth()` e incluir `created_by: user?.id` no payload
-
-#### 3. Proteção global: componente ProtectedPage aguardar tenant
-
-Verificar se o componente `ProtectedPage` (usado em todas as rotas protegidas) já aguarda o `TenantContext` carregar. Se não, adicionar essa verificação para prevenir esse tipo de erro em **todos os módulos**.
-
-**Arquivo**: `src/App.tsx` (componente `ProtectedPage` inline) ou `src/components/ProtectedRoute.tsx`
-
-### Impacto
-
-- Zero alteração em lógica de negócio, queries ou mutations
-- Previne o erro em todos os módulos que usam `ProtectedPage`
-- Corrige a causa raiz (timing) em vez de tratar sintoma
+## Detalhes tecnicos
+- O PDF sera gerado client-side com jsPDF + jspdf-autotable (ja instalados)
+- Dados das OS vem do hook `usePeriodOrders` que ja existe
+- Informacoes da empresa vem de `useCompanySettings` (ja usado em outros PDFs)
+- Nenhuma alteracao de banco de dados necessaria
 
