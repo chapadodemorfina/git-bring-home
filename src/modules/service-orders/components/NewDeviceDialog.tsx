@@ -17,6 +17,7 @@ const quickDeviceSchema = z.object({
     "notebook", "desktop_pc", "monitor", "tv", "smartphone",
     "tablet", "printer", "electronic_module", "motherboard", "other",
   ] as const),
+  custom_device_type: z.string().trim().max(100).optional().or(z.literal("")),
   brand: z.string().trim().max(100).optional().or(z.literal("")),
   model: z.string().trim().max(100).optional().or(z.literal("")),
   serial_number: z.string().trim().max(100).optional().or(z.literal("")),
