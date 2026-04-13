@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { DollarSign, Filter, Play, Check, Banknote, Eye } from "lucide-react";
+import { DollarSign, Play, Check, Banknote, Eye, FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,11 +16,14 @@ import {
   useGenerateCpCommissions,
   useApproveCpCommission,
   usePayCpCommission,
+  usePeriodOrders,
 } from "../hooks/useCpCommissionPeriods";
 import { useAllCollectionPoints } from "../hooks/useCollectionPoints";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { usePeriodOrders } from "../hooks/useCpCommissionPeriods";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { generateCpCommissionReportPdf } from "@/lib/pdf-generators/cp-commission-report-pdf";
+import type { CompanyInfo } from "@/lib/pdf-utils";
 
 const statusLabels: Record<string, string> = { pending: "Pendente", approved: "Aprovada", paid: "Paga" };
 const statusVariant: Record<string, "secondary" | "default" | "outline"> = { pending: "secondary", approved: "outline", paid: "default" };
@@ -30,6 +33,20 @@ const statusColors: Record<string, string> = {
   delivered: "bg-emerald-100 text-emerald-800",
   cancelled: "bg-red-100 text-red-800",
 };
+
+function useCompanyInfoForPdf() {
+  const s = useCompanySettings();
+  const info: CompanyInfo = {
+    name: s.company_name || "Assistência Técnica",
+    legalName: s.company_legal_name,
+    cnpj: s.company_cnpj,
+    address: s.company_address,
+    phone: s.company_phone,
+    email: s.company_email,
+    logoUrl: s.company_logo_url,
+  };
+  return info;
+}
 
 export default function CpCommissionPeriodsPage() {
   const now = new Date();
@@ -48,6 +65,7 @@ export default function CpCommissionPeriodsPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailPeriod, setDetailPeriod] = useState<any>(null);
 
+  const companyInfo = useCompanyInfoForPdf();
   const { data: points } = useAllCollectionPoints();
   const { data, isLoading } = useCpCommissionPeriods(
     statusFilter !== "all" ? statusFilter : undefined,
@@ -80,6 +98,33 @@ export default function CpCommissionPeriodsPage() {
     });
   };
 
+  const handleExportPdf = async (periodItem: any, ordersList?: any[]) => {
+    // Find collection point to get commission type/value
+    const cp = points?.find((p) => p.id === periodItem.collection_point_id);
+
+    const periodData = {
+      collection_point_name: periodItem.collection_points?.name || "Parceiro",
+      period_start: periodItem.period_start,
+      period_end: periodItem.period_end,
+      completed_orders: periodItem.completed_orders,
+      total_orders: periodItem.total_orders,
+      total_revenue: Number(periodItem.total_revenue),
+      commission_amount: Number(periodItem.commission_amount),
+      status: periodItem.status,
+      commission_type: cp?.commission_type,
+      commission_value: cp?.commission_value,
+    };
+
+    const orders = (ordersList || []).map((o: any) => ({
+      order_number: o.order_number || "—",
+      customer_name: o.customer_name || "—",
+      status: o.status || "—",
+      total_amount: Number(o.total_amount || 0),
+    }));
+
+    await generateCpCommissionReportPdf(periodData, orders, companyInfo);
+  };
+
   // Summary totals
   const totalCommission = items.reduce((s, c) => s + Number(c.commission_amount), 0);
   const totalRevenue = items.reduce((s, c) => s + Number(c.total_revenue), 0);
@@ -93,7 +138,7 @@ export default function CpCommissionPeriodsPage() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Selecione o período e o parceiro para gerar, aprovar e pagar comissões. Clique em "Detalhes" para ver as OS vinculadas.
+        Selecione o período e o parceiro para gerar, aprovar e pagar comissões. Clique em "Detalhes" para ver as OS vinculadas e exportar em PDF.
       </p>
 
       {/* Filters + Generate */}
@@ -242,6 +287,17 @@ export default function CpCommissionPeriodsPage() {
                   <p className="font-bold text-lg text-orange-600">R$ {Number(detailPeriod.commission_amount).toFixed(2)}</p>
                 </div>
               </div>
+            )}
+
+            {/* Export PDF button */}
+            {detailPeriod && !loadingOrders && periodOrders && periodOrders.length > 0 && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => handleExportPdf(detailPeriod, periodOrders)}
+              >
+                <FileDown className="h-4 w-4 mr-2" /> Exportar Relatório em PDF
+              </Button>
             )}
 
             {loadingOrders ? <Skeleton className="h-40" /> : !periodOrders?.length ? (
