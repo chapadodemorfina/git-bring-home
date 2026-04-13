@@ -21,6 +21,7 @@ export interface Device {
   id: string;
   customer_id: string;
   device_type: DeviceType;
+  custom_device_type: string | null;
   brand: string | null;
   model: string | null;
   serial_number: string | null;
@@ -36,6 +37,14 @@ export interface Device {
   updated_at: string;
   // joined
   customer_name?: string;
+}
+
+/** Returns the display label for a device, considering custom types */
+export function getDeviceTypeLabel(device: Pick<Device, 'device_type' | 'custom_device_type'>): string {
+  if (device.device_type === 'other' && device.custom_device_type) {
+    return device.custom_device_type;
+  }
+  return deviceTypeLabels[device.device_type] ?? device.device_type;
 }
 
 export interface DeviceAccessory {
@@ -62,6 +71,7 @@ export const deviceSchema = z.object({
     "notebook", "desktop_pc", "monitor", "tv", "smartphone",
     "tablet", "printer", "electronic_module", "motherboard", "other",
   ] as const),
+  custom_device_type: z.string().trim().max(100).optional().or(z.literal("")),
   brand: z.string().trim().max(100).optional().or(z.literal("")),
   model: z.string().trim().max(100).optional().or(z.literal("")),
   serial_number: z.string().trim().max(100).optional().or(z.literal("")),
