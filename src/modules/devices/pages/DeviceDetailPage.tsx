@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Edit, Trash2, Loader2, Monitor, User, AlertTriangle } from "lucide-react";
 import { useDevice, useDeleteDevice } from "../hooks/useDevices";
-import { deviceTypeLabels } from "../types";
+import { deviceTypeLabels, getDeviceTypeLabel } from "../types";
 import { AccessoryChecklist } from "../components/AccessoryChecklist";
 import { DevicePhotos } from "../components/DevicePhotos";
 import { DeviceHistory } from "../components/DeviceHistory";

@@ -83,7 +83,7 @@ export default function DevicesListPage() {
                         onClick={() => navigate(`/devices/${device.id}`)}
                       >
                         <TableCell>
-                          <Badge variant="outline">{deviceTypeLabels[device.device_type]}</Badge>
+                          <Badge variant="outline">{getDeviceTypeLabel(device)}</Badge>
                         </TableCell>
                         <TableCell className="font-medium">
                           {[device.brand, device.model].filter(Boolean).join(" ") || "—"}
