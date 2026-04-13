@@ -104,11 +104,16 @@ export default function ServiceOrderForm({ initialData }: Props) {
                         <SelectTrigger><SelectValue placeholder="Selecione um dispositivo" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {customerDevices.map((d) => (
+                        {customerDevices.map((d) => {
+                          const label = d.device_type === 'other' && d.custom_device_type
+                            ? d.custom_device_type
+                            : deviceTypeLabels[d.device_type];
+                          return (
                           <SelectItem key={d.id} value={d.id}>
-                            {deviceTypeLabels[d.device_type]} — {d.brand} {d.model}
+                            {label} — {d.brand} {d.model}
                           </SelectItem>
-                        ))}
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   ) : (

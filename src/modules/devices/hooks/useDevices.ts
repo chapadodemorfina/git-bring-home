@@ -74,6 +74,7 @@ export function useCreateDevice() {
       const { data: device, error } = await db.from("devices").insert({
         customer_id: data.customer_id,
         device_type: data.device_type,
+        custom_device_type: data.device_type === 'other' ? (data.custom_device_type || null) : null,
         brand: data.brand || null,
         model: data.model || null,
         serial_number: data.serial_number || null,
@@ -107,6 +108,7 @@ export function useUpdateDevice() {
       const { data: device, error } = await db.from("devices").update({
         customer_id: data.customer_id,
         device_type: data.device_type,
+        custom_device_type: data.device_type === 'other' ? (data.custom_device_type || null) : null,
         brand: data.brand || null,
         model: data.model || null,
         serial_number: data.serial_number || null,

@@ -17,6 +17,7 @@ const quickDeviceSchema = z.object({
     "notebook", "desktop_pc", "monitor", "tv", "smartphone",
     "tablet", "printer", "electronic_module", "motherboard", "other",
   ] as const),
+  custom_device_type: z.string().trim().max(100).optional().or(z.literal("")),
   brand: z.string().trim().max(100).optional().or(z.literal("")),
   model: z.string().trim().max(100).optional().or(z.literal("")),
   serial_number: z.string().trim().max(100).optional().or(z.literal("")),
@@ -40,6 +41,7 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
     resolver: zodResolver(quickDeviceSchema),
     defaultValues: {
       device_type: "smartphone",
+      custom_device_type: "",
       brand: "",
       model: "",
       serial_number: "",
@@ -55,6 +57,7 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
     const device = await createDevice.mutateAsync({
       customer_id: customerId,
       device_type: data.device_type,
+      custom_device_type: data.device_type === 'other' ? (data.custom_device_type || "") : "",
       brand: data.brand || "",
       model: data.model || "",
       serial_number: data.serial_number || "",
@@ -104,6 +107,16 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
                   <FormMessage />
                 </FormItem>
               )} />
+
+              {deviceType === "other" && (
+                <FormField control={form.control} name="custom_device_type" render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Especifique o Tipo *</FormLabel>
+                    <FormControl><Input placeholder="Ex: Fonte, Drone, Scanner..." {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              )}
 
               <FormField control={form.control} name="brand" render={({ field }) => (
                 <FormItem>

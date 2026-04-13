@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, Monitor, Eye, Loader2 } from "lucide-react";
 import { useDevices } from "../hooks/useDevices";
-import { deviceTypeLabels, DeviceType } from "../types";
+import { deviceTypeLabels, DeviceType, getDeviceTypeLabel } from "../types";
 
 export default function DevicesListPage() {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ export default function DevicesListPage() {
                         onClick={() => navigate(`/devices/${device.id}`)}
                       >
                         <TableCell>
-                          <Badge variant="outline">{deviceTypeLabels[device.device_type]}</Badge>
+                          <Badge variant="outline">{getDeviceTypeLabel(device)}</Badge>
                         </TableCell>
                         <TableCell className="font-medium">
                           {[device.brand, device.model].filter(Boolean).join(" ") || "—"}
