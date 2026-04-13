@@ -108,6 +108,16 @@ export default function NewDeviceDialog({ customerId, onDeviceCreated }: Props) 
                 </FormItem>
               )} />
 
+              {deviceType === "other" && (
+                <FormField control={form.control} name="custom_device_type" render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Especifique o Tipo *</FormLabel>
+                    <FormControl><Input placeholder="Ex: Fonte, Drone, Scanner..." {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              )}
+
               <FormField control={form.control} name="brand" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Marca</FormLabel>
