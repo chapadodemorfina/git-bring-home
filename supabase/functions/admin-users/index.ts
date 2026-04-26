@@ -444,6 +444,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse(result);
   } catch (err) {
-    return jsonResponse({ error: err.message }, 500);
+    const message = err instanceof Error ? err.message : String(err);
+    return jsonResponse({ error: message }, 500);
   }
 });

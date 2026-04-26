@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY") ?? null;
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     const pendingState = await getActivePendingState(supabase, conversation.id);
 
     if (pendingState) {
-      const result = await handlePendingState(supabase, conversation, pendingState, message, inboundMsg?.id, lovableApiKey);
+      const result = await handlePendingState(supabase, conversation, pendingState, message, inboundMsg?.id ?? null, lovableApiKey);
       if (result.handled) {
         await storeOutbound(supabase, conversation.id, result.response!);
         await sendWhatsAppMessage(normalizedPhone, result.response!);
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
     } else {
       const context = await gatherBusinessContext(supabase, customerId);
       context.tenant_id = conversation.tenant_id || null;
-      const aiResult = await classifyAndRespond(lovableApiKey, message, customerName || "Cliente", context, conversation.id);
+      const aiResult = await classifyAndRespond(supabase, lovableApiKey, message, customerName || "Cliente", context, conversation.id);
       intent = aiResult.intent;
       confidence = aiResult.confidence;
       responseText = aiResult.response;
@@ -216,7 +216,8 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("WhatsApp webhook error:", error);
-    return jsonResponse({ error: error.message }, 500);
+    const message = error instanceof Error ? error.message : String(error);
+    return jsonResponse({ error: message }, 500);
   }
 });
 
@@ -551,6 +552,7 @@ async function gatherBusinessContext(supabase: any, customerId: string) {
     balance: balance.data || {},
     warranties: warranties.data || [],
     logistics: logistics.data || [],
+    tenant_id: null as string | null,
   };
 }
 
@@ -564,15 +566,15 @@ const STATUS_LABELS: Record<string, string> = {
 
 // ===== AI CLASSIFICATION =====
 
-async function classifyAndRespond(apiKey: string, message: string, customerName: string, context: any, conversationId: string) {
+async function classifyAndRespond(supabase: any, apiKey: string, message: string, customerName: string, context: any, conversationId: string) {
   // Resolve tenant_id from conversation context
   const tenantId = context?.tenant_id || null;
   let companyName = "nossa empresa";
   if (tenantId) {
-    const companyNameResult = await supabaseAdmin.from("app_settings").select("value").eq("key", "company_name").eq("tenant_id", tenantId).maybeSingle();
+    const companyNameResult = await supabase.from("app_settings").select("value").eq("key", "company_name").eq("tenant_id", tenantId).maybeSingle();
     companyName = companyNameResult?.data?.value || companyName;
   } else {
-    const companyNameResult = await supabaseAdmin.from("app_settings").select("value").eq("key", "company_name").limit(1).maybeSingle();
+    const companyNameResult = await supabase.from("app_settings").select("value").eq("key", "company_name").limit(1).maybeSingle();
     companyName = companyNameResult?.data?.value || companyName;
   }
   const systemPrompt = `Você é o assistente virtual da ${companyName}, uma assistência técnica de eletrônicos.
