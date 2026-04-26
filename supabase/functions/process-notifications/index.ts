@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         .update({ status: "processing", last_attempt_at: new Date().toISOString() })
         .eq("id", item.id);
 
-      const result = await deliverNotification(item, supabase);
+      const result = await deliverNotification(item);
       const newAttempts = item.attempts + 1;
 
       if (result.success) {
@@ -124,8 +124,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("Notification processor error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: message }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -144,8 +145,7 @@ interface DeliveryResult {
 }
 
 async function deliverNotification(
-  item: Record<string, unknown>,
-  _supabase: ReturnType<typeof createClient>
+  item: Record<string, unknown>
 ): Promise<DeliveryResult> {
   const channel = item.channel as string;
 
@@ -183,7 +183,8 @@ async function deliverWhatsApp(item: Record<string, unknown>): Promise<DeliveryR
     }
     return { success: false, error: `WhatsApp API returned ${response.status}`, provider: "whatsapp", response: body, statusCode: response.status };
   } catch (err) {
-    return { success: false, error: `WhatsApp delivery error: ${err.message}`, provider: "whatsapp" };
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: `WhatsApp delivery error: ${message}`, provider: "whatsapp" };
   }
 }
 
@@ -208,7 +209,8 @@ async function deliverEmail(item: Record<string, unknown>): Promise<DeliveryResu
     }
     return { success: false, error: `Email API returned ${response.status}`, provider: "email", response: body, statusCode: response.status };
   } catch (err) {
-    return { success: false, error: `Email delivery error: ${err.message}`, provider: "email" };
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: `Email delivery error: ${message}`, provider: "email" };
   }
 }
 
