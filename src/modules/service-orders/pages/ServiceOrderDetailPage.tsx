@@ -35,6 +35,7 @@ import { generatePaymentReceiptPdf } from "@/lib/pdf-generators/service-order-pa
 import { useCompanySettings, settingIsTrue, type CompanySettings } from "@/hooks/useCompanySettings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useServiceOrderItems } from "../hooks/useServiceOrderItems";
 
 const db = supabase as any;
 
@@ -92,6 +93,7 @@ export default function ServiceOrderDetailPage() {
   const companySettings = useCompanySettings();
   const generateLink = useGeneratePublicLink();
   const { data: orderAttachments } = useOrderAttachments(id);
+  const { data: orderItems } = useServiceOrderItems(id);
 
   const { data: statusHistory } = useQuery({
     queryKey: ["so-status-history-pdf", id],
@@ -179,10 +181,10 @@ export default function ServiceOrderDetailPage() {
       const entryIds = (financialEntries || []).map((e: any) => e.id);
       if (entryIds.length === 0) return [];
       const { data, error } = await db
-        .from("financial_payments")
+        .from("payments")
         .select("*")
         .in("financial_entry_id", entryIds)
-        .order("paid_at", { ascending: false });
+        .order("payment_date", { ascending: false });
       if (error) throw error;
       return (data || []) as any[];
     },
@@ -309,7 +311,7 @@ export default function ServiceOrderDetailPage() {
       payments: allPayments.map((p: any) => ({
         amount: Number(p.amount),
         method: p.payment_method,
-        paidAt: p.paid_at,
+        paidAt: p.payment_date,
         notes: p.notes,
       })),
     }, company);
@@ -517,7 +519,35 @@ export default function ServiceOrderDetailPage() {
 
       {/* Hidden printable elements */}
       <div className="hidden">
-        <IntakeReceipt ref={receiptRef} order={order} trackingUrl={trackingUrl} />
+        <IntakeReceipt
+          ref={receiptRef}
+          order={order}
+          trackingUrl={trackingUrl}
+          items={(orderItems || []).map((item: any) => ({
+            description: item.description,
+            item_type: item.item_type,
+            quantity: Number(item.quantity || 0),
+            unit_price: Number(item.unit_price || 0),
+            total_price: Number(item.total_price || 0),
+            notes: item.notes,
+          }))}
+          financialEntries={(financialEntries || []).map((entry: any) => ({
+            description: entry.description,
+            entry_type: entry.entry_type,
+            status: entry.status,
+            amount: Number(entry.amount || 0),
+            paid_amount: Number(entry.paid_amount || 0),
+            due_date: entry.due_date,
+            notes: entry.notes,
+          }))}
+          payments={(financialPayments || []).map((payment: any) => ({
+            amount: Number(payment.amount || 0),
+            payment_method: payment.payment_method,
+            payment_date: payment.payment_date,
+            reference: payment.reference,
+            notes: payment.notes,
+          }))}
+        />
       </div>
       <div className="hidden">
         <DeviceIntakeLabel
