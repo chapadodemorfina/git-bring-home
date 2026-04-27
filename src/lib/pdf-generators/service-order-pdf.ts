@@ -248,14 +248,50 @@ export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   }
 
   // ── 8. RESUMO FINANCEIRO ──
+  const activeFinancialEntries = (financialEntries || []).filter((entry) => entry.status !== "cancelled");
+  const totalPaid = (payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
   if (quoteData && (quoteData.total_amount || 0) > 0) {
     const totalLines: { label: string; value: string; bold?: boolean; color?: [number, number, number] }[] = [];
     if (quoteData.parts_cost) totalLines.push({ label: "Peças", value: formatCurrency(quoteData.parts_cost) });
     if (quoteData.labor_cost) totalLines.push({ label: "Mão de Obra", value: formatCurrency(quoteData.labor_cost) });
     if (quoteData.analysis_fee && quoteData.analysis_fee > 0) totalLines.push({ label: "Taxa de Análise", value: formatCurrency(quoteData.analysis_fee) });
     if (quoteData.discount_amount && quoteData.discount_amount > 0) totalLines.push({ label: "Desconto", value: `- ${formatCurrency(quoteData.discount_amount)}`, color: DEFAULT_THEME.danger });
+    if (totalPaid > 0) totalLines.push({ label: "Pago", value: formatCurrency(totalPaid) });
+    const pending = Math.max(0, Number(quoteData.total_amount || 0) - totalPaid);
+    if (pending > 0) totalLines.push({ label: "Pendente", value: formatCurrency(pending), color: DEFAULT_THEME.danger });
     totalLines.push({ label: "TOTAL", value: formatCurrency(quoteData.total_amount), bold: true, color: DEFAULT_THEME.primary });
     y = addTotalBox(doc, y, totalLines);
+  }
+
+  if (activeFinancialEntries.length > 0) {
+    y = addSection(doc, "Lançamentos Financeiros", y);
+    y = addTable(doc, y,
+      ["Descrição", "Tipo", "Status", "Vencimento", "Valor", "Pago"],
+      activeFinancialEntries.map((entry) => [
+        entry.description,
+        entry.entry_type === "revenue" ? "Receita" : entry.entry_type === "expense" ? "Despesa" : "Comissão",
+        financialStatusMap[entry.status] || entry.status,
+        entry.due_date ? formatDateTime(entry.due_date).split(" ")[0] : "—",
+        formatCurrency(entry.amount),
+        formatCurrency(Number(entry.paid_amount || 0)),
+      ]),
+      { columnStyles: { 4: { halign: "right" as const }, 5: { halign: "right" as const } } }
+    );
+  }
+
+  if (payments && payments.length > 0) {
+    y = addSection(doc, "Pagamentos Recebidos", y);
+    y = addTable(doc, y,
+      ["Data", "Forma", "Referência", "Observações", "Valor"],
+      payments.map((payment) => [
+        formatDateTime(payment.payment_date),
+        paymentMethodMap[payment.payment_method] || payment.payment_method,
+        payment.reference || "—",
+        payment.notes || "—",
+        formatCurrency(payment.amount),
+      ]),
+      { columnStyles: { 2: { cellWidth: 35 }, 3: { cellWidth: 45 }, 4: { halign: "right" as const } } }
+    );
   }
 
   // ── CHECKLIST DE SAÍDA ──
