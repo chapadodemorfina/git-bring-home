@@ -251,6 +251,22 @@ export default function ServiceOrderDetailPage() {
         unit_price: Number(i.unit_price),
         total_price: Number(i.total_price),
       })),
+      financialEntries: (financialEntries || []).map((entry: any) => ({
+        description: entry.description,
+        entry_type: entry.entry_type,
+        status: entry.status,
+        amount: Number(entry.amount || 0),
+        paid_amount: Number(entry.paid_amount || 0),
+        due_date: entry.due_date,
+        notes: entry.notes,
+      })),
+      payments: (financialPayments || []).map((payment: any) => ({
+        amount: Number(payment.amount || 0),
+        payment_method: payment.payment_method,
+        payment_date: payment.payment_date,
+        reference: payment.reference,
+        notes: payment.notes,
+      })),
       signatures: (signatures || []).map((s) => ({
         signer_name: s.signer_name,
         signer_role: s.signer_role,
