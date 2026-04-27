@@ -41,6 +41,8 @@ interface StatusEntry { from_status: string | null; to_status: string; notes: st
 interface DiagnosticData { technical_findings?: string | null; probable_cause?: string | null; repair_complexity?: string; repair_viability?: string | null; estimated_repair_hours?: number | null; estimated_cost?: number | null; not_repairable_reason?: string | null; }
 interface QuoteItem { description: string; item_type: string; quantity: number; unit_price: number; total_price: number; }
 interface QuoteData { quote_number?: string; total_amount?: number; discount_amount?: number; analysis_fee?: number; labor_cost?: number; parts_cost?: number; notes?: string | null; }
+interface FinancialEntryData { description: string; entry_type: string; status: string; amount: number; paid_amount?: number; due_date?: string | null; notes?: string | null; }
+interface PaymentData { amount: number; payment_method: string; payment_date: string; reference?: string | null; notes?: string | null; }
 interface SignatureData { signer_name: string; signer_role: string; signature_data: string; }
 interface TermData { title: string; content: string; }
 interface ChecklistItem { label: string; checked: boolean; notes?: string; }
@@ -59,6 +61,8 @@ export interface ServiceOrderPdfOptions {
   diagnostic?: DiagnosticData | null;
   quoteData?: QuoteData | null;
   quoteItems?: QuoteItem[];
+  financialEntries?: FinancialEntryData[];
+  payments?: PaymentData[];
   signatures?: SignatureData[];
   terms?: TermData[];
   entryChecklist?: ChecklistItem[];
@@ -75,6 +79,8 @@ const priorityMap: Record<string, string> = { low: "Baixa", normal: "Normal", hi
 const channelMap: Record<string, string> = { front_desk: "Balcão", collection_point: "Ponto de Coleta", whatsapp: "WhatsApp", phone: "Telefone", email: "E-mail", website: "Website" };
 const complexityMap: Record<string, string> = { simple: "Simples", moderate: "Moderada", complex: "Complexa", specialized: "Especializada" };
 const viabilityMap: Record<string, string> = { repairable: "Reparável", not_repairable: "Não Reparável", uncertain: "Incerto" };
+const paymentMethodMap: Record<string, string> = { cash: "Dinheiro", credit_card: "Cartão Crédito", debit_card: "Cartão Débito", pix: "PIX", bank_transfer: "Transferência", boleto: "Boleto", check: "Cheque", other: "Outro" };
+const financialStatusMap: Record<string, string> = { pending: "Pendente", partial: "Parcial", paid: "Pago", overdue: "Vencido", cancelled: "Cancelado" };
 
 const CHECKLIST_NAME_MAP: Record<string, string> = {
   screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
@@ -101,7 +107,7 @@ function parsePhysicalCondition(raw: string | null | undefined): ChecklistItem[]
 // ─── Main Generator ───────────────────────────────────────────
 export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const { order, statusHistory, company, diagnostic, quoteData, quoteItems,
-          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions, attachmentPhotos } = opts;
+          financialEntries, payments, signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions, attachmentPhotos } = opts;
 
   const doc = createPdf();
   const col1 = 16;
@@ -242,14 +248,50 @@ export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   }
 
   // ── 8. RESUMO FINANCEIRO ──
+  const activeFinancialEntries = (financialEntries || []).filter((entry) => entry.status !== "cancelled");
+  const totalPaid = (payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
   if (quoteData && (quoteData.total_amount || 0) > 0) {
     const totalLines: { label: string; value: string; bold?: boolean; color?: [number, number, number] }[] = [];
     if (quoteData.parts_cost) totalLines.push({ label: "Peças", value: formatCurrency(quoteData.parts_cost) });
     if (quoteData.labor_cost) totalLines.push({ label: "Mão de Obra", value: formatCurrency(quoteData.labor_cost) });
     if (quoteData.analysis_fee && quoteData.analysis_fee > 0) totalLines.push({ label: "Taxa de Análise", value: formatCurrency(quoteData.analysis_fee) });
     if (quoteData.discount_amount && quoteData.discount_amount > 0) totalLines.push({ label: "Desconto", value: `- ${formatCurrency(quoteData.discount_amount)}`, color: DEFAULT_THEME.danger });
+    if (totalPaid > 0) totalLines.push({ label: "Pago", value: formatCurrency(totalPaid) });
+    const pending = Math.max(0, Number(quoteData.total_amount || 0) - totalPaid);
+    if (pending > 0) totalLines.push({ label: "Pendente", value: formatCurrency(pending), color: DEFAULT_THEME.danger });
     totalLines.push({ label: "TOTAL", value: formatCurrency(quoteData.total_amount), bold: true, color: DEFAULT_THEME.primary });
     y = addTotalBox(doc, y, totalLines);
+  }
+
+  if (activeFinancialEntries.length > 0) {
+    y = addSection(doc, "Lançamentos Financeiros", y);
+    y = addTable(doc, y,
+      ["Descrição", "Tipo", "Status", "Vencimento", "Valor", "Pago"],
+      activeFinancialEntries.map((entry) => [
+        entry.description,
+        entry.entry_type === "revenue" ? "Receita" : entry.entry_type === "expense" ? "Despesa" : "Comissão",
+        financialStatusMap[entry.status] || entry.status,
+        entry.due_date ? formatDateTime(entry.due_date).split(" ")[0] : "—",
+        formatCurrency(entry.amount),
+        formatCurrency(Number(entry.paid_amount || 0)),
+      ]),
+      { columnStyles: { 4: { halign: "right" as const }, 5: { halign: "right" as const } } }
+    );
+  }
+
+  if (payments && payments.length > 0) {
+    y = addSection(doc, "Pagamentos Recebidos", y);
+    y = addTable(doc, y,
+      ["Data", "Forma", "Referência", "Observações", "Valor"],
+      payments.map((payment) => [
+        formatDateTime(payment.payment_date),
+        paymentMethodMap[payment.payment_method] || payment.payment_method,
+        payment.reference || "—",
+        payment.notes || "—",
+        formatCurrency(payment.amount),
+      ]),
+      { columnStyles: { 2: { cellWidth: 35 }, 3: { cellWidth: 45 }, 4: { halign: "right" as const } } }
+    );
   }
 
   // ── CHECKLIST DE SAÍDA ──
