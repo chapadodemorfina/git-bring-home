@@ -41,6 +41,8 @@ interface StatusEntry { from_status: string | null; to_status: string; notes: st
 interface DiagnosticData { technical_findings?: string | null; probable_cause?: string | null; repair_complexity?: string; repair_viability?: string | null; estimated_repair_hours?: number | null; estimated_cost?: number | null; not_repairable_reason?: string | null; }
 interface QuoteItem { description: string; item_type: string; quantity: number; unit_price: number; total_price: number; }
 interface QuoteData { quote_number?: string; total_amount?: number; discount_amount?: number; analysis_fee?: number; labor_cost?: number; parts_cost?: number; notes?: string | null; }
+interface FinancialEntryData { description: string; entry_type: string; status: string; amount: number; paid_amount?: number; due_date?: string | null; notes?: string | null; }
+interface PaymentData { amount: number; payment_method: string; payment_date: string; reference?: string | null; notes?: string | null; }
 interface SignatureData { signer_name: string; signer_role: string; signature_data: string; }
 interface TermData { title: string; content: string; }
 interface ChecklistItem { label: string; checked: boolean; notes?: string; }
@@ -59,6 +61,8 @@ export interface ServiceOrderPdfOptions {
   diagnostic?: DiagnosticData | null;
   quoteData?: QuoteData | null;
   quoteItems?: QuoteItem[];
+  financialEntries?: FinancialEntryData[];
+  payments?: PaymentData[];
   signatures?: SignatureData[];
   terms?: TermData[];
   entryChecklist?: ChecklistItem[];
@@ -75,6 +79,8 @@ const priorityMap: Record<string, string> = { low: "Baixa", normal: "Normal", hi
 const channelMap: Record<string, string> = { front_desk: "Balcão", collection_point: "Ponto de Coleta", whatsapp: "WhatsApp", phone: "Telefone", email: "E-mail", website: "Website" };
 const complexityMap: Record<string, string> = { simple: "Simples", moderate: "Moderada", complex: "Complexa", specialized: "Especializada" };
 const viabilityMap: Record<string, string> = { repairable: "Reparável", not_repairable: "Não Reparável", uncertain: "Incerto" };
+const paymentMethodMap: Record<string, string> = { cash: "Dinheiro", credit_card: "Cartão Crédito", debit_card: "Cartão Débito", pix: "PIX", bank_transfer: "Transferência", boleto: "Boleto", check: "Cheque", other: "Outro" };
+const financialStatusMap: Record<string, string> = { pending: "Pendente", partial: "Parcial", paid: "Pago", overdue: "Vencido", cancelled: "Cancelado" };
 
 const CHECKLIST_NAME_MAP: Record<string, string> = {
   screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
@@ -101,7 +107,7 @@ function parsePhysicalCondition(raw: string | null | undefined): ChecklistItem[]
 // ─── Main Generator ───────────────────────────────────────────
 export async function generateServiceOrderPdf(opts: ServiceOrderPdfOptions) {
   const { order, statusHistory, company, diagnostic, quoteData, quoteItems,
-          signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions, attachmentPhotos } = opts;
+          financialEntries, payments, signatures, terms, entryChecklist, exitChecklist, qrCodeImageData, displayOptions, attachmentPhotos } = opts;
 
   const doc = createPdf();
   const col1 = 16;
