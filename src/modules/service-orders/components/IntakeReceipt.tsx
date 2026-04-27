@@ -7,6 +7,33 @@ import { useCompanyName } from "@/hooks/useCompanyName";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+type ReceiptItem = {
+  description: string;
+  item_type: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  notes?: string | null;
+};
+
+type ReceiptFinancialEntry = {
+  description: string;
+  entry_type: string;
+  status: string;
+  amount: number;
+  paid_amount: number;
+  due_date?: string | null;
+  notes?: string | null;
+};
+
+type ReceiptPayment = {
+  amount: number;
+  payment_method: string;
+  payment_date: string;
+  reference?: string | null;
+  notes?: string | null;
+};
+
 const CHECKLIST_NAME_MAP: Record<string, string> = {
   screen: "Tela/Display", body: "Carcaça/Estrutura", buttons: "Botões",
   charging: "Porta de Carga", battery: "Bateria", speakers: "Alto-falante/Mic",
@@ -38,13 +65,55 @@ function formatPhysicalCondition(raw: string | null | undefined): string {
 interface Props {
   order: ServiceOrder;
   trackingUrl?: string | null;
+  items?: ReceiptItem[];
+  financialEntries?: ReceiptFinancialEntry[];
+  payments?: ReceiptPayment[];
 }
 
-const IntakeReceipt = forwardRef<HTMLDivElement, Props>(({ order, trackingUrl }, ref) => {
+const formatCurrency = (value: number) =>
+  value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const itemTypeLabels: Record<string, string> = {
+  service: "Serviço",
+  product: "Produto/Peça",
+  part: "Peça",
+  labor: "Mão de Obra",
+};
+
+const paymentMethodLabels: Record<string, string> = {
+  cash: "Dinheiro",
+  credit_card: "Cartão Crédito",
+  debit_card: "Cartão Débito",
+  pix: "PIX",
+  bank_transfer: "Transferência",
+  boleto: "Boleto",
+  check: "Cheque",
+  other: "Outro",
+};
+
+const financialStatusLabels: Record<string, string> = {
+  pending: "Pendente",
+  partial: "Parcial",
+  paid: "Pago",
+  overdue: "Vencido",
+  cancelled: "Cancelado",
+};
+
+const IntakeReceipt = forwardRef<HTMLDivElement, Props>(({ order, trackingUrl, items = [], financialEntries = [], payments = [] }, ref) => {
   const { data: terms } = useActiveTerms();
   const { data: signatures } = useOrderSignatures(order.id);
   const companyName = useCompanyName("Assistência Técnica");
   const activeTerm = terms?.[0];
+  const activeEntries = financialEntries.filter((entry) => entry.status !== "cancelled");
+  const totalItems = items.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
+  const totalRevenue = activeEntries
+    .filter((entry) => entry.entry_type === "revenue")
+    .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+  const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const pendingAmount = Math.max(0, (totalRevenue || Number(order.total_amount || totalItems || 0)) - totalPaid);
+  const pixQrPayload = payments.find((payment) => payment.payment_method === "pix" && (payment.reference || payment.notes))?.reference
+    || payments.find((payment) => payment.payment_method === "pix" && payment.notes)?.notes
+    || null;
 
   return (
     <div ref={ref} className="bg-white text-black p-8 max-w-[800px] mx-auto text-sm print:p-4" style={{ fontFamily: "Arial, sans-serif" }}>
@@ -128,6 +197,83 @@ const IntakeReceipt = forwardRef<HTMLDivElement, Props>(({ order, trackingUrl },
           <p>{order.collection_point_name}</p>
         </div>
       )}
+
+      <div className="border rounded p-3 mb-4">
+        <p className="font-bold mb-2">Serviços, Peças e Valores</p>
+        {items.length > 0 ? (
+          <table className="text-xs w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-1">Descrição</th>
+                <th className="text-left py-1">Tipo</th>
+                <th className="text-right py-1">Qtd</th>
+                <th className="text-right py-1">Unit.</th>
+                <th className="text-right py-1">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, index) => (
+                <tr key={`${item.description}-${index}`} className="border-b last:border-b-0">
+                  <td className="py-1 pr-2">{item.description}{item.notes ? <span className="block text-[10px]">Obs.: {item.notes}</span> : null}</td>
+                  <td className="py-1 pr-2">{itemTypeLabels[item.item_type] || item.item_type}</td>
+                  <td className="py-1 text-right">{Number(item.quantity).toLocaleString("pt-BR")}</td>
+                  <td className="py-1 text-right">{formatCurrency(Number(item.unit_price || 0))}</td>
+                  <td className="py-1 text-right font-bold">{formatCurrency(Number(item.total_price || 0))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-xs">Nenhum item lançado.</p>
+        )}
+        <div className="mt-2 text-right font-bold">Total da OS: {formatCurrency(Number(order.total_amount || totalItems || 0))}</div>
+      </div>
+
+      <div className="border rounded p-3 mb-4">
+        <p className="font-bold mb-2">Financeiro e Pagamentos</p>
+        <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+          <div><span className="block font-medium">Valor</span>{formatCurrency(totalRevenue || Number(order.total_amount || 0))}</div>
+          <div><span className="block font-medium">Pago</span>{formatCurrency(totalPaid)}</div>
+          <div><span className="block font-medium">Pendente</span>{formatCurrency(pendingAmount)}</div>
+        </div>
+        {activeEntries.length > 0 && (
+          <table className="text-xs w-full border-collapse mb-3">
+            <tbody>
+              {activeEntries.map((entry, index) => (
+                <tr key={`${entry.description}-${index}`} className="border-b last:border-b-0">
+                  <td className="py-1 pr-2">{entry.description}</td>
+                  <td className="py-1 pr-2">{financialStatusLabels[entry.status] || entry.status}</td>
+                  <td className="py-1 text-right font-bold">{formatCurrency(Number(entry.amount || 0))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        {payments.length > 0 ? (
+          <table className="text-xs w-full border-collapse">
+            <thead><tr className="border-b"><th className="text-left py-1">Forma</th><th className="text-left py-1">Data</th><th className="text-left py-1">Referência</th><th className="text-right py-1">Valor</th></tr></thead>
+            <tbody>
+              {payments.map((payment, index) => (
+                <tr key={`${payment.payment_method}-${index}`} className="border-b last:border-b-0">
+                  <td className="py-1 pr-2">{paymentMethodLabels[payment.payment_method] || payment.payment_method}</td>
+                  <td className="py-1 pr-2">{format(new Date(payment.payment_date), "dd/MM/yyyy HH:mm", { locale: ptBR })}</td>
+                  <td className="py-1 pr-2 break-all">{payment.reference || payment.notes || "—"}</td>
+                  <td className="py-1 text-right font-bold">{formatCurrency(Number(payment.amount || 0))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-xs">Nenhum pagamento registrado.</p>
+        )}
+        {pixQrPayload && (
+          <div className="mt-4 flex flex-col items-center border-t pt-3">
+            <QRCodeSVG value={pixQrPayload} size={120} level="M" />
+            <p className="text-xs mt-2 font-medium">QR Code PIX</p>
+            <p className="text-[10px] break-all mt-1">{pixQrPayload}</p>
+          </div>
+        )}
+      </div>
 
       {/* Terms */}
       {activeTerm && (
