@@ -197,6 +197,13 @@ export default function ServiceOrderDetailPage() {
 
   const handleExportPdf = async () => {
     if (!order) return;
+    const pdfItemsSource = (quoteItems && quoteItems.length > 0) ? quoteItems : (orderItems || []);
+    const pdfLaborCost = pdfItemsSource
+      .filter((i: any) => i.item_type === "labor" || i.item_type === "service")
+      .reduce((s: number, i: any) => s + Number(i.total_price || 0), 0);
+    const pdfPartsCost = pdfItemsSource
+      .filter((i: any) => i.item_type === "part" || i.item_type === "product")
+      .reduce((s: number, i: any) => s + Number(i.total_price || 0), 0);
     const company = {
       name: companySettings.company_name,
       legalName: companySettings.company_legal_name,
@@ -237,14 +244,18 @@ export default function ServiceOrderDetailPage() {
       diagnostic: diagnostic || null,
       quoteData: repairQuote ? {
         quote_number: repairQuote.quote_number,
-        total_amount: repairQuote.total_amount,
-        discount_amount: repairQuote.discount_amount,
-        analysis_fee: repairQuote.analysis_fee,
-        labor_cost: (quoteItems || []).filter((i: any) => i.item_type === "labor").reduce((s: number, i: any) => s + Number(i.total_price), 0),
-        parts_cost: (quoteItems || []).filter((i: any) => i.item_type === "part").reduce((s: number, i: any) => s + Number(i.total_price), 0),
+        total_amount: Number(repairQuote.total_amount || order.total_amount || 0),
+        discount_amount: Number(repairQuote.discount_amount || 0),
+        analysis_fee: Number(repairQuote.analysis_fee || 0),
+        labor_cost: pdfLaborCost,
+        parts_cost: pdfPartsCost,
         notes: repairQuote.notes,
+      } : Number(order.total_amount || 0) > 0 ? {
+        total_amount: Number(order.total_amount || 0),
+        labor_cost: pdfLaborCost,
+        parts_cost: pdfPartsCost,
       } : null,
-      quoteItems: (quoteItems || []).map((i: any) => ({
+      quoteItems: pdfItemsSource.map((i: any) => ({
         description: i.description,
         item_type: i.item_type,
         quantity: Number(i.quantity),
