@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _hotfix_audit: {
-        Row: {
-          at: string | null
-          detail: string | null
-          expected_fail: boolean | null
-          n: number | null
-          name: string | null
-          passed: boolean | null
-        }
-        Insert: {
-          at?: string | null
-          detail?: string | null
-          expected_fail?: boolean | null
-          n?: number | null
-          name?: string | null
-          passed?: boolean | null
-        }
-        Update: {
-          at?: string | null
-          detail?: string | null
-          expected_fail?: boolean | null
-          n?: number | null
-          name?: string | null
-          passed?: boolean | null
-        }
-        Relationships: []
-      }
       accounts_receivable: {
         Row: {
           amount_received: number
