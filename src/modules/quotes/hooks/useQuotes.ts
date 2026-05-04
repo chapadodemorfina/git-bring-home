@@ -94,11 +94,19 @@ export function useUpdateCommercialQuote() {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<QuoteFormData> }) => {
-      const { error } = await db.from("quotes").update({
-        ...data,
-        device_id: data.device_id || null,
-        service_order_id: data.service_order_id || null,
-      }).eq("id", id);
+      // Update parcial seguro: só inclui no payload os campos efetivamente enviados
+      // pelo caller. Para campos opcionais sensíveis (device_id, service_order_id),
+      // string vazia é tratada como "limpar"; undefined significa "não tocar".
+      const payload: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (value === undefined) continue;
+        if ((key === "device_id" || key === "service_order_id") && value === "") {
+          payload[key] = null;
+        } else {
+          payload[key] = value;
+        }
+      }
+      const { error } = await db.from("quotes").update(payload).eq("id", id);
       if (error) throw error;
     },
     onSuccess: (_, { id }) => {
