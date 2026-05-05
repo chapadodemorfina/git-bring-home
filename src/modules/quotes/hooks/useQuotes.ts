@@ -119,27 +119,32 @@ export function useUpdateCommercialQuote() {
   });
 }
 
-// ─── Status changes ────────────────────────────────────────────
+// ─── Status changes (via RPCs transacionais) ──────────────────
+export type QuoteStatusTransition = "sent" | "approved" | "rejected" | "cancelled" | "expired";
+
+const STATUS_RPC_MAP: Record<QuoteStatusTransition, string> = {
+  sent: "quote_send",
+  approved: "quote_approve",
+  rejected: "quote_reject",
+  cancelled: "quote_cancel",
+  expired: "quote_expire",
+};
+
 export function useChangeQuoteStatus() {
   const qc = useQueryClient();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: async ({ id, status, reason }: { id: string; status: string; reason?: string }) => {
-      const updates: any = { status };
-      if (status === "approved") updates.approved_at = new Date().toISOString();
-      if (status === "rejected") {
-        updates.rejected_at = new Date().toISOString();
-        updates.rejection_reason = reason || null;
+    mutationFn: async ({ id, status, reason }: { id: string; status: QuoteStatusTransition; reason?: string }) => {
+      const fn = STATUS_RPC_MAP[status];
+      if (!fn) throw new Error(`Transição não suportada: ${status}`);
+      const args: Record<string, unknown> = { p_quote_id: id };
+      if (status === "rejected" || status === "cancelled") {
+        args.p_reason = reason ?? null;
       }
-      const { error } = await db.from("quotes").update(updates).eq("id", id);
+      const { data, error } = await db.rpc(fn, args);
       if (error) throw error;
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      await db.from("quote_history").insert({
-        quote_id: id,
-        action: status,
-        notes: reason || `Status alterado para ${status}`,
-        created_by: userId,
-      });
+      return data;
+      // Histórico é gravado pela própria RPC; não inserir manualmente.
     },
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: ["commercial-quote", id] });
