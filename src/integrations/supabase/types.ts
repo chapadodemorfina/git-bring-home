@@ -2713,16 +2713,24 @@ export type Database = {
       quotes: {
         Row: {
           approved_at: string | null
+          approved_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          converted_at: string | null
+          converted_service_order_id: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
+          deleted_at: string | null
           description: string | null
           device_id: string | null
           discount_amount: number
           estimated_profit: number
           id: string
+          parent_quote_id: string | null
           quote_number: string
           rejected_at: string | null
+          rejected_by: string | null
           rejection_reason: string | null
           service_order_id: string | null
           status: string
@@ -2734,20 +2742,30 @@ export type Database = {
           total_amount: number
           total_cost: number
           updated_at: string
+          updated_by: string | null
           valid_until: string | null
+          version: number
         }
         Insert: {
           approved_at?: string | null
+          approved_by?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          converted_at?: string | null
+          converted_service_order_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          deleted_at?: string | null
           description?: string | null
           device_id?: string | null
           discount_amount?: number
           estimated_profit?: number
           id?: string
+          parent_quote_id?: string | null
           quote_number?: string
           rejected_at?: string | null
+          rejected_by?: string | null
           rejection_reason?: string | null
           service_order_id?: string | null
           status?: string
@@ -2759,20 +2777,30 @@ export type Database = {
           total_amount?: number
           total_cost?: number
           updated_at?: string
+          updated_by?: string | null
           valid_until?: string | null
+          version?: number
         }
         Update: {
           approved_at?: string | null
+          approved_by?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          converted_at?: string | null
+          converted_service_order_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          deleted_at?: string | null
           description?: string | null
           device_id?: string | null
           discount_amount?: number
           estimated_profit?: number
           id?: string
+          parent_quote_id?: string | null
           quote_number?: string
           rejected_at?: string | null
+          rejected_by?: string | null
           rejection_reason?: string | null
           service_order_id?: string | null
           status?: string
@@ -2784,7 +2812,9 @@ export type Database = {
           total_amount?: number
           total_cost?: number
           updated_at?: string
+          updated_by?: string | null
           valid_until?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -2799,6 +2829,13 @@ export type Database = {
             columns: ["device_id"]
             isOneToOne: false
             referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_parent_quote_id_fkey"
+            columns: ["parent_quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
           {
@@ -5361,6 +5398,25 @@ export type Database = {
         Args: { _so_id: string }
         Returns: undefined
       }
+      _quote_log_event: {
+        Args: {
+          _actor: string
+          _event: string
+          _from: string
+          _payload?: Json
+          _quote_id: string
+          _tenant: string
+          _to: string
+        }
+        Returns: undefined
+      }
+      _quote_rpc_authorize: {
+        Args: never
+        Returns: {
+          _tenant: string
+          _uid: string
+        }[]
+      }
       adjust_stock: {
         Args: { _new_quantity: number; _product_id: string; _reason?: string }
         Returns: Json
@@ -5626,6 +5682,25 @@ export type Database = {
         Returns: Json
       }
       public_track_order: { Args: { _token: string }; Returns: Json }
+      quote_approve: {
+        Args: {
+          p_approval_source?: string
+          p_note?: string
+          p_quote_id: string
+        }
+        Returns: Json
+      }
+      quote_cancel: {
+        Args: { p_quote_id: string; p_reason?: string }
+        Returns: Json
+      }
+      quote_expire: { Args: { p_quote_id: string }; Returns: Json }
+      quote_reject: {
+        Args: { p_quote_id: string; p_reason?: string }
+        Returns: Json
+      }
+      quote_revise: { Args: { p_quote_id: string }; Returns: Json }
+      quote_send: { Args: { p_quote_id: string }; Returns: Json }
       quotes_summary: { Args: never; Returns: Json }
       recalculate_quote_totals: {
         Args: { _quote_id: string }
