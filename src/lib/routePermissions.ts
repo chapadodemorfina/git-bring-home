@@ -118,6 +118,11 @@ export const ROUTE_PERMISSIONS = {
     mode: "blocking-and",
     notes: "Fase 3.5.6.1: criação de orçamento em AND com RoleGuard.",
   },
+  quotesEdit: {
+    anyOf: ["quotes.update"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.8: edição de orçamento em AND com RoleGuard.",
+  },
   warranties: {
     anyOf: ["warranties.view"],
     mode: "blocking-and",
