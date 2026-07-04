@@ -52,12 +52,75 @@ export function useMyPermissions() {
   return useQuery<string[]>({
     queryKey: ["my-permissions"],
     enabled: !!getActiveTenantId(),
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_my_permissions");
       if (error) throw new Error(error.message);
       return (data as string[]) || [];
     },
   });
+}
+
+/**
+ * Mapa (Set) das permissões do usuário atual, com helpers convenientes.
+ * Fail-closed: em erro ou durante loading, `hasPermission` retorna `false`.
+ */
+export function usePermissionMap() {
+  const query = useMyPermissions();
+  const permissions = query.data || [];
+  const set = new Set(permissions);
+  const ready = !query.isLoading && !query.isError;
+
+  const hasPermission = (key: string): boolean => {
+    if (!ready) return false;
+    return set.has(key);
+  };
+  const hasAnyPermission = (keys: string[]): boolean => {
+    if (!ready) return false;
+    return keys.some((k) => set.has(k));
+  };
+  const hasAllPermissions = (keys: string[]): boolean => {
+    if (!ready) return false;
+    return keys.every((k) => set.has(k));
+  };
+
+  return {
+    permissions,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error as Error | null,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+  };
+}
+
+/**
+ * Verifica uma permissão específica do usuário atual.
+ * Fail-closed em loading e erro.
+ */
+export function useHasPermission(permissionKey: string) {
+  const { hasPermission, isLoading, isError, error } = usePermissionMap();
+  return {
+    allowed: hasPermission(permissionKey),
+    isLoading,
+    isError,
+    error,
+  };
+}
+
+/**
+ * Verifica se o usuário atual tem ao menos uma das permissões.
+ * Fail-closed em loading e erro.
+ */
+export function useHasAnyPermission(permissionKeys: string[]) {
+  const { hasAnyPermission, isLoading, isError, error } = usePermissionMap();
+  return {
+    allowed: hasAnyPermission(permissionKeys),
+    isLoading,
+    isError,
+    error,
+  };
 }
 
 interface SetOverrideParams {

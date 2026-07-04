@@ -16,6 +16,7 @@ import {
   useClearUserPermissionOverride,
   type EffectivePermission,
 } from "../hooks/usePermissions";
+import { PermissionDivergenceDiagnostic } from "../components/PermissionDivergenceDiagnostic";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -306,6 +307,14 @@ export default function PermissionsManagementPage() {
                     </CardContent>
                   </Card>
                 ))
+              )}
+
+              {selectedUser && !isAccessDenied && (
+                <PermissionDivergenceDiagnostic
+                  userId={selectedUser.id}
+                  userLabel={selectedUser.full_name || selectedUser.email || ""}
+                  userRoles={(selectedUser.roles || []) as string[]}
+                />
               )}
             </>
           )}

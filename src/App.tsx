@@ -15,6 +15,8 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SubscriptionGate } from "@/components/SubscriptionGate";
 import { ROUTE_ROLES } from "@/lib/permissions";
+import { ROUTE_PERMISSIONS } from "@/lib/routePermissions";
+import { PermissionGuard } from "@/modules/permissions/components/PermissionGuard";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -218,7 +220,7 @@ const App = () => (
               <Route path="/finance/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserEditPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/system/permissions" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><PermissionsManagementPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/system/permissions" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.permissionsPage.anyOf]} shadowOnly debugLabel="/system/permissions"><PermissionsManagementPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
 
               {/* Customer Portal */}
               <Route path="/portal/login" element={<PortalLoginPage />} />
