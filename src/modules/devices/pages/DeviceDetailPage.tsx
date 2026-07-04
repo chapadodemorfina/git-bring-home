@@ -15,6 +15,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function DeviceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,9 +74,11 @@ export default function DeviceDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate(`/devices/${id}/edit`)}>
-            <Edit className="h-4 w-4 mr-2" /> Editar
-          </Button>
+          <Can permission="devices.update" mode="hide">
+            <Button variant="outline" onClick={() => navigate(`/devices/${id}/edit`)}>
+              <Edit className="h-4 w-4 mr-2" /> Editar
+            </Button>
+          </Can>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>

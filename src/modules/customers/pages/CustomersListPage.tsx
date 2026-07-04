@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import DataPagination from "@/components/ui/data-pagination";
 import { Search, Plus, Eye, Pencil, Trash2, Loader2, Building2, User } from "lucide-react";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function CustomersListPage() {
   const [search, setSearch] = useState("");
@@ -30,9 +31,11 @@ export default function CustomersListPage() {
           <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
           <p className="text-muted-foreground">Gerenciamento de clientes</p>
         </div>
-        <Button onClick={() => navigate("/customers/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Cliente
-        </Button>
+        <Can permission="customers.create" mode="hide">
+          <Button onClick={() => navigate("/customers/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Cliente
+          </Button>
+        </Can>
       </div>
 
       <Card>
@@ -98,9 +101,11 @@ export default function CustomersListPage() {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/customers/${c.id}`)}>
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/customers/${c.id}/edit`)}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
+                            <Can permission="customers.update" mode="hide">
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/customers/${c.id}/edit`)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </Can>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>

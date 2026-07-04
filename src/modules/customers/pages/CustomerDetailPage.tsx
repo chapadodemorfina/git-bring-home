@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Pencil, Building2, User, Phone, Mail, MessageCircle, Loader2 } from "lucide-react";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,9 +52,11 @@ export default function CustomerDetailPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => navigate(`/customers/${id}/edit`)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
-        </Button>
+        <Can permission="customers.update" mode="hide">
+          <Button onClick={() => navigate(`/customers/${id}/edit`)}>
+            <Pencil className="mr-2 h-4 w-4" /> Editar
+          </Button>
+        </Can>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

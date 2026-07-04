@@ -10,6 +10,7 @@ import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, Monitor, Eye, Loader2 } from "lucide-react";
 import { useDevices } from "../hooks/useDevices";
 import { deviceTypeLabels, DeviceType, getDeviceTypeLabel } from "../types";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function DevicesListPage() {
   const navigate = useNavigate();
@@ -27,9 +28,11 @@ export default function DevicesListPage() {
           <h1 className="text-2xl font-bold tracking-tight">Dispositivos</h1>
           <p className="text-muted-foreground">Gerenciamento de equipamentos</p>
         </div>
-        <Button onClick={() => navigate("/devices/new")}>
-          <Plus className="h-4 w-4 mr-2" /> Novo Dispositivo
-        </Button>
+        <Can permission="devices.create" mode="hide">
+          <Button onClick={() => navigate("/devices/new")}>
+            <Plus className="h-4 w-4 mr-2" /> Novo Dispositivo
+          </Button>
+        </Can>
       </div>
 
       <Card>
