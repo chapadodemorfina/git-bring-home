@@ -37,9 +37,11 @@ export default function QuotesListPage() {
           <h1 className="text-2xl font-bold">Orçamentos</h1>
           <p className="text-sm text-muted-foreground">Gestão comercial de propostas</p>
         </div>
-        <Button onClick={() => navigate("/quotes/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Orçamento
-        </Button>
+        <Can permission="quotes.create" mode="hide">
+          <Button onClick={() => navigate("/quotes/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Orçamento
+          </Button>
+        </Can>
       </div>
 
       {/* Summary Cards */}
