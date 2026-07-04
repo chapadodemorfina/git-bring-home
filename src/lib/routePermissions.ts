@@ -66,7 +66,12 @@ export const ROUTE_PERMISSIONS = {
     mode: "shadow",
   },
   stock: { anyOf: ["inventory.view"], mode: "shadow" },
-  commercial: { anyOf: ["sales.view", "quotes.view"], mode: "shadow" },
+  commercial: {
+    anyOf: ["commercial.view"],
+    mode: "blocking-and",
+    notes:
+      "Fase 3.5.7: hub Comercial protegido por commercial.view em AND com RoleGuard. Seções internas continuam protegidas por quotes.view e sales.view via <Can>.",
+  },
   financial: {
     anyOf: ["financial.view"],
     requiresRoleFloor: true,
