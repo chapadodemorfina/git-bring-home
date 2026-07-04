@@ -12,6 +12,7 @@ import ServiceOrderFilters, { defaultFilters, type ServiceOrderFilterValues } fr
 import { Plus, ClipboardList, MapPin, Store, CircleDollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Can } from "@/modules/permissions/components/Can";
 
 const paymentStatusConfig: Record<string, { label: string; className: string }> = {
   paid: { label: "Pago", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" },
