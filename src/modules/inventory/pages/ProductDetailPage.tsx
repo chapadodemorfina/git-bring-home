@@ -11,6 +11,7 @@ import StockMovementsTable from "../components/StockMovementsTable";
 import StockEntryDialog from "../components/StockEntryDialog";
 import StockAdjustDialog from "../components/StockAdjustDialog";
 import ProductUsageHistory from "../components/ProductUsageHistory";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
