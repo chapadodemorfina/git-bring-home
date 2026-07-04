@@ -15,6 +15,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function DeviceDetailPage() {
   const { id } = useParams<{ id: string }>();
