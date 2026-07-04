@@ -53,9 +53,11 @@ export default function ServiceOrdersListPage() {
           <h1 className="text-2xl font-bold">Ordens de Serviço</h1>
           <p className="text-muted-foreground">Gerencie todas as ordens de serviço</p>
         </div>
-        <Button asChild>
-          <Link to="/service-orders/new"><Plus className="mr-2 h-4 w-4" /> Nova OS</Link>
-        </Button>
+        <Can permission="service_orders.create">
+          <Button asChild>
+            <Link to="/service-orders/new"><Plus className="mr-2 h-4 w-4" /> Nova OS</Link>
+          </Button>
+        </Can>
       </div>
 
       <Card>
