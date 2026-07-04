@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, FileText, Send, CheckCircle, XCircle, Copy, MoreHorizontal, TrendingUp, Clock, DollarSign, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
+import { Can } from "@/modules/permissions/components/Can";
 
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
