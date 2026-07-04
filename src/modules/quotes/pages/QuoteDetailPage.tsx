@@ -187,10 +187,12 @@ export default function QuoteDetailPage() {
           )}
           {canApprove && (
             <>
-              <Button size="sm" variant="default" className="bg-green-600 hover:bg-green-700"
-                onClick={() => changeStatus.mutate({ id: id!, status: "approved" })}>
-                <CheckCircle className="mr-1 h-4 w-4" /> Aprovar
-              </Button>
+              <Can permission="quotes.approve" mode="disable">
+                <Button size="sm" variant="default" className="bg-green-600 hover:bg-green-700"
+                  onClick={() => changeStatus.mutate({ id: id!, status: "approved" })}>
+                  <CheckCircle className="mr-1 h-4 w-4" /> Aprovar
+                </Button>
+              </Can>
               <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)}>
                 <XCircle className="mr-1 h-4 w-4" /> Recusar
               </Button>
