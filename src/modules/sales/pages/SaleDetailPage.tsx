@@ -24,6 +24,7 @@ import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
 import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
 import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
