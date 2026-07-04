@@ -212,4 +212,14 @@ function DivergenceBadge({ value }: { value: RowDivergence }) {
   );
 }
 
+function ModeBadge({ value }: { value: "shadow" | "blocking-and" | "role-only" }) {
+  if (value === "blocking-and") {
+    return <Badge className="text-[10px]">blocking-and</Badge>;
+  }
+  if (value === "role-only") {
+    return <Badge variant="outline" className="text-[10px]">role-only</Badge>;
+  }
+  return <Badge variant="secondary" className="text-[10px]">shadow</Badge>;
+}
+
 export default PermissionDivergenceDiagnostic;
