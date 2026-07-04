@@ -308,6 +308,14 @@ export default function PermissionsManagementPage() {
                   </Card>
                 ))
               )}
+
+              {selectedUser && !isAccessDenied && (
+                <PermissionDivergenceDiagnostic
+                  userId={selectedUser.id}
+                  userLabel={selectedUser.full_name || selectedUser.email || ""}
+                  userRoles={(selectedUser.roles || []) as string[]}
+                />
+              )}
             </>
           )}
         </div>
