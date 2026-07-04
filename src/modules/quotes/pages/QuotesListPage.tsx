@@ -166,9 +166,11 @@ export default function QuotesListPage() {
                               </DropdownMenuItem>
                             )}
                             {(q.status === "draft" || q.status === "sent") && (
-                              <DropdownMenuItem onClick={() => changeStatus.mutate({ id: q.id, status: "approved" })}>
-                                Aprovar
-                              </DropdownMenuItem>
+                              <Can permission="quotes.approve" mode="disable">
+                                <DropdownMenuItem onClick={() => changeStatus.mutate({ id: q.id, status: "approved" })}>
+                                  Aprovar
+                                </DropdownMenuItem>
+                              </Can>
                             )}
                             {(q.status === "draft" || q.status === "sent") && (
                               <DropdownMenuItem onClick={() => changeStatus.mutate({ id: q.id, status: "rejected", reason: "Recusado manualmente" })}>
