@@ -31,9 +31,11 @@ export default function CustomersListPage() {
           <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
           <p className="text-muted-foreground">Gerenciamento de clientes</p>
         </div>
-        <Button onClick={() => navigate("/customers/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Cliente
-        </Button>
+        <Can permission="customers.create" mode="hide">
+          <Button onClick={() => navigate("/customers/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Cliente
+          </Button>
+        </Can>
       </div>
 
       <Card>
