@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Pencil, Building2, User, Phone, Mail, MessageCircle, Loader2 } from "lucide-react";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
