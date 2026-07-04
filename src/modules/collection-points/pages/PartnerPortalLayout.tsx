@@ -12,7 +12,7 @@ const navItems = [
 ];
 
 export default function PartnerPortalLayout() {
-  const { session, loading, signOut } = useAuth();
+  const { session, loading, signOut, roles } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -24,6 +24,13 @@ export default function PartnerPortalLayout() {
   }
 
   if (!session) return <Navigate to="/portal/login" replace />;
+
+  // Portal do parceiro é exclusivo para operador de ponto de coleta.
+  const isPartner =
+    Array.isArray(roles) && roles.includes("collection_point_operator" as any);
+  if (!isPartner) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const isActive = (path: string) =>
     path === "/partner" ? location.pathname === "/partner" : location.pathname.startsWith(path);
