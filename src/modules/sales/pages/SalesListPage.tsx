@@ -15,6 +15,7 @@ import { Plus, ShoppingBag, DollarSign, TrendingUp, BarChart3 } from "lucide-rea
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function SalesListPage() {
   const navigate = useNavigate();
@@ -60,9 +61,11 @@ export default function SalesListPage() {
           <Button variant="outline" asChild>
             <Link to="/sales/dashboard"><BarChart3 className="mr-2 h-4 w-4" /> Dashboard</Link>
           </Button>
-          <Button asChild>
-            <Link to="/sales/new"><Plus className="mr-2 h-4 w-4" /> Nova Venda</Link>
-          </Button>
+          <Can permission="sales.create" mode="hide">
+            <Button asChild>
+              <Link to="/sales/new"><Plus className="mr-2 h-4 w-4" /> Nova Venda</Link>
+            </Button>
+          </Can>
         </div>
       </div>
 
