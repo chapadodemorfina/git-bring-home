@@ -27,16 +27,7 @@ export const ROLES = {
 
 /** Roles permitidos para cada rota / módulo. */
 export const ROUTE_ROLES = {
-  dashboard: [
-    "admin",
-    "manager",
-    "finance",
-    "front_desk",
-    "bench_technician",
-    "field_technician",
-    "collection_point_operator",
-    "customer",
-  ],
+  dashboard: ["admin", "manager", "finance"],
   operation: ["admin", "manager", "front_desk", "bench_technician", "field_technician"],
   registrations: ["admin", "manager", "front_desk", "finance", "bench_technician"],
   stock: ["admin", "manager", "bench_technician", "front_desk"],
