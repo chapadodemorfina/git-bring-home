@@ -135,6 +135,8 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
                 <TableHeader>
                   <TableRow>
                     <TableHead>Rota/Módulo</TableHead>
+                    <TableHead>Modo</TableHead>
+                    <TableHead>Flags</TableHead>
                     <TableHead>Roles atuais</TableHead>
                     <TableHead>Permissões (anyOf)</TableHead>
                     <TableHead>Por role</TableHead>
@@ -146,6 +148,17 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
                   {rows.map((r) => (
                     <TableRow key={r.key}>
                       <TableCell className="font-mono text-xs">{r.key}</TableCell>
+                      <TableCell>
+                        <ModeBadge value={r.mode} />
+                      </TableCell>
+                      <TableCell className="space-x-1">
+                        {r.requiresRoleFloor && (
+                          <Badge variant="outline" className="text-[10px]">piso por role</Badge>
+                        )}
+                        {r.sensitive && (
+                          <Badge variant="destructive" className="text-[10px]">sensível</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-xs">{r.roles.join(", ") || "—"}</TableCell>
                       <TableCell className="text-xs">{r.perms.join(", ")}</TableCell>
                       <TableCell>
@@ -164,6 +177,7 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
                     </TableRow>
                   ))}
                 </TableBody>
+
               </Table>
             </div>
           </>
