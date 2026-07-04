@@ -1,17 +1,29 @@
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { AppRole } from "@/lib/permissions";
+import { getDefaultRouteForRoles, type AppRole } from "@/lib/permissions";
 
 interface RoleGuardProps {
   children: React.ReactNode;
   allowedRoles: AppRole[];
-  /** Rota para o botão "Voltar". Default: `/dashboard`. */
+  /** Rota para o botão "Ir para o Dashboard" na tela 403. */
   fallback?: string;
+  /**
+   * Quando true e o usuário possui alguma role válida (mas não a permitida),
+   * redireciona silenciosamente para a home canônica do role
+   * (`getDefaultRouteForRoles`) em vez de mostrar a tela 403.
+   * Se o usuário não tiver nenhuma role, sempre mostra 403 (fail-closed).
+   */
+  redirectByRole?: boolean;
 }
 
-export function RoleGuard({ children, allowedRoles, fallback = "/dashboard" }: RoleGuardProps) {
+export function RoleGuard({
+  children,
+  allowedRoles,
+  fallback = "/dashboard",
+  redirectByRole = false,
+}: RoleGuardProps) {
   const { roles, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -23,13 +35,21 @@ export function RoleGuard({ children, allowedRoles, fallback = "/dashboard" }: R
     );
   }
 
-  // Bloqueio padrão: sem roles carregados ou nenhum role permitido → nega.
+  const hasAnyRole = Array.isArray(roles) && roles.length > 0;
   const hasAccess =
-    Array.isArray(roles) &&
-    roles.length > 0 &&
-    roles.some((r) => allowedRoles.includes(r as AppRole));
+    hasAnyRole && roles.some((r) => allowedRoles.includes(r as AppRole));
 
   if (!hasAccess) {
+    // Redirect silencioso para a home do próprio role, se solicitado
+    // e se o usuário realmente tem um role reconhecido.
+    if (redirectByRole && hasAnyRole) {
+      const target = getDefaultRouteForRoles(roles);
+      // Evita loop caso o próprio target também esteja bloqueado.
+      if (target && !allowedRoles.includes("customer" as AppRole)) {
+        return <Navigate to={target} replace />;
+      }
+    }
+
     return (
       <div className="flex min-h-[60vh] w-full items-center justify-center p-6">
         <div className="max-w-md w-full rounded-lg border bg-card p-8 text-center shadow-sm">
