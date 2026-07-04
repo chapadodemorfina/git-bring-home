@@ -132,7 +132,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Dashboard */}
-              <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
+              <Route path="/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.dashboard} redirectByRole><Dashboard /></RoleGuard></ProtectedPage>} />
 
               {/* Module Hub Pages */}
               <Route path="/operation" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.operation}><OperationModulePage /></RoleGuard></ProtectedPage>} />
