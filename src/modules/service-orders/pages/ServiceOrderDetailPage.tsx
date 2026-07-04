@@ -36,6 +36,7 @@ import { useCompanySettings, settingIsTrue, type CompanySettings } from "@/hooks
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServiceOrderItems } from "../hooks/useServiceOrderItems";
+import { Can } from "@/modules/permissions/components/Can";
 
 const db = supabase as any;
 
