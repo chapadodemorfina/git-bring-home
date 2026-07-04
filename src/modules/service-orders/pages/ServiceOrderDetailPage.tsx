@@ -377,9 +377,11 @@ export default function ServiceOrderDetailPage() {
           {/* Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {canChangeStatus && (
-              <Button onClick={() => setStatusOpen(true)} className="gap-2">
-                <RefreshCw className="h-4 w-4" /> Avançar Status
-              </Button>
+              <Can permission="service_orders.update" mode="disable">
+                <Button onClick={() => setStatusOpen(true)} className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Avançar Status
+                </Button>
+              </Can>
             )}
 
             {(order.status === "ready_for_pickup" || order.status === "delivered") && (
