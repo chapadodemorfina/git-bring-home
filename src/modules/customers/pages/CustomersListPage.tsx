@@ -101,9 +101,11 @@ export default function CustomersListPage() {
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/customers/${c.id}`)}>
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/customers/${c.id}/edit`)}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
+                            <Can permission="customers.update" mode="hide">
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => navigate(`/customers/${c.id}/edit`)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </Can>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
