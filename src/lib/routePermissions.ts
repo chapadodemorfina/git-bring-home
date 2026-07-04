@@ -93,15 +93,25 @@ export const ROUTE_PERMISSIONS = {
   sales: { anyOf: ["sales.create"], mode: "shadow" },
   salesRead: {
     anyOf: ["sales.view"],
-    mode: "role-only",
+    mode: "blocking-and",
     notes:
-      "bench_technician tem sales.view no seed; migração para permissão pura ampliaria acesso. Decisão pendente.",
+      "Fase 3.5.6.1: blocking-and em /sales/:id. RoleGuard permanece como piso (bench_technician excluído).",
   },
   quotes: {
     anyOf: ["quotes.view"],
-    mode: "role-only",
+    mode: "blocking-and",
     notes:
-      "finance tem quotes.view no seed; migração para permissão pura ampliaria acesso. Decisão pendente.",
+      "Fase 3.5.6.1: alias de leitura. Ver quotesRead/quotesCreate para uso em rotas específicas.",
+  },
+  quotesRead: {
+    anyOf: ["quotes.view"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.6.1: detalhe/leitura de orçamento em AND com RoleGuard.",
+  },
+  quotesCreate: {
+    anyOf: ["quotes.create"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.6.1: criação de orçamento em AND com RoleGuard.",
   },
   warranties: {
     anyOf: ["warranties.view"],
