@@ -16,6 +16,7 @@ import {
   useClearUserPermissionOverride,
   type EffectivePermission,
 } from "../hooks/usePermissions";
+import { PermissionDivergenceDiagnostic } from "../components/PermissionDivergenceDiagnostic";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
