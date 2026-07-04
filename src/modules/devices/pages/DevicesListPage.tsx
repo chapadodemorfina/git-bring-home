@@ -28,9 +28,11 @@ export default function DevicesListPage() {
           <h1 className="text-2xl font-bold tracking-tight">Dispositivos</h1>
           <p className="text-muted-foreground">Gerenciamento de equipamentos</p>
         </div>
-        <Button onClick={() => navigate("/devices/new")}>
-          <Plus className="h-4 w-4 mr-2" /> Novo Dispositivo
-        </Button>
+        <Can permission="devices.create" mode="hide">
+          <Button onClick={() => navigate("/devices/new")}>
+            <Plus className="h-4 w-4 mr-2" /> Novo Dispositivo
+          </Button>
+        </Can>
       </div>
 
       <Card>
