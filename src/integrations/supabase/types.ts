@@ -5607,6 +5607,14 @@ export type Database = {
         Args: { _resource_type: string; _tenant_id: string }
         Returns: boolean
       }
+      clear_user_permission_override: {
+        Args: {
+          _permission_key: string
+          _reason?: string
+          _target_user_id: string
+        }
+        Returns: Json
+      }
       close_cash_register: {
         Args: {
           _closing_notes?: string
@@ -6008,6 +6016,16 @@ export type Database = {
         Returns: Json
       }
       set_tenant_context: { Args: { _tenant_id: string }; Returns: undefined }
+      set_user_permission_override: {
+        Args: {
+          _effect: string
+          _expires_at?: string
+          _permission_key: string
+          _reason?: string
+          _target_user_id: string
+        }
+        Returns: Json
+      }
       switch_tenant: { Args: { _tenant_id: string }; Returns: Json }
       team_ranking_data: {
         Args: { _from?: string; _to?: string }
