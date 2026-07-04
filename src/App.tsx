@@ -206,7 +206,7 @@ const App = () => (
               <Route path="/cp-ranking" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CpRankingPage /></RoleGuard></ProtectedPage>} />
               <Route path="/quotes/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.quotes}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.quotesCreate.anyOf]} shadowOnly={false} debugLabel="/quotes/new"><QuoteCreatePage /></PermissionGuard></RoleGuard></ProtectedPage>} />
               <Route path="/quotes/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.quotes}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.quotesRead.anyOf]} shadowOnly={false} debugLabel="/quotes/:id"><QuoteDetailPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
-              <Route path="/quotes/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.quotes}><QuoteEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.quotes}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.quotesEdit.anyOf]} shadowOnly={false} debugLabel="/quotes/:id/edit"><QuoteEditPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
               {/* Sales */}
               <Route path="/sales" element={<Navigate to="/commercial?tab=sales" replace />} />
               <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
