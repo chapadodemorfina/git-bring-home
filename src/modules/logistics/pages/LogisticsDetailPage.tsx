@@ -51,9 +51,11 @@ export default function LogisticsDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {canChangeStatus && (
-            <Button variant="outline" onClick={() => setStatusOpen(true)}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Alterar Status
-            </Button>
+            <Can permission="logistics.update" mode="disable">
+              <Button variant="outline" onClick={() => setStatusOpen(true)}>
+                <RefreshCw className="mr-2 h-4 w-4" /> Alterar Status
+              </Button>
+            </Can>
           )}
           <Button variant="outline" asChild>
             <Link to={`/logistics/${item.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar</Link>
