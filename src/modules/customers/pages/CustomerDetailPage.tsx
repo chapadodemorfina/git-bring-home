@@ -52,9 +52,11 @@ export default function CustomerDetailPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => navigate(`/customers/${id}/edit`)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
-        </Button>
+        <Can permission="customers.update" mode="hide">
+          <Button onClick={() => navigate(`/customers/${id}/edit`)}>
+            <Pencil className="mr-2 h-4 w-4" /> Editar
+          </Button>
+        </Can>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
