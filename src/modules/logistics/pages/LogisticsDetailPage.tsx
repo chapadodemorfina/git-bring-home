@@ -13,6 +13,7 @@ import { ArrowLeft, Edit, Trash2, RefreshCw, MapPin, User, Phone, Truck } from "
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useSignedUrl } from "@/hooks/useSignedUrl";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function LogisticsDetailPage() {
   const { id } = useParams<{ id: string }>();
