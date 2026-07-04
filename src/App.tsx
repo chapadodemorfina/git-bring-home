@@ -141,7 +141,7 @@ const App = () => (
               <Route path="/operation" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.operation}><OperationModulePage /></RoleGuard></ProtectedPage>} />
               <Route path="/registrations" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.registrations}><RegistrationsModulePage /></RoleGuard></ProtectedPage>} />
               <Route path="/stock" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.stock}><InventoryModulePage /></RoleGuard></ProtectedPage>} />
-              <Route path="/commercial" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.commercial}><CommercialModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/commercial" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.commercial}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.commercial.anyOf]} shadowOnly={false} debugLabel="/commercial"><CommercialModulePage /></PermissionGuard></RoleGuard></ProtectedPage>} />
               <Route path="/financial" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.financial}><FinanceModulePage /></RoleGuard></ProtectedPage>} />
               <Route path="/commissions-hub" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.commissionsHub}><CommissionsModulePage /></RoleGuard></ProtectedPage>} />
               <Route path="/communication" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.communication}><CommunicationModulePage /></RoleGuard></ProtectedPage>} />
