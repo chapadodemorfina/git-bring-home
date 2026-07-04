@@ -5394,6 +5394,10 @@ export type Database = {
       }
     }
     Functions: {
+      _generate_sale_commissions_internal: {
+        Args: { _sale_id: string }
+        Returns: number
+      }
       _internal_sync_os_revenue: {
         Args: { _so_id: string }
         Returns: undefined
