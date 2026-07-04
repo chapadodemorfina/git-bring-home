@@ -42,7 +42,11 @@ interface DiagRow {
   byRole: boolean;
   byPerm: boolean;
   divergence: RowDivergence;
+  requiresRoleFloor: boolean;
+  sensitive: boolean;
+  mode: "shadow" | "blocking-and" | "role-only";
 }
+
 
 export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }: Props) {
   const { data: effective, isLoading, error } = useEffectivePermissions(userId);
@@ -54,7 +58,12 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
     const keys = Object.keys(ROUTE_PERMISSIONS) as RoutePermissionKey[];
     return keys.map((key) => {
       const routeRoles = (ROUTE_ROLES as Record<string, readonly AppRole[]>)[key] || [];
-      const perms = ROUTE_PERMISSIONS[key].anyOf;
+      const rule = ROUTE_PERMISSIONS[key] as (typeof ROUTE_PERMISSIONS)[RoutePermissionKey] & {
+        requiresRoleFloor?: boolean;
+        sensitive?: boolean;
+        mode?: "shadow" | "blocking-and" | "role-only";
+      };
+      const perms = rule.anyOf;
       const byRole =
         routeRoles.length > 0 &&
         userRoles.some((r) => routeRoles.includes(r as AppRole));
@@ -66,8 +75,19 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
       else if (byRole && !byPerm) divergence = "role-only";
       else divergence = "perm-only";
 
-      return { key, roles: routeRoles, perms, byRole, byPerm, divergence };
+      return {
+        key,
+        roles: routeRoles,
+        perms,
+        byRole,
+        byPerm,
+        divergence,
+        requiresRoleFloor: !!rule.requiresRoleFloor,
+        sensitive: !!rule.sensitive,
+        mode: rule.mode ?? "shadow",
+      };
     });
+
   }, [effective, userRoles]);
 
   const summary = useMemo(() => {
@@ -115,6 +135,8 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
                 <TableHeader>
                   <TableRow>
                     <TableHead>Rota/Módulo</TableHead>
+                    <TableHead>Modo</TableHead>
+                    <TableHead>Flags</TableHead>
                     <TableHead>Roles atuais</TableHead>
                     <TableHead>Permissões (anyOf)</TableHead>
                     <TableHead>Por role</TableHead>
@@ -126,6 +148,17 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
                   {rows.map((r) => (
                     <TableRow key={r.key}>
                       <TableCell className="font-mono text-xs">{r.key}</TableCell>
+                      <TableCell>
+                        <ModeBadge value={r.mode} />
+                      </TableCell>
+                      <TableCell className="space-x-1">
+                        {r.requiresRoleFloor && (
+                          <Badge variant="outline" className="text-[10px]">piso por role</Badge>
+                        )}
+                        {r.sensitive && (
+                          <Badge variant="destructive" className="text-[10px]">sensível</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-xs">{r.roles.join(", ") || "—"}</TableCell>
                       <TableCell className="text-xs">{r.perms.join(", ")}</TableCell>
                       <TableCell>
@@ -144,6 +177,7 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
                     </TableRow>
                   ))}
                 </TableBody>
+
               </Table>
             </div>
           </>
@@ -176,6 +210,16 @@ function DivergenceBadge({ value }: { value: RowDivergence }) {
       Permissão permite / role negaria
     </Badge>
   );
+}
+
+function ModeBadge({ value }: { value: "shadow" | "blocking-and" | "role-only" }) {
+  if (value === "blocking-and") {
+    return <Badge className="text-[10px]">blocking-and</Badge>;
+  }
+  if (value === "role-only") {
+    return <Badge variant="outline" className="text-[10px]">role-only</Badge>;
+  }
+  return <Badge variant="secondary" className="text-[10px]">shadow</Badge>;
 }
 
 export default PermissionDivergenceDiagnostic;

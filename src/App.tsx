@@ -183,9 +183,10 @@ const App = () => (
               <Route path="/devices/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.devices}><DeviceCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/devices/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.devices}><DeviceDetailPage /></RoleGuard></ProtectedPage>} />
               <Route path="/devices/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.devices}><DeviceEditPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/service-orders/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><ServiceOrderCreatePage /></RoleGuard></ProtectedPage>} />
-              <Route path="/service-orders/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><ServiceOrderDetailPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/service-orders/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><ServiceOrderEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/service-orders/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.serviceOrders.anyOf]} shadowOnly={false} debugLabel="/service-orders/new"><ServiceOrderCreatePage /></PermissionGuard></RoleGuard></ProtectedPage>} />
+              <Route path="/service-orders/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.serviceOrders.anyOf]} shadowOnly={false} debugLabel="/service-orders/:id"><ServiceOrderDetailPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
+              <Route path="/service-orders/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.serviceOrders.anyOf]} shadowOnly={false} debugLabel="/service-orders/:id/edit"><ServiceOrderEditPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
+
               <Route path="/inventory/products/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ProductCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/inventory/products/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ProductDetailPage /></RoleGuard></ProtectedPage>} />
               <Route path="/inventory/products/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ProductEditPage /></RoleGuard></ProtectedPage>} />
@@ -247,7 +248,9 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <RoleGuard allowedRoles={ROUTE_ROLES.tech}>
-                      <TechLayout />
+                      <PermissionGuard anyOf={[...ROUTE_PERMISSIONS.tech.anyOf]} shadowOnly={false} debugLabel="/tech">
+                        <TechLayout />
+                      </PermissionGuard>
                     </RoleGuard>
                   </ProtectedRoute>
                 }
@@ -257,6 +260,7 @@ const App = () => (
                 <Route path="queue" element={<TechQueuePage />} />
                 <Route path="order/:id" element={<TechOrderDetailPage />} />
               </Route>
+
 
               {/* Public Tracking */}
               <Route path="/track/:token" element={<PublicTrackingPage />} />
