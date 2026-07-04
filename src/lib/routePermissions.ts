@@ -124,8 +124,16 @@ export const ROUTE_PERMISSIONS = {
     mode: "blocking-and",
     notes: "Piloto 3.5.2: PermissionGuard bloqueante em AND com RoleGuard.",
   },
-  inventory: { anyOf: ["inventory.view"], mode: "shadow" },
-  logistics: { anyOf: ["logistics.view"], mode: "shadow" },
+  inventory: {
+    anyOf: ["inventory.view"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.5: PermissionGuard bloqueante em AND com RoleGuard.",
+  },
+  logistics: {
+    anyOf: ["logistics.view"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.5: PermissionGuard bloqueante em AND com RoleGuard.",
+  },
   finance: {
     anyOf: ["financial.view"],
     requiresRoleFloor: true,

@@ -11,6 +11,7 @@ import StockMovementsTable from "../components/StockMovementsTable";
 import StockEntryDialog from "../components/StockEntryDialog";
 import StockAdjustDialog from "../components/StockAdjustDialog";
 import ProductUsageHistory from "../components/ProductUsageHistory";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -71,9 +72,11 @@ export default function ProductDetailPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <Button variant="outline" onClick={() => setShowAdjust(true)}>
-            <Wrench className="h-4 w-4 mr-1" /> Ajustar
-          </Button>
+          <Can permission="inventory.adjust" mode="hide">
+            <Button variant="outline" onClick={() => setShowAdjust(true)}>
+              <Wrench className="h-4 w-4 mr-1" /> Ajustar
+            </Button>
+          </Can>
           <Button variant="outline" onClick={() => setShowEntry(true)}>
             <PackagePlus className="h-4 w-4 mr-1" /> Entrada
           </Button>
