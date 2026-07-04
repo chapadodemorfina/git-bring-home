@@ -422,11 +422,13 @@ export default function ServiceOrderDetailPage() {
                   <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando..." : "Imprimir Etiqueta"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to={`/service-orders/${order.id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" /> Editar OS
-                  </Link>
-                </DropdownMenuItem>
+                <Can permission="service_orders.update">
+                  <DropdownMenuItem asChild>
+                    <Link to={`/service-orders/${order.id}/edit`}>
+                      <Edit className="mr-2 h-4 w-4" /> Editar OS
+                    </Link>
+                  </DropdownMenuItem>
+                </Can>
               </DropdownMenuContent>
             </DropdownMenu>
 
