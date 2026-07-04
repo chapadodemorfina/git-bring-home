@@ -17,7 +17,7 @@ const navItems = [
 ];
 
 export default function PortalLayout() {
-  const { session, loading, signOut } = useAuth();
+  const { session, loading, signOut, roles } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -30,6 +30,13 @@ export default function PortalLayout() {
 
   if (!session) {
     return <Navigate to="/portal/login" replace />;
+  }
+
+  // Portal do cliente é exclusivo para role `customer`.
+  // Usuários internos são redirecionados ao app principal.
+  const isCustomer = Array.isArray(roles) && roles.includes("customer" as any);
+  if (!isCustomer) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const isActive = (path: string, exact?: boolean) =>
