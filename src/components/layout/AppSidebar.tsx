@@ -14,28 +14,49 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { ROUTE_ROLES, type AppRole } from "@/lib/permissions";
 import logoI9 from "@/assets/logo-i9.png";
 
-const navItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Operação", url: "/operation", icon: ClipboardList },
-  { title: "Cadastros", url: "/registrations", icon: UserRound },
-  { title: "Estoque", url: "/stock", icon: Package },
-  { title: "Comercial", url: "/commercial", icon: ShoppingBag },
-  { title: "Financeiro", url: "/financial", icon: DollarSign },
-  { title: "Comissões", url: "/commissions-hub", icon: Percent },
-  { title: "Comunicação", url: "/communication", icon: MessageSquare },
-  { title: "Administração", url: "/admin-hub", icon: Settings },
+type NavItem = {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  roles: AppRole[];
+};
+
+const navItems: NavItem[] = [
+  { title: "Dashboard",      url: "/dashboard",       icon: LayoutDashboard,   roles: ROUTE_ROLES.dashboard },
+  { title: "Operação",       url: "/operation",       icon: ClipboardList,     roles: ROUTE_ROLES.operation },
+  { title: "Cadastros",      url: "/registrations",   icon: UserRound,         roles: ROUTE_ROLES.registrations },
+  { title: "Estoque",        url: "/stock",           icon: Package,           roles: ROUTE_ROLES.stock },
+  { title: "Comercial",      url: "/commercial",      icon: ShoppingBag,       roles: ROUTE_ROLES.commercial },
+  { title: "Financeiro",     url: "/financial",       icon: DollarSign,        roles: ROUTE_ROLES.financial },
+  { title: "Comissões",      url: "/commissions-hub", icon: Percent,           roles: ROUTE_ROLES.commissionsHub },
+  { title: "Comunicação",    url: "/communication",   icon: MessageSquare,     roles: ROUTE_ROLES.communication },
+  { title: "Administração",  url: "/admin-hub",       icon: Settings,          roles: ROUTE_ROLES.adminHub },
 ];
 
-const pdvItem = { title: "Frente de Caixa", url: "/pdv", icon: MonitorSmartphone };
+const pdvItem: NavItem = {
+  title: "Frente de Caixa",
+  url: "/pdv",
+  icon: MonitorSmartphone,
+  roles: ROUTE_ROLES.pdv,
+};
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { hasRole } = useAuth();
-  const showPdv = hasRole("admin") || hasRole("manager") || hasRole("front_desk");
+  const { roles, loading } = useAuth();
+
+  const canAccess = (allowed: AppRole[]) =>
+    !loading &&
+    Array.isArray(roles) &&
+    roles.length > 0 &&
+    roles.some((r) => allowed.includes(r as AppRole));
+
+  const visibleNav = navItems.filter((i) => canAccess(i.roles));
+  const showPdv = canAccess(pdvItem.roles);
 
   const isActive = (url: string) =>
     url === "/dashboard"
@@ -54,7 +75,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {visibleNav.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} className="h-9">
                     <NavLink
