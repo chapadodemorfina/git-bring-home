@@ -2181,6 +2181,36 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          action: string
+          created_at: string
+          description: string | null
+          is_sensitive: boolean
+          is_system: boolean
+          key: string
+          module: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          description?: string | null
+          is_sensitive?: boolean
+          is_system?: boolean
+          key: string
+          module: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string | null
+          is_sensitive?: boolean
+          is_system?: boolean
+          key?: string
+          module?: string
+        }
+        Relationships: []
+      }
       pickups_deliveries: {
         Row: {
           address_city: string | null
@@ -3251,6 +3281,48 @@ export type Database = {
           },
           {
             foreignKeyName: "repair_timer_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          allowed: boolean
+          created_at: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          allowed?: boolean
+          created_at?: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          allowed?: boolean
+          created_at?: string
+          permission_key?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "role_permissions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -4741,6 +4813,60 @@ export type Database = {
           },
         ]
       }
+      user_permission_overrides: {
+        Row: {
+          created_at: string
+          created_by: string
+          effect: string
+          expires_at: string | null
+          id: string
+          permission_key: string
+          reason: string | null
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          effect: string
+          expires_at?: string | null
+          id?: string
+          permission_key: string
+          reason?: string | null
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          effect?: string
+          expires_at?: string | null
+          id?: string
+          permission_key?: string
+          reason?: string | null
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permission_overrides_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "user_permission_overrides_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -5595,10 +5721,15 @@ export type Database = {
         }
         Returns: Json
       }
+      get_effective_permissions: {
+        Args: { _target_user_id: string }
+        Returns: Json
+      }
       get_financial_balances: { Args: never; Returns: Json }
       get_goal_progress: { Args: { _goal_id: string }; Returns: Json }
       get_last_closed_balances: { Args: never; Returns: Json }
       get_my_cp_settings: { Args: never; Returns: Json }
+      get_my_permissions: { Args: never; Returns: string[] }
       get_next_sequence: {
         Args: { _key: string; _tenant_id: string }
         Returns: number
@@ -5627,11 +5758,19 @@ export type Database = {
             }
             Returns: Json
           }
+      has_any_permission: {
+        Args: { _permissions: string[]; _user_id: string }
+        Returns: boolean
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
       has_role: {
