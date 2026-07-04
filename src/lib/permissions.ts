@@ -62,3 +62,51 @@ export interface SidebarModule {
   title: string;
   url: string;
 }
+
+/**
+ * Rota inicial (home) por role.
+ * Fail-closed: role desconhecida ou ausente → `/login`.
+ */
+export function getDefaultRouteForRole(role: AppRole | string | null | undefined): string {
+  switch (role) {
+    case "admin":
+    case "manager":
+    case "finance":
+      return "/dashboard";
+    case "front_desk":
+      return "/operation";
+    case "bench_technician":
+    case "field_technician":
+      return "/tech";
+    case "collection_point_operator":
+      return "/partner";
+    case "customer":
+      return "/portal";
+    default:
+      return "/login";
+  }
+}
+
+/**
+ * Escolhe a melhor rota destino a partir de uma lista de roles do usuário.
+ * Prioriza roles mais privilegiadas.
+ */
+const ROLE_PRIORITY: AppRole[] = [
+  "admin",
+  "manager",
+  "finance",
+  "front_desk",
+  "bench_technician",
+  "field_technician",
+  "collection_point_operator",
+  "customer",
+];
+
+export function getDefaultRouteForRoles(roles: readonly string[] | null | undefined): string {
+  if (!Array.isArray(roles) || roles.length === 0) return "/login";
+  for (const r of ROLE_PRIORITY) {
+    if (roles.includes(r)) return getDefaultRouteForRole(r);
+  }
+  return "/login";
+}
+
