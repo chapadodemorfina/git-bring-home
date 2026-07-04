@@ -248,7 +248,9 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <RoleGuard allowedRoles={ROUTE_ROLES.tech}>
-                      <TechLayout />
+                      <PermissionGuard anyOf={[...ROUTE_PERMISSIONS.tech.anyOf]} shadowOnly={false} debugLabel="/tech">
+                        <TechLayout />
+                      </PermissionGuard>
                     </RoleGuard>
                   </ProtectedRoute>
                 }
@@ -258,6 +260,7 @@ const App = () => (
                 <Route path="queue" element={<TechQueuePage />} />
                 <Route path="order/:id" element={<TechOrderDetailPage />} />
               </Route>
+
 
               {/* Public Tracking */}
               <Route path="/track/:token" element={<PublicTrackingPage />} />
