@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.dashboard_summary(timestamptz, timestamptz) FROM anon;
