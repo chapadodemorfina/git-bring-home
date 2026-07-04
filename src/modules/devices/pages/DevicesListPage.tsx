@@ -10,6 +10,7 @@ import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, Monitor, Eye, Loader2 } from "lucide-react";
 import { useDevices } from "../hooks/useDevices";
 import { deviceTypeLabels, DeviceType, getDeviceTypeLabel } from "../types";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function DevicesListPage() {
   const navigate = useNavigate();
