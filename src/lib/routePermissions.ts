@@ -103,9 +103,21 @@ export const ROUTE_PERMISSIONS = {
     notes:
       "finance tem quotes.view no seed; migração para permissão pura ampliaria acesso. Decisão pendente.",
   },
-  warranties: { anyOf: ["warranties.view"], mode: "shadow" },
-  customers: { anyOf: ["customers.view"], mode: "shadow" },
-  devices: { anyOf: ["devices.view"], mode: "shadow" },
+  warranties: {
+    anyOf: ["warranties.view"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.4: PermissionGuard bloqueante em AND com RoleGuard.",
+  },
+  customers: {
+    anyOf: ["customers.view"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.4: PermissionGuard bloqueante em AND com RoleGuard.",
+  },
+  devices: {
+    anyOf: ["devices.view"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.4: PermissionGuard bloqueante em AND com RoleGuard.",
+  },
   // Piloto blocking-and — aplicado em AND com RoleGuard nas rotas /service-orders/*.
   serviceOrders: {
     anyOf: ["service_orders.view"],
