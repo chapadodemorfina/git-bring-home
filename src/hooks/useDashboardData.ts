@@ -110,7 +110,15 @@ export function useDashboardData(dateRange: DateRange) {
         _from: from,
         _to: to,
       });
-      if (error) throw error;
+      if (error) {
+        // Server-side authorization denied (role check). Route-level RoleGuard
+        // already blocks the UI for unauthorized roles; this is a defensive
+        // fallback for direct RPC calls — return empty payload silently.
+        if ((error as any)?.code === "42501") {
+          return defaultSummary;
+        }
+        throw error;
+      }
       if (!data) return defaultSummary;
       return {
         ...defaultSummary,
@@ -127,6 +135,10 @@ export function useDashboardData(dateRange: DateRange) {
         top_products_sold: data.top_products_sold || [],
         team_ranking: data.team_ranking || [],
       } as DashboardSummary;
+    },
+    retry: (failureCount, error) => {
+      if ((error as any)?.code === "42501") return false;
+      return failureCount < 3;
     },
   });
 }
