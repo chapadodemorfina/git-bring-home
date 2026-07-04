@@ -156,9 +156,11 @@ export default function QuotesListPage() {
                               Ver Detalhes
                             </DropdownMenuItem>
                             {q.status === "draft" && (
-                              <DropdownMenuItem onClick={() => navigate(`/quotes/${q.id}/edit`)}>
-                                Editar
-                              </DropdownMenuItem>
+                              <Can permission="quotes.update" mode="hide">
+                                <DropdownMenuItem onClick={() => navigate(`/quotes/${q.id}/edit`)}>
+                                  Editar
+                                </DropdownMenuItem>
+                              </Can>
                             )}
                             {q.status === "draft" && (
                               <DropdownMenuItem onClick={() => changeStatus.mutate({ id: q.id, status: "sent" })}>
