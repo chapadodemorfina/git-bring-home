@@ -215,9 +215,9 @@ const App = () => (
               <Route path="/sales/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.salesRead}><SaleDetailPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.sales}><SaleEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={ROUTE_ROLES.pdv}><PdvPage /></RoleGuard></ProtectedRoute>} />
-              <Route path="/logistics/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><LogisticsCreatePage /></RoleGuard></ProtectedPage>} />
-              <Route path="/logistics/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><LogisticsDetailPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/logistics/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><LogisticsEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/logistics/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.logistics.anyOf]} shadowOnly={false} debugLabel="/logistics/new"><LogisticsCreatePage /></PermissionGuard></RoleGuard></ProtectedPage>} />
+              <Route path="/logistics/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.logistics.anyOf]} shadowOnly={false} debugLabel="/logistics/:id"><LogisticsDetailPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
+              <Route path="/logistics/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.logistics.anyOf]} shadowOnly={false} debugLabel="/logistics/:id/edit"><LogisticsEditPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
               <Route path="/finance/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/finance/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceDetailPage /></RoleGuard></ProtectedPage>} />
               <Route path="/finance/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceEditPage /></RoleGuard></ProtectedPage>} />
