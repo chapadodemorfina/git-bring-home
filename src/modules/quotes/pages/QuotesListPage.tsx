@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DataPagination from "@/components/ui/data-pagination";
 import { Plus, Search, FileText, Send, CheckCircle, XCircle, Copy, MoreHorizontal, TrendingUp, Clock, DollarSign, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
+import { Can } from "@/modules/permissions/components/Can";
 
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -37,9 +38,11 @@ export default function QuotesListPage() {
           <h1 className="text-2xl font-bold">Orçamentos</h1>
           <p className="text-sm text-muted-foreground">Gestão comercial de propostas</p>
         </div>
-        <Button onClick={() => navigate("/quotes/new")}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Orçamento
-        </Button>
+        <Can permission="quotes.create" mode="hide">
+          <Button onClick={() => navigate("/quotes/new")}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Orçamento
+          </Button>
+        </Can>
       </div>
 
       {/* Summary Cards */}
@@ -163,9 +166,11 @@ export default function QuotesListPage() {
                               </DropdownMenuItem>
                             )}
                             {(q.status === "draft" || q.status === "sent") && (
-                              <DropdownMenuItem onClick={() => changeStatus.mutate({ id: q.id, status: "approved" })}>
-                                Aprovar
-                              </DropdownMenuItem>
+                              <Can permission="quotes.approve" mode="disable">
+                                <DropdownMenuItem onClick={() => changeStatus.mutate({ id: q.id, status: "approved" })}>
+                                  Aprovar
+                                </DropdownMenuItem>
+                              </Can>
                             )}
                             {(q.status === "draft" || q.status === "sent") && (
                               <DropdownMenuItem onClick={() => changeStatus.mutate({ id: q.id, status: "rejected", reason: "Recusado manualmente" })}>
