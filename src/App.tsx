@@ -78,6 +78,7 @@ import FinanceDetailPage from "./modules/finance/pages/FinanceDetailPage";
 import FinanceEditPage from "./modules/finance/pages/FinanceEditPage";
 import UserCreatePage from "./modules/users/pages/UserCreatePage";
 import UserEditPage from "./modules/users/pages/UserEditPage";
+import PermissionsManagementPage from "./modules/permissions/pages/PermissionsManagementPage";
 
 // Portals
 import PortalLayout from "./modules/portal/components/PortalLayout";
