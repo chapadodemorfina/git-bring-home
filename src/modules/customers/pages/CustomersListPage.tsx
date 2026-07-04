@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import DataPagination from "@/components/ui/data-pagination";
 import { Search, Plus, Eye, Pencil, Trash2, Loader2, Building2, User } from "lucide-react";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function CustomersListPage() {
   const [search, setSearch] = useState("");
