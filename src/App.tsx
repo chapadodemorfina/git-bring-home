@@ -218,6 +218,7 @@ const App = () => (
               <Route path="/finance/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/system/permissions" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><PermissionsManagementPage /></RoleGuard></ProtectedPage>} />
 
               {/* Customer Portal */}
               <Route path="/portal/login" element={<PortalLoginPage />} />
