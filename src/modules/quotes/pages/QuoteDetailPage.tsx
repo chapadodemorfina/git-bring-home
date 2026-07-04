@@ -174,9 +174,11 @@ export default function QuoteDetailPage() {
         <div className="flex gap-2">
           {isDraft && (
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${id}/edit`)}>
-                <Pencil className="mr-1 h-4 w-4" /> Editar
-              </Button>
+              <Can permission="quotes.update" mode="hide">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${id}/edit`)}>
+                  <Pencil className="mr-1 h-4 w-4" /> Editar
+                </Button>
+              </Can>
               <Button variant="outline" size="sm" onClick={() => setAddOpen(true)}>
                 <Plus className="mr-1 h-4 w-4" /> Item
               </Button>
