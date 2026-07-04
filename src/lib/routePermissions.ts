@@ -108,6 +108,11 @@ export const ROUTE_PERMISSIONS = {
     notes:
       "Fase 3.5.6.1: alias de leitura. Ver quotesRead/quotesCreate para uso em rotas específicas.",
   },
+  salesEdit: {
+    anyOf: ["sales.update"],
+    mode: "blocking-and",
+    notes: "Fase 3.5.9: edição de venda em AND com RoleGuard.",
+  },
   quotesRead: {
     anyOf: ["quotes.view"],
     mode: "blocking-and",

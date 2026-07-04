@@ -179,9 +179,11 @@ export default function SaleDetailPage() {
           )}
           {sale.status === "draft" && (
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
-                <Pencil className="mr-2 h-4 w-4" /> Editar
-              </Button>
+              <Can permission="sales.update" mode="hide">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
+                  <Pencil className="mr-2 h-4 w-4" /> Editar
+                </Button>
+              </Can>
               <Button size="sm" onClick={() => completeSale.mutate(sale.id)}>
                 <Plus className="mr-2 h-4 w-4" /> Concluir
               </Button>

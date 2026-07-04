@@ -212,7 +212,7 @@ const App = () => (
               <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.sales}><SaleCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.salesRead}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.salesRead.anyOf]} shadowOnly={false} debugLabel="/sales/:id"><SaleDetailPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
-              <Route path="/sales/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.sales}><SaleEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/sales/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.sales}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.salesEdit.anyOf]} shadowOnly={false} debugLabel="/sales/:id/edit"><SaleEditPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
 
               <Route path="/warranties/returns" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.warranties}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.warranties.anyOf]} shadowOnly={false} debugLabel="/warranties/returns"><WarrantyReturnsPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
               <Route path="/warranties/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.warranties}><PermissionGuard anyOf={[...ROUTE_PERMISSIONS.warranties.anyOf]} shadowOnly={false} debugLabel="/warranties/:id"><WarrantyDetailPage /></PermissionGuard></RoleGuard></ProtectedPage>} />
