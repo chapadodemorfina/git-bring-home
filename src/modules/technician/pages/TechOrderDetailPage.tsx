@@ -13,6 +13,7 @@ import RepairPhotoUpload from "../components/RepairPhotoUpload";
 import RepairTestWarrantyPanel from "@/modules/repair/components/RepairTestWarrantyPanel";
 import DiagnosticQuotePanel from "@/modules/diagnostics/components/DiagnosticQuotePanel";
 import RepairTimer from "@/modules/repair/components/RepairTimer";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function TechOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +50,9 @@ export default function TechOrderDetailPage() {
       </div>
 
       {/* Quick Status */}
-      <QuickStatusBar orderId={order.id} currentStatus={order.status as ServiceOrderStatus} />
+      <Can permission="service_orders.update">
+        <QuickStatusBar orderId={order.id} currentStatus={order.status as ServiceOrderStatus} />
+      </Can>
 
       {/* Customer & Device */}
       <Card>

@@ -36,6 +36,7 @@ import { useCompanySettings, settingIsTrue, type CompanySettings } from "@/hooks
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServiceOrderItems } from "../hooks/useServiceOrderItems";
+import { Can } from "@/modules/permissions/components/Can";
 
 const db = supabase as any;
 
@@ -376,9 +377,11 @@ export default function ServiceOrderDetailPage() {
           {/* Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {canChangeStatus && (
-              <Button onClick={() => setStatusOpen(true)} className="gap-2">
-                <RefreshCw className="h-4 w-4" /> Avançar Status
-              </Button>
+              <Can permission="service_orders.update" mode="disable">
+                <Button onClick={() => setStatusOpen(true)} className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Avançar Status
+                </Button>
+              </Can>
             )}
 
             {(order.status === "ready_for_pickup" || order.status === "delivered") && (
@@ -419,11 +422,13 @@ export default function ServiceOrderDetailPage() {
                   <Tag className="mr-2 h-4 w-4" /> {generateLink.isPending ? "Gerando..." : "Imprimir Etiqueta"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to={`/service-orders/${order.id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" /> Editar OS
-                  </Link>
-                </DropdownMenuItem>
+                <Can permission="service_orders.update">
+                  <DropdownMenuItem asChild>
+                    <Link to={`/service-orders/${order.id}/edit`}>
+                      <Edit className="mr-2 h-4 w-4" /> Editar OS
+                    </Link>
+                  </DropdownMenuItem>
+                </Can>
               </DropdownMenuContent>
             </DropdownMenu>
 
