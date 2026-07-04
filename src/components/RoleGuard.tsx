@@ -44,8 +44,7 @@ export function RoleGuard({
     // e se o usuário realmente tem um role reconhecido.
     if (redirectByRole && hasAnyRole) {
       const target = getDefaultRouteForRoles(roles);
-      // Evita loop caso o próprio target também esteja bloqueado.
-      if (target && !allowedRoles.includes("customer" as AppRole)) {
+      if (target && target !== window.location.pathname) {
         return <Navigate to={target} replace />;
       }
     }
