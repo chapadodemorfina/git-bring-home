@@ -58,7 +58,12 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
     const keys = Object.keys(ROUTE_PERMISSIONS) as RoutePermissionKey[];
     return keys.map((key) => {
       const routeRoles = (ROUTE_ROLES as Record<string, readonly AppRole[]>)[key] || [];
-      const perms = ROUTE_PERMISSIONS[key].anyOf;
+      const rule = ROUTE_PERMISSIONS[key] as (typeof ROUTE_PERMISSIONS)[RoutePermissionKey] & {
+        requiresRoleFloor?: boolean;
+        sensitive?: boolean;
+        mode?: "shadow" | "blocking-and" | "role-only";
+      };
+      const perms = rule.anyOf;
       const byRole =
         routeRoles.length > 0 &&
         userRoles.some((r) => routeRoles.includes(r as AppRole));
@@ -70,8 +75,19 @@ export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }:
       else if (byRole && !byPerm) divergence = "role-only";
       else divergence = "perm-only";
 
-      return { key, roles: routeRoles, perms, byRole, byPerm, divergence };
+      return {
+        key,
+        roles: routeRoles,
+        perms,
+        byRole,
+        byPerm,
+        divergence,
+        requiresRoleFloor: !!rule.requiresRoleFloor,
+        sensitive: !!rule.sensitive,
+        mode: rule.mode ?? "shadow",
+      };
     });
+
   }, [effective, userRoles]);
 
   const summary = useMemo(() => {
