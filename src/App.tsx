@@ -14,6 +14,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SubscriptionGate } from "@/components/SubscriptionGate";
+import { ROUTE_ROLES } from "@/lib/permissions";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -134,14 +135,14 @@ const App = () => (
               <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
 
               {/* Module Hub Pages */}
-              <Route path="/operation" element={<ProtectedPage><OperationModulePage /></ProtectedPage>} />
-              <Route path="/registrations" element={<ProtectedPage><RegistrationsModulePage /></ProtectedPage>} />
-              <Route path="/stock" element={<ProtectedPage><InventoryModulePage /></ProtectedPage>} />
-              <Route path="/commercial" element={<ProtectedPage><CommercialModulePage /></ProtectedPage>} />
-              <Route path="/financial" element={<ProtectedPage><FinanceModulePage /></ProtectedPage>} />
-              <Route path="/commissions-hub" element={<ProtectedPage><CommissionsModulePage /></ProtectedPage>} />
-              <Route path="/communication" element={<ProtectedPage><CommunicationModulePage /></ProtectedPage>} />
-              <Route path="/admin-hub" element={<ProtectedPage><AdminModulePage /></ProtectedPage>} />
+              <Route path="/operation" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.operation}><OperationModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/registrations" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.registrations}><RegistrationsModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/stock" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.stock}><InventoryModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/commercial" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.commercial}><CommercialModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/financial" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.financial}><FinanceModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/commissions-hub" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.commissionsHub}><CommissionsModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/communication" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.communication}><CommunicationModulePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/admin-hub" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.adminHub}><AdminModulePage /></RoleGuard></ProtectedPage>} />
 
               {/* Legacy redirects — list pages now live inside module tabs */}
               <Route path="/service-orders" element={<Navigate to="/operation?tab=orders" replace />} />
@@ -173,47 +174,47 @@ const App = () => (
               <Route path="/financial/audit" element={<Navigate to="/admin-hub?tab=financial-audit" replace />} />
 
               {/* Detail/Create/Edit — preserved */}
-              <Route path="/customers/new" element={<ProtectedPage><CustomerCreatePage /></ProtectedPage>} />
-              <Route path="/customers/:id" element={<ProtectedPage><CustomerDetailPage /></ProtectedPage>} />
-              <Route path="/customers/:id/edit" element={<ProtectedPage><CustomerEditPage /></ProtectedPage>} />
-              <Route path="/devices/new" element={<ProtectedPage><DeviceCreatePage /></ProtectedPage>} />
-              <Route path="/devices/:id" element={<ProtectedPage><DeviceDetailPage /></ProtectedPage>} />
-              <Route path="/devices/:id/edit" element={<ProtectedPage><DeviceEditPage /></ProtectedPage>} />
-              <Route path="/service-orders/new" element={<ProtectedPage><ServiceOrderCreatePage /></ProtectedPage>} />
-              <Route path="/service-orders/:id" element={<ProtectedPage><ServiceOrderDetailPage /></ProtectedPage>} />
-              <Route path="/service-orders/:id/edit" element={<ProtectedPage><ServiceOrderEditPage /></ProtectedPage>} />
-              <Route path="/inventory/products/new" element={<ProtectedPage><ProductCreatePage /></ProtectedPage>} />
-              <Route path="/inventory/products/:id" element={<ProtectedPage><ProductDetailPage /></ProtectedPage>} />
-              <Route path="/inventory/products/:id/edit" element={<ProtectedPage><ProductEditPage /></ProtectedPage>} />
-              <Route path="/inventory/suppliers" element={<ProtectedPage><SuppliersPage /></ProtectedPage>} />
-              <Route path="/inventory/suppliers/:id" element={<ProtectedPage><SupplierDetailPage /></ProtectedPage>} />
-              <Route path="/inventory/suppliers/:id/edit" element={<ProtectedPage><SupplierEditPage /></ProtectedPage>} />
-              <Route path="/inventory/movements" element={<ProtectedPage><StockMovementsPage /></ProtectedPage>} />
-              <Route path="/inventory/scrap/new" element={<ProtectedPage><ScrapCreatePage /></ProtectedPage>} />
-              <Route path="/inventory/scrap/dashboard" element={<ProtectedPage><ScrapDashboardPage /></ProtectedPage>} />
-              <Route path="/inventory/scrap/disassembly" element={<ProtectedPage><ScrapDisassemblyPage /></ProtectedPage>} />
-              <Route path="/inventory/scrap/:id" element={<ProtectedPage><ScrapDetailPage /></ProtectedPage>} />
+              <Route path="/customers/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.customers}><CustomerCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/customers/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.customers}><CustomerDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/customers/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.customers}><CustomerEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/devices/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.devices}><DeviceCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/devices/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.devices}><DeviceDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/devices/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.devices}><DeviceEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/service-orders/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><ServiceOrderCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/service-orders/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><ServiceOrderDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/service-orders/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.serviceOrders}><ServiceOrderEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/products/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ProductCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/products/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ProductDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/products/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ProductEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/suppliers" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><SuppliersPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/suppliers/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><SupplierDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/suppliers/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><SupplierEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/movements" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><StockMovementsPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/scrap/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ScrapCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/scrap/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ScrapDashboardPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/scrap/disassembly" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ScrapDisassemblyPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/inventory/scrap/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.inventory}><ScrapDetailPage /></RoleGuard></ProtectedPage>} />
               <Route path="/collection-points/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/collection-points/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointDetailPage /></RoleGuard></ProtectedPage>} />
               <Route path="/collection-points/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><CollectionPointEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/commissions/cp" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CpCommissionPeriodsPage /></RoleGuard></ProtectedPage>} />
               <Route path="/cp-ranking" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><CpRankingPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/quotes/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician"]}><QuoteCreatePage /></RoleGuard></ProtectedPage>} />
-              <Route path="/quotes/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician", "finance"]}><QuoteDetailPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/quotes/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "bench_technician"]}><QuoteEditPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/warranties/returns" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "bench_technician", "front_desk", "finance"]}><WarrantyReturnsPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/warranties/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "bench_technician", "front_desk", "finance"]}><WarrantyDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.quotes}><QuoteCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.quotes}><QuoteDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/quotes/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.quotes}><QuoteEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/warranties/returns" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.warranties}><WarrantyReturnsPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/warranties/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.warranties}><WarrantyDetailPage /></RoleGuard></ProtectedPage>} />
               <Route path="/sales/dashboard" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "finance"]}><SalesDashboardPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleCreatePage /></RoleGuard></ProtectedPage>} />
-              <Route path="/sales/:id" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk", "finance"]}><SaleDetailPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/sales/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><SaleEditPage /></RoleGuard></ProtectedPage>} />
-              <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "manager", "front_desk"]}><PdvPage /></RoleGuard></ProtectedRoute>} />
-              <Route path="/logistics/new" element={<ProtectedPage><LogisticsCreatePage /></ProtectedPage>} />
-              <Route path="/logistics/:id" element={<ProtectedPage><LogisticsDetailPage /></ProtectedPage>} />
-              <Route path="/logistics/:id/edit" element={<ProtectedPage><LogisticsEditPage /></ProtectedPage>} />
-              <Route path="/finance/new" element={<ProtectedPage><FinanceCreatePage /></ProtectedPage>} />
-              <Route path="/finance/:id" element={<ProtectedPage><FinanceDetailPage /></ProtectedPage>} />
-              <Route path="/finance/:id/edit" element={<ProtectedPage><FinanceEditPage /></ProtectedPage>} />
+              <Route path="/sales/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.sales}><SaleCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/sales/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.salesRead}><SaleDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/sales/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.sales}><SaleEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/pdv" element={<ProtectedRoute><RoleGuard allowedRoles={ROUTE_ROLES.pdv}><PdvPage /></RoleGuard></ProtectedRoute>} />
+              <Route path="/logistics/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><LogisticsCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/logistics/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><LogisticsDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/logistics/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.logistics}><LogisticsEditPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/finance/new" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceCreatePage /></RoleGuard></ProtectedPage>} />
+              <Route path="/finance/:id" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceDetailPage /></RoleGuard></ProtectedPage>} />
+              <Route path="/finance/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={ROUTE_ROLES.finance}><FinanceEditPage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/new" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserCreatePage /></RoleGuard></ProtectedPage>} />
               <Route path="/system/users/:id/edit" element={<ProtectedPage><RoleGuard allowedRoles={["admin", "manager"]}><UserEditPage /></RoleGuard></ProtectedPage>} />
 
@@ -237,7 +238,16 @@ const App = () => (
               </Route>
 
               {/* Technician Mobile */}
-              <Route path="/tech" element={<ProtectedRoute><TechLayout /></ProtectedRoute>}>
+              <Route
+                path="/tech"
+                element={
+                  <ProtectedRoute>
+                    <RoleGuard allowedRoles={ROUTE_ROLES.tech}>
+                      <TechLayout />
+                    </RoleGuard>
+                  </ProtectedRoute>
+                }
+              >
                 <Route index element={<TechDashboardPage />} />
                 <Route path="scan" element={<TechScanPage />} />
                 <Route path="queue" element={<TechQueuePage />} />
