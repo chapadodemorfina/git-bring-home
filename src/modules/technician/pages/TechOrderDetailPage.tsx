@@ -50,7 +50,9 @@ export default function TechOrderDetailPage() {
       </div>
 
       {/* Quick Status */}
-      <QuickStatusBar orderId={order.id} currentStatus={order.status as ServiceOrderStatus} />
+      <Can permission="service_orders.update">
+        <QuickStatusBar orderId={order.id} currentStatus={order.status as ServiceOrderStatus} />
+      </Can>
 
       {/* Customer & Device */}
       <Card>
