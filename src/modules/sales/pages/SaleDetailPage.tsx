@@ -24,6 +24,7 @@ import { generateSaleReceiptPdf } from "@/lib/pdf-generators/sale-receipt-pdf";
 import { generateSaleThermalReceiptPdf } from "@/lib/pdf-generators/sale-thermal-receipt-pdf";
 import WhatsAppSendButton from "@/modules/messaging/components/WhatsAppSendButton";
 import MessageHistoryPanel from "@/modules/messaging/components/MessageHistoryPanel";
+import { Can } from "@/modules/permissions/components/Can";
 
 export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -179,9 +180,11 @@ export default function SaleDetailPage() {
           )}
           {sale.status === "draft" && (
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
-                <Pencil className="mr-2 h-4 w-4" /> Editar
-              </Button>
+              <Can permission="sales.update" mode="hide">
+                <Button variant="outline" size="sm" onClick={() => navigate(`/sales/${sale.id}/edit`)}>
+                  <Pencil className="mr-2 h-4 w-4" /> Editar
+                </Button>
+              </Can>
               <Button size="sm" onClick={() => completeSale.mutate(sale.id)}>
                 <Plus className="mr-2 h-4 w-4" /> Concluir
               </Button>
