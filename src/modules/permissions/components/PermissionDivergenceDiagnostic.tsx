@@ -42,7 +42,11 @@ interface DiagRow {
   byRole: boolean;
   byPerm: boolean;
   divergence: RowDivergence;
+  requiresRoleFloor: boolean;
+  sensitive: boolean;
+  mode: "shadow" | "blocking-and" | "role-only";
 }
+
 
 export function PermissionDivergenceDiagnostic({ userId, userLabel, userRoles }: Props) {
   const { data: effective, isLoading, error } = useEffectivePermissions(userId);
