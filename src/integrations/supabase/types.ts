@@ -5817,6 +5817,18 @@ export type Database = {
         Returns: undefined
       }
       process_notification_events: { Args: never; Returns: Json }
+      process_sale_payment: {
+        Args: {
+          _amount: number
+          _cash_register_id?: string
+          _installments?: number
+          _notes?: string
+          _payment_method: string
+          _reference?: string
+          _sale_id: string
+        }
+        Returns: string
+      }
       process_sale_return: {
         Args: {
           _amount_refunded: number
