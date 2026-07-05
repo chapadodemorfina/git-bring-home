@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -60,9 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchProfile(session.user.id);
             fetchRoles(session.user.id);
           }, 0);
+          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
+          }
         } else {
           setProfile(null);
           setRoles([]);
+          queryClient.removeQueries({ queryKey: ["my-permissions"] });
         }
         setLoading(false);
       }
