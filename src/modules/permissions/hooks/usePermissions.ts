@@ -73,13 +73,19 @@ export function useMyPermissions() {
  * para evitar flash de "Acesso negado" antes da query começar.
  */
 export function usePermissionMap() {
+  const { activeTenant, loading: tenantLoading } = useTenant();
   const query = useMyPermissions();
-  const tenantId = getActiveTenantId();
+  const tenantId = activeTenant?.id ?? getActiveTenantId();
   const permissions = query.data || [];
   const set = new Set(permissions);
   // Considera "carregando" também quando o tenant ainda não está pronto
-  // (nesse caso a query fica com enabled=false e não emite isLoading).
-  const isLoading = !tenantId || query.isLoading || query.fetchStatus === "fetching" || (query.isPending && !query.isError);
+  // ou quando a query ainda não completou (evita flash de "Acesso negado").
+  const isLoading =
+    tenantLoading ||
+    !tenantId ||
+    query.isLoading ||
+    query.fetchStatus === "fetching" ||
+    (query.isPending && !query.isError);
   const ready = !isLoading && !query.isError;
 
   const hasPermission = (key: string): boolean => {
