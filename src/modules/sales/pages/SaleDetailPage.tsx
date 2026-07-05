@@ -104,28 +104,9 @@ export default function SaleDetailPage() {
       payment_method: newPayMethod,
       amount: newPayAmount,
       reference: newPayRef || undefined,
+      cash_register_id: openCashRegister?.id ?? null,
     }, {
-      onSuccess: async () => {
-        // Register cash movement if register is open
-        if (openCashRegister) {
-          const isCash = newPayMethod === "cash";
-          try {
-            await addCashMovement.mutateAsync({
-              cash_register_id: openCashRegister.id,
-              movement_type: "receipt",
-              payment_method: newPayMethod,
-              amount: newPayAmount,
-              description: `Pagamento - Venda ${sale.sale_number}`,
-              reference_type: "sale",
-              reference_id: sale.id,
-              affects_cash: isCash,
-              affects_bank: !isCash,
-              source_type: "sale",
-            });
-          } catch {
-            // non-blocking
-          }
-        }
+      onSuccess: () => {
         setShowPayment(false);
         setNewPayAmount(0);
         setNewPayRef("");
