@@ -6055,6 +6055,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      update_draft_sale: {
+        Args: {
+          _finalize?: boolean
+          _items: Json
+          _payments?: Json
+          _sale_data: Json
+          _sale_id: string
+        }
+        Returns: string
+      }
       upsert_os_revenue: {
         Args: { _service_order_id: string }
         Returns: string
