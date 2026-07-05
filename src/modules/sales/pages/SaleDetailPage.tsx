@@ -29,7 +29,7 @@ import { Can } from "@/modules/permissions/components/Can";
 export default function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  useAuth();
+  
   const companySettings = useCompanySettings();
   const companyName = companySettings.company_name;
 
