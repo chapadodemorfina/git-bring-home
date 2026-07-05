@@ -111,7 +111,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     setActiveTenantRole(membership.tenant_role);
     setActiveTenantId(tenantId);
     localStorage.setItem(STORAGE_KEY, tenantId);
-  }, [tenants]);
+    // Invalida caches tenant-dependentes para não reaproveitar dados do tenant anterior
+    queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
+  }, [tenants, queryClient]);
+
 
   return (
     <TenantContext.Provider value={{
