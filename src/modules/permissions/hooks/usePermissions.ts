@@ -49,9 +49,10 @@ export function useEffectivePermissions(targetUserId: string | undefined) {
 }
 
 export function useMyPermissions() {
+  const tenantId = getActiveTenantId();
   return useQuery<string[]>({
-    queryKey: ["my-permissions"],
-    enabled: !!getActiveTenantId(),
+    queryKey: ["my-permissions", tenantId],
+    enabled: !!tenantId,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_my_permissions");
@@ -64,12 +65,18 @@ export function useMyPermissions() {
 /**
  * Mapa (Set) das permissões do usuário atual, com helpers convenientes.
  * Fail-closed: em erro ou durante loading, `hasPermission` retorna `false`.
+ * `isLoading` também é true enquanto o tenant ativo ainda não foi resolvido,
+ * para evitar flash de "Acesso negado" antes da query começar.
  */
 export function usePermissionMap() {
   const query = useMyPermissions();
+  const tenantId = getActiveTenantId();
   const permissions = query.data || [];
   const set = new Set(permissions);
-  const ready = !query.isLoading && !query.isError;
+  // Considera "carregando" também quando o tenant ainda não está pronto
+  // (nesse caso a query fica com enabled=false e não emite isLoading).
+  const isLoading = !tenantId || query.isLoading || query.fetchStatus === "fetching" || (query.isPending && !query.isError);
+  const ready = !isLoading && !query.isError;
 
   const hasPermission = (key: string): boolean => {
     if (!ready) return false;
