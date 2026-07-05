@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSale, useSaleItems, useSalePayments, useSaleReturns, useCancelSale, useCompleteSale, useAddSalePayment, useProcessReturn } from "../hooks/useSales";
-import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
+import { useOpenCashRegister } from "@/modules/cash-register/hooks/useCashRegister";
 import { saleStatusLabels, saleStatusColors, paymentStatusLabels, paymentMethodLabels, SalePaymentMethod } from "../types";
 
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -55,7 +55,7 @@ export default function SaleDetailPage() {
   const addPayment = useAddSalePayment();
   const processReturn = useProcessReturn();
   const { data: openCashRegister } = useOpenCashRegister();
-  const addCashMovement = useAddCashMovement();
+  
 
   // Cancel dialog
   const [showCancel, setShowCancel] = useState(false);
@@ -104,28 +104,9 @@ export default function SaleDetailPage() {
       payment_method: newPayMethod,
       amount: newPayAmount,
       reference: newPayRef || undefined,
+      cash_register_id: openCashRegister?.id ?? null,
     }, {
-      onSuccess: async () => {
-        // Register cash movement if register is open
-        if (openCashRegister) {
-          const isCash = newPayMethod === "cash";
-          try {
-            await addCashMovement.mutateAsync({
-              cash_register_id: openCashRegister.id,
-              movement_type: "receipt",
-              payment_method: newPayMethod,
-              amount: newPayAmount,
-              description: `Pagamento - Venda ${sale.sale_number}`,
-              reference_type: "sale",
-              reference_id: sale.id,
-              affects_cash: isCash,
-              affects_bank: !isCash,
-              source_type: "sale",
-            });
-          } catch {
-            // non-blocking
-          }
-        }
+      onSuccess: () => {
         setShowPayment(false);
         setNewPayAmount(0);
         setNewPayRef("");
@@ -198,9 +179,11 @@ export default function SaleDetailPage() {
             </Can>
           )}
           {sale.status !== "cancelled" && sale.payment_status !== "paid" && sale.status !== "draft" && (
-            <Button variant="outline" size="sm" onClick={() => { setNewPayAmount(Number(sale.total_amount) - (payments?.reduce((s, p) => s + Number(p.amount), 0) || 0)); setShowPayment(true); }}>
-              <Plus className="mr-2 h-4 w-4" /> Pagamento
-            </Button>
+            <Can permission="sales.payment" mode="hide">
+              <Button variant="outline" size="sm" onClick={() => { setNewPayAmount(Number(sale.total_amount) - (payments?.reduce((s, p) => s + Number(p.amount), 0) || 0)); setShowPayment(true); }}>
+                <Plus className="mr-2 h-4 w-4" /> Pagamento
+              </Button>
+            </Can>
           )}
           {sale.status !== "cancelled" && (
             <Can permission="sales.cancel" mode="hide">
