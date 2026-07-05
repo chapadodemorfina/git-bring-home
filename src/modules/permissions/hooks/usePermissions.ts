@@ -50,10 +50,13 @@ export function useEffectivePermissions(targetUserId: string | undefined) {
 }
 
 export function useMyPermissions() {
-  const tenantId = getActiveTenantId();
+  // Depend on TenantContext so the query re-runs (and key changes) when
+  // the active tenant is resolved or switched.
+  const { activeTenant, loading: tenantLoading } = useTenant();
+  const tenantId = activeTenant?.id ?? getActiveTenantId();
   return useQuery<string[]>({
     queryKey: ["my-permissions", tenantId],
-    enabled: !!tenantId,
+    enabled: !!tenantId && !tenantLoading,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_my_permissions");
