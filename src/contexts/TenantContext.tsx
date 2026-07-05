@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase, setActiveTenantId } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
