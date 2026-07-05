@@ -36,6 +36,7 @@ const STORAGE_KEY = "i9_active_tenant_id";
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [tenants, setTenants] = useState<TenantMembership[]>([]);
   const [activeTenant, setActiveTenant] = useState<Tenant | null>(null);
   const [activeTenantRole, setActiveTenantRole] = useState<TenantRole | null>(null);
