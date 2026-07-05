@@ -73,7 +73,7 @@ export default function SaleDetailPage() {
   const [newPayAmount, setNewPayAmount] = useState(0);
   const [newPayRef, setNewPayRef] = useState("");
 
-  const canManage = hasRole("admin") || hasRole("manager") || hasRole("finance");
+  
 
   if (isLoading) return <div className="space-y-4 p-6">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}</div>;
   if (!sale) return <p className="text-center py-12 text-muted-foreground">Venda não encontrada</p>;
@@ -190,10 +190,12 @@ export default function SaleDetailPage() {
               </Button>
             </>
           )}
-          {(sale.status === "completed" || sale.status === "partially_refunded") && canManage && (
-            <Button variant="outline" size="sm" onClick={() => setShowReturn(true)}>
-              <RotateCcw className="mr-2 h-4 w-4" /> Devolução
-            </Button>
+          {(sale.status === "completed" || sale.status === "partially_refunded") && (
+            <Can permission="sales.return" mode="hide">
+              <Button variant="outline" size="sm" onClick={() => setShowReturn(true)}>
+                <RotateCcw className="mr-2 h-4 w-4" /> Devolução
+              </Button>
+            </Can>
           )}
           {sale.status !== "cancelled" && sale.payment_status !== "paid" && sale.status !== "draft" && (
             <Button variant="outline" size="sm" onClick={() => { setNewPayAmount(Number(sale.total_amount) - (payments?.reduce((s, p) => s + Number(p.amount), 0) || 0)); setShowPayment(true); }}>
