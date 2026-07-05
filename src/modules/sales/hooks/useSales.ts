@@ -222,29 +222,17 @@ export function useUpdateDraftSale() {
       payments: { method: SalePaymentMethod; amount: number; reference?: string }[];
       finalize: boolean;
     }) => {
-      const subtotal = payload.items.reduce((sum, i) => sum + (i.unit_price * i.quantity - i.discount), 0);
-      const total = subtotal - payload.discount_amount + payload.surcharge_amount;
-
-      // Update sale header
-      const { error: saleErr } = await db
-        .from("sales")
-        .update({
-          customer_id: payload.customer_id || null,
-          subtotal,
-          discount_amount: payload.discount_amount,
-          surcharge_amount: payload.surcharge_amount,
-          total_amount: total,
-          notes: payload.notes || null,
-        })
-        .eq("id", payload.sale_id);
-      if (saleErr) throw saleErr;
-
-      // Replace items: delete old, insert new
-      const { error: delItemsErr } = await db.from("sale_items").delete().eq("sale_id", payload.sale_id);
-      if (delItemsErr) throw delItemsErr;
-
-      const itemRows = payload.items.map((i) => ({
-        sale_id: payload.sale_id,
+      // Toda a atualização de venda draft passa pela RPC transacional
+      // `update_draft_sale` (Fase 3.5.12.5-a). Ela substitui itens e pagamentos
+      // dentro de SECURITY DEFINER, valida permissão `sales.update`, bloqueia
+      // vendas não-draft, recalcula `payment_status` server-side e audita.
+      const saleData = {
+        customer_id: payload.customer_id || null,
+        discount_amount: payload.discount_amount,
+        surcharge_amount: payload.surcharge_amount,
+        notes: payload.notes || null,
+      };
+      const itemsPayload = payload.items.map((i) => ({
         product_id: i.product_id,
         sku_snapshot: i.sku,
         product_name_snapshot: i.name,
@@ -252,27 +240,25 @@ export function useUpdateDraftSale() {
         unit_price: i.unit_price,
         cost_price_snapshot: i.cost_price,
         discount_amount: i.discount,
-        total_amount: i.unit_price * i.quantity - i.discount,
       }));
-      const { error: itemsErr } = await db.from("sale_items").insert(itemRows);
-      if (itemsErr) throw itemsErr;
+      const paymentsPayload = payload.payments.map((p) => ({
+        payment_method: p.method,
+        amount: p.amount,
+        reference: p.reference || null,
+      }));
 
-      // Replace payments
-      const { error: delPayErr } = await db.from("sale_payments").delete().eq("sale_id", payload.sale_id);
-      if (delPayErr) throw delPayErr;
+      const { error: rpcErr } = await db.rpc("update_draft_sale", {
+        _sale_id: payload.sale_id,
+        _sale_data: saleData,
+        _items: itemsPayload,
+        _payments: paymentsPayload,
+        _finalize: false,
+      });
+      if (rpcErr) throw rpcErr;
 
-      if (payload.payments.length > 0) {
-        const payRows = payload.payments.map((p) => ({
-          sale_id: payload.sale_id,
-          payment_method: p.method,
-          amount: p.amount,
-          reference: p.reference || null,
-        }));
-        const { error: payErr } = await db.from("sale_payments").insert(payRows);
-        if (payErr) throw payErr;
-      }
-
-      // Finalize if requested
+      // A finalização continua sendo delegada ao fluxo existente `complete_sale`,
+      // que trata estoque, comissão e movimentos financeiros. Mantido fora da RPC
+      // para preservar comportamento atual (Opção B do plano da fase).
       if (payload.finalize) {
         const { error: compErr } = await db.rpc("complete_sale", { _sale_id: payload.sale_id });
         if (compErr) throw compErr;
