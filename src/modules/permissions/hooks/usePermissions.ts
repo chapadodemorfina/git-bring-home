@@ -93,7 +93,7 @@ export function usePermissionMap() {
 
   return {
     permissions,
-    isLoading: query.isLoading,
+    isLoading,
     isError: query.isError,
     error: query.error as Error | null,
     hasPermission,
