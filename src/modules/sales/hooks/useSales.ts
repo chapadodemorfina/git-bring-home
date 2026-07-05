@@ -388,38 +388,26 @@ export function useAddSalePayment() {
       installments?: number;
       reference?: string;
       notes?: string;
+      cash_register_id?: string | null;
     }) => {
-      const { error } = await db.from("sale_payments").insert({
-        sale_id: params.sale_id,
-        payment_method: params.payment_method,
-        amount: params.amount,
-        installments: params.installments || null,
-        reference: params.reference || null,
-        notes: params.notes || null,
+      const { data, error } = await db.rpc("process_sale_payment", {
+        _sale_id: params.sale_id,
+        _amount: params.amount,
+        _payment_method: params.payment_method,
+        _installments: params.installments ?? null,
+        _reference: params.reference ?? null,
+        _notes: params.notes ?? null,
+        _cash_register_id: params.cash_register_id ?? null,
       });
       if (error) throw error;
-
-      // Recalculate payment status
-      const { data: payments } = await db
-        .from("sale_payments")
-        .select("amount")
-        .eq("sale_id", params.sale_id);
-      const { data: sale } = await db
-        .from("sales")
-        .select("total_amount")
-        .eq("id", params.sale_id)
-        .single();
-
-      if (payments && sale) {
-        const totalPaid = payments.reduce((s: number, p: any) => s + Number(p.amount), 0);
-        const newStatus = totalPaid >= sale.total_amount ? "paid" : totalPaid > 0 ? "partial" : "pending";
-        await db.from("sales").update({ payment_status: newStatus }).eq("id", params.sale_id);
-      }
+      return data as string;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sale"] });
       qc.invalidateQueries({ queryKey: ["sale-payments"] });
       qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["cash-register"] });
+      qc.invalidateQueries({ queryKey: ["cash-register-movements"] });
       toast({ title: "Pagamento registrado!" });
     },
     onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
