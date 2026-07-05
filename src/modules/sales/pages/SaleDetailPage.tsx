@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSale, useSaleItems, useSalePayments, useSaleReturns, useCancelSale, useCompleteSale, useAddSalePayment, useProcessReturn } from "../hooks/useSales";
 import { useOpenCashRegister, useAddCashMovement } from "@/modules/cash-register/hooks/useCashRegister";
 import { saleStatusLabels, saleStatusColors, paymentStatusLabels, paymentMethodLabels, SalePaymentMethod } from "../types";
-import { useAuth } from "@/contexts/AuthContext";
+
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
