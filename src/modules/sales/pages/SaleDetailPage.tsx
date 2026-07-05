@@ -179,9 +179,11 @@ export default function SaleDetailPage() {
             </Can>
           )}
           {sale.status !== "cancelled" && sale.payment_status !== "paid" && sale.status !== "draft" && (
-            <Button variant="outline" size="sm" onClick={() => { setNewPayAmount(Number(sale.total_amount) - (payments?.reduce((s, p) => s + Number(p.amount), 0) || 0)); setShowPayment(true); }}>
-              <Plus className="mr-2 h-4 w-4" /> Pagamento
-            </Button>
+            <Can permission="sales.payment" mode="hide">
+              <Button variant="outline" size="sm" onClick={() => { setNewPayAmount(Number(sale.total_amount) - (payments?.reduce((s, p) => s + Number(p.amount), 0) || 0)); setShowPayment(true); }}>
+                <Plus className="mr-2 h-4 w-4" /> Pagamento
+              </Button>
+            </Can>
           )}
           {sale.status !== "cancelled" && (
             <Can permission="sales.cancel" mode="hide">
