@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "admin" | "manager" | "front_desk" | "bench_technician" | "field_technician" | "finance" | "collection_point_operator" | "customer";
@@ -27,6 +28,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -49,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -58,9 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchProfile(session.user.id);
             fetchRoles(session.user.id);
           }, 0);
+          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
+          }
         } else {
           setProfile(null);
           setRoles([]);
+          queryClient.removeQueries({ queryKey: ["my-permissions"] });
         }
         setLoading(false);
       }
@@ -87,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setProfile(null);
     setRoles([]);
+    queryClient.clear();
   };
 
   return (

@@ -7,6 +7,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase, getActiveTenantId } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 
 export interface EffectivePermission {
@@ -49,9 +50,13 @@ export function useEffectivePermissions(targetUserId: string | undefined) {
 }
 
 export function useMyPermissions() {
+  // Depend on TenantContext so the query re-runs (and key changes) when
+  // the active tenant is resolved or switched.
+  const { activeTenant, loading: tenantLoading } = useTenant();
+  const tenantId = activeTenant?.id ?? getActiveTenantId();
   return useQuery<string[]>({
-    queryKey: ["my-permissions"],
-    enabled: !!getActiveTenantId(),
+    queryKey: ["my-permissions", tenantId],
+    enabled: !!tenantId && !tenantLoading,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_my_permissions");
@@ -64,12 +69,24 @@ export function useMyPermissions() {
 /**
  * Mapa (Set) das permissões do usuário atual, com helpers convenientes.
  * Fail-closed: em erro ou durante loading, `hasPermission` retorna `false`.
+ * `isLoading` também é true enquanto o tenant ativo ainda não foi resolvido,
+ * para evitar flash de "Acesso negado" antes da query começar.
  */
 export function usePermissionMap() {
+  const { activeTenant, loading: tenantLoading } = useTenant();
   const query = useMyPermissions();
+  const tenantId = activeTenant?.id ?? getActiveTenantId();
   const permissions = query.data || [];
   const set = new Set(permissions);
-  const ready = !query.isLoading && !query.isError;
+  // Considera "carregando" também quando o tenant ainda não está pronto
+  // ou quando a query ainda não completou (evita flash de "Acesso negado").
+  const isLoading =
+    tenantLoading ||
+    !tenantId ||
+    query.isLoading ||
+    query.fetchStatus === "fetching" ||
+    (query.isPending && !query.isError);
+  const ready = !isLoading && !query.isError;
 
   const hasPermission = (key: string): boolean => {
     if (!ready) return false;
@@ -86,7 +103,7 @@ export function usePermissionMap() {
 
   return {
     permissions,
-    isLoading: query.isLoading,
+    isLoading,
     isError: query.isError,
     error: query.error as Error | null,
     hasPermission,

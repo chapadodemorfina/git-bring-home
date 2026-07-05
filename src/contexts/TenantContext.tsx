@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase, setActiveTenantId } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -35,6 +36,7 @@ const STORAGE_KEY = "i9_active_tenant_id";
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [tenants, setTenants] = useState<TenantMembership[]>([]);
   const [activeTenant, setActiveTenant] = useState<Tenant | null>(null);
   const [activeTenantRole, setActiveTenantRole] = useState<TenantRole | null>(null);
@@ -109,7 +111,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     setActiveTenantRole(membership.tenant_role);
     setActiveTenantId(tenantId);
     localStorage.setItem(STORAGE_KEY, tenantId);
-  }, [tenants]);
+    // Invalida caches tenant-dependentes para não reaproveitar dados do tenant anterior
+    queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
+  }, [tenants, queryClient]);
+
 
   return (
     <TenantContext.Provider value={{
