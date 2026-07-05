@@ -200,10 +200,12 @@ export default function SaleDetailPage() {
               <Plus className="mr-2 h-4 w-4" /> Pagamento
             </Button>
           )}
-          {sale.status !== "cancelled" && canManage && (
-            <Button variant="destructive" size="sm" onClick={() => setShowCancel(true)}>
-              <XCircle className="mr-2 h-4 w-4" /> Cancelar
-            </Button>
+          {sale.status !== "cancelled" && (
+            <Can permission="sales.cancel" mode="hide">
+              <Button variant="destructive" size="sm" onClick={() => setShowCancel(true)}>
+                <XCircle className="mr-2 h-4 w-4" /> Cancelar
+              </Button>
+            </Can>
           )}
         </div>
       </div>
