@@ -140,59 +140,47 @@ export function useCreateSale() {
       payments: { method: SalePaymentMethod; amount: number; installments?: number; reference?: string }[];
       finalize: boolean;
     }) => {
-      const subtotal = payload.items.reduce((sum, i) => sum + (i.unit_price * i.quantity - i.discount), 0);
-      const total = subtotal - payload.discount_amount + payload.surcharge_amount;
-
-      // 1. Create sale
-      const { data: sale, error: saleErr } = await db
-        .from("sales")
-        .insert({
-          sale_number: "", // trigger fills
-          customer_id: payload.customer_id || null,
+      // Toda a criação de venda (sales + sale_items + sale_payments + finalize)
+      // passa pela RPC transacional `create_sale` (Fase 3.5.12.5-c.1).
+      // Ela roda em SECURITY DEFINER, valida auth/tenant/`sales.create`,
+      // valida produtos por tenant, recalcula subtotal/total/payment_status
+      // server-side, impede pagamento maior que total, chama `complete_sale`
+      // internamente quando `_finalize=true` e grava auditoria `sale_created`.
+      const { data: saleId, error: rpcErr } = await db.rpc("create_sale", {
+        _sale_data: {
+          customer_id: payload.customer_id ?? null,
           seller_user_id: payload.seller_user_id,
-          subtotal,
-          discount_amount: payload.discount_amount,
-          surcharge_amount: payload.surcharge_amount,
-          total_amount: total,
-          notes: payload.notes || null,
-        })
-        .select()
-        .single();
-      if (saleErr) throw saleErr;
-
-      // 2. Insert items
-      const itemRows = payload.items.map((i) => ({
-        sale_id: sale.id,
-        product_id: i.product_id,
-        sku_snapshot: i.sku,
-        product_name_snapshot: i.name,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
-        cost_price_snapshot: i.cost_price,
-        discount_amount: i.discount,
-        total_amount: i.unit_price * i.quantity - i.discount,
-      }));
-      const { error: itemsErr } = await db.from("sale_items").insert(itemRows);
-      if (itemsErr) throw itemsErr;
-
-      // 3. Insert payments
-      if (payload.payments.length > 0) {
-        const payRows = payload.payments.map((p) => ({
-          sale_id: sale.id,
+          discount_amount: payload.discount_amount ?? 0,
+          surcharge_amount: payload.surcharge_amount ?? 0,
+          notes: payload.notes ?? null,
+        },
+        _items: payload.items.map((i) => ({
+          product_id: i.product_id,
+          sku_snapshot: i.sku,
+          product_name_snapshot: i.name,
+          quantity: i.quantity,
+          unit_price: i.unit_price,
+          cost_price_snapshot: i.cost_price,
+          discount_amount: i.discount,
+        })),
+        _payments: (payload.payments ?? []).map((p) => ({
           payment_method: p.method,
           amount: p.amount,
-          installments: p.installments || null,
-          reference: p.reference || null,
-        }));
-        const { error: payErr } = await db.from("sale_payments").insert(payRows);
-        if (payErr) throw payErr;
-      }
+          installments: p.installments ?? null,
+          reference: p.reference ?? null,
+        })),
+        _finalize: payload.finalize ?? false,
+      });
+      if (rpcErr) throw rpcErr;
 
-      // 4. Finalize if requested
-      if (payload.finalize) {
-        const { data: result, error: compErr } = await db.rpc("complete_sale", { _sale_id: sale.id });
-        if (compErr) throw compErr;
-      }
+      // Buscar a venda criada para preservar contrato atual do hook
+      // (SaleCreatePage usa `sale.id` e `sale.sale_number` para caixa/navegação).
+      const { data: sale, error: fetchErr } = await db
+        .from("sales")
+        .select("*")
+        .eq("id", saleId as string)
+        .single();
+      if (fetchErr) throw fetchErr;
 
       return sale;
     },
