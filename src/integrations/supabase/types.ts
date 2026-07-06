@@ -5666,6 +5666,15 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      create_sale: {
+        Args: {
+          _finalize?: boolean
+          _items: Json
+          _payments?: Json
+          _sale_data: Json
+        }
+        Returns: string
+      }
       create_tenant: {
         Args: { _document?: string; _name: string; _slug: string }
         Returns: Json
