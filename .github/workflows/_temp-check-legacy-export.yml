@@ -16,13 +16,14 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Normalize handler typing
+      - name: Normalize exporter typing
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('supabase/functions/legacy-migration-export/index.ts')
           s = p.read_text()
           s = s.replace('Deno.serve(async (req) => {', 'Deno.serve(async (req: Request): Promise<Response> => {')
+          s = s.replace('''async function authorize(req: Request) {''', '''type AuthorizationResult =\n  | { error: Response }\n  | { admin: any; supabaseUrl: string; serviceRoleKey: string; tenantId: string; user: any };\n\nasync function authorize(req: Request): Promise<AuthorizationResult> {''')
           s = s.replace('''      default:\n        return jsonResponse({ error: "invalid_action" }, 400);\n    }\n  } catch (error) {''', '''      default:\n        break;\n    }\n    return jsonResponse({ error: "invalid_action" }, 400);\n  } catch (error) {''')
           p.write_text(s)
           PY
@@ -37,5 +38,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add supabase/functions/legacy-migration-export/index.ts
-          git commit -m "fix: make legacy exporter handler return type explicit"
+          git commit -m "fix: type legacy exporter authorization result"
           git push
