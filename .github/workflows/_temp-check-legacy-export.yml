@@ -1,0 +1,19 @@
+name: TEMP Check Legacy Exporter
+
+on:
+  push:
+    branches:
+      - feature/legacy-export-bridge-20260831
+
+permissions:
+  contents: read
+
+jobs:
+  deno-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check supabase/functions/legacy-migration-export/index.ts
