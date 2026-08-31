@@ -17,3 +17,7 @@ verify_jwt = false
 
 [functions.admin-users]
 verify_jwt = false
+
+[functions.legacy-migration-export]
+verify_jwt = true
+
