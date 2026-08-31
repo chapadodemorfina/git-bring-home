@@ -12,47 +12,9 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-
-      - name: Load public Supabase runtime values without logging them
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
-          import os, re
-
-          values = {}
-          env_path = Path('.env')
-          if env_path.exists():
-              for raw in env_path.read_text(encoding='utf-8', errors='replace').splitlines():
-                  line = raw.strip()
-                  if not line or line.startswith('#') or '=' not in line:
-                      continue
-                  k, v = line.split('=', 1)
-                  k, v = k.strip(), v.strip().strip('"').strip("'")
-                  values[k] = v
-
-          if not values.get('VITE_SUPABASE_URL') or not values.get('VITE_SUPABASE_PUBLISHABLE_KEY'):
-              text = Path('src/integrations/supabase/client.ts').read_text(encoding='utf-8', errors='replace')
-              m_url = re.search(r'const\s+SUPABASE_URL\s*=\s*["\']([^"\']+)', text)
-              m_key = re.search(r'const\s+SUPABASE_PUBLISHABLE_KEY\s*=\s*["\']([^"\']+)', text)
-              if m_url:
-                  values.setdefault('VITE_SUPABASE_URL', m_url.group(1))
-              if m_key:
-                  values.setdefault('VITE_SUPABASE_PUBLISHABLE_KEY', m_key.group(1))
-
-          required = ('VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY')
-          missing = [k for k in required if not values.get(k)]
-          if missing:
-              raise SystemExit('missing public runtime configuration: ' + ','.join(missing))
-
-          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
-              for k in required:
-                  f.write(f'{k}={values[k]}\n')
-          PY
 
       - name: Produce sanitized code and API inventory
         shell: bash
@@ -60,26 +22,47 @@ jobs:
           set -euo pipefail
           python3 <<'PY'
           from pathlib import Path
-          import json, os, re, subprocess, tempfile
+          import json, re, subprocess, tempfile
 
           report = []
-          report.append('LEGACY_READONLY_AUDIT_V1')
-          report.append('expected_project_ref=moijoyqwapimforpijdc')
-          report.append('runtime_url_matches_expected=' + str('moijoyqwapimforpijdc.supabase.co' in os.environ['VITE_SUPABASE_URL']).lower())
+          report.append('LEGACY_READONLY_AUDIT_V2')
+          expected_ref = 'moijoyqwapimforpijdc'
+          report.append('expected_project_ref=' + expected_ref)
 
-          # Only key NAMES are reported. Values are never emitted.
-          env_keys = []
-          if Path('.env').exists():
-              for raw in Path('.env').read_text(encoding='utf-8', errors='replace').splitlines():
+          def read_dotenv(path):
+              out = {}
+              if not path.exists():
+                  return out
+              for raw in path.read_text(encoding='utf-8', errors='replace').splitlines():
                   line = raw.strip()
-                  if line and not line.startswith('#') and '=' in line:
-                      env_keys.append(line.split('=', 1)[0].strip())
+                  if not line or line.startswith('#') or '=' not in line:
+                      continue
+                  k, v = line.split('=', 1)
+                  out[k.strip()] = v.strip().strip('"').strip("'")
+              return out
+
+          env = read_dotenv(Path('.env'))
+          client = Path('src/integrations/supabase/client.ts').read_text(encoding='utf-8', errors='replace')
+          m_url = re.search(r'const\s+SUPABASE_URL\s*=\s*["\']([^"\']+)', client)
+          m_key = re.search(r'const\s+SUPABASE_PUBLISHABLE_KEY\s*=\s*["\']([^"\']+)', client)
+          client_url = m_url.group(1) if m_url else ''
+          client_key = m_key.group(1) if m_key else ''
+          env_url = env.get('VITE_SUPABASE_URL', '')
+          env_key = env.get('VITE_SUPABASE_PUBLISHABLE_KEY', '')
+          url = (env_url or client_url).rstrip('/')
+
+          report.append('runtime_url_matches_expected=' + str(expected_ref + '.supabase.co' in url).lower())
+          report.append('env_and_client_url_equal=' + str(bool(env_url and client_url and env_url == client_url)).lower())
+          report.append('env_and_client_key_equal=' + str(bool(env_key and client_key and env_key == client_key)).lower())
+
+          # Only variable NAMES are reported. Values are never emitted.
+          env_keys = sorted(env.keys())
           privileged_markers = ('SERVICE_ROLE', 'DATABASE_URL', 'POSTGRES', 'DB_PASSWORD', 'SUPABASE_ACCESS_TOKEN', 'SECRET_KEY')
           privileged_names = sorted(k for k in env_keys if any(marker in k.upper() for marker in privileged_markers))
-          report.append('tracked_env_key_names=' + ','.join(sorted(set(env_keys))))
+          report.append('tracked_env_key_names=' + ','.join(env_keys))
           report.append('tracked_privileged_key_names=' + (','.join(privileged_names) if privileged_names else 'none'))
 
-          # Generated Supabase types are the best code-level schema snapshot.
+          # Generated Supabase types: code-level schema snapshot.
           types_path = Path('src/integrations/supabase/types.ts')
           text = types_path.read_text(encoding='utf-8', errors='replace')
           def section_names(start, end):
@@ -88,7 +71,7 @@ jobs:
               if s < 0 or e < 0:
                   return []
               chunk = text[s:e]
-              return re.findall(r'^      ([A-Za-z0-9_]+): \\{$', chunk, flags=re.M)
+              return re.findall(r'^      ([A-Za-z0-9_]+): \{$', chunk, flags=re.M)
           tables = section_names('    Tables: {', '    Views: {')
           views = section_names('    Views: {', '    Functions: {')
           functions = section_names('    Functions: {', '    Enums: {')
@@ -99,7 +82,12 @@ jobs:
           report.append(f'generated_rpcs_count={len(functions)}')
           report.append('generated_rpcs=' + ','.join(functions))
 
-          # Edge Functions and their config-level JWT setting.
+          # Page/module inventory.
+          page_files = sorted(str(p).replace('src/pages/', '') for p in Path('src/pages').rglob('*') if p.is_file()) if Path('src/pages').exists() else []
+          report.append(f'page_files_count={len(page_files)}')
+          report.append('page_files=' + ','.join(page_files))
+
+          # Edge Functions: config plus static authentication signals.
           config = Path('supabase/config.toml').read_text(encoding='utf-8', errors='replace') if Path('supabase/config.toml').exists() else ''
           verify = {}
           current = None
@@ -109,60 +97,113 @@ jobs:
                   current = m.group(1)
               elif current and line.strip().startswith('verify_jwt'):
                   verify[current] = line.split('=',1)[1].strip()
-          edge = sorted(p.parent.name for p in Path('supabase/functions').glob('*/index.ts')) if Path('supabase/functions').exists() else []
-          report.append(f'edge_functions_count={len(edge)}')
-          for name in edge:
-              report.append(f'edge_function={name}|verify_jwt={verify.get(name,"default")}' )
+          edge_paths = sorted(Path('supabase/functions').glob('*/index.ts')) if Path('supabase/functions').exists() else []
+          report.append(f'edge_functions_count={len(edge_paths)}')
+          for p in edge_paths:
+              body = p.read_text(encoding='utf-8', errors='replace')
+              name = p.parent.name
+              uses_sr = 'SUPABASE_SERVICE_ROLE_KEY' in body
+              reads_auth = 'authorization' in body.lower()
+              checks_user = ('.auth.getUser' in body or 'auth.getUser' in body or 'getClaims' in body)
+              role_gate = bool(re.search(r'admin|manager|superadmin|role', body, flags=re.I))
+              report.append(
+                  f'edge_function={name}|verify_jwt={verify.get(name,"default")}|uses_service_role={str(uses_sr).lower()}|reads_authorization={str(reads_auth).lower()}|checks_user={str(checks_user).lower()}|role_gate_signal={str(role_gate).lower()}'
+              )
 
-          # Anonymous OpenAPI discovery with the project's own public browser key.
-          url = os.environ['VITE_SUPABASE_URL'].rstrip('/')
-          key = os.environ['VITE_SUPABASE_PUBLISHABLE_KEY']
-          with tempfile.TemporaryDirectory() as td:
-              openapi = Path(td) / 'openapi.json'
+          # Migration security signals (counts only).
+          migrations = list(Path('supabase/migrations').glob('*.sql')) if Path('supabase/migrations').exists() else []
+          all_sql = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in migrations)
+          report.append(f'migrations_count={len(migrations)}')
+          report.append(f'rls_enable_occurrences={len(re.findall(r"enable\\s+row\\s+level\\s+security", all_sql, flags=re.I))}')
+          report.append(f'policy_create_occurrences={len(re.findall(r"create\\s+policy", all_sql, flags=re.I))}')
+          report.append(f'security_definer_occurrences={len(re.findall(r"security\\s+definer", all_sql, flags=re.I))}')
+          report.append(f'anon_grant_occurrences={len(re.findall(r"grant\\s+execute[^;]*\\bto\\s+anon\\b", all_sql, flags=re.I|re.S))}')
+
+          if not url:
+              report.append('project_health_status=missing_url')
+          else:
+              # Project health does not require privileged access.
+              try:
+                  health = subprocess.check_output(['curl','-sS','--max-time','15','-o','/dev/null','-w','%{http_code}',f'{url}/auth/v1/health'], text=True).strip()
+              except subprocess.CalledProcessError:
+                  health = 'curl_error'
+              report.append('project_health_status=' + health)
+
+          def classify_error(path):
+              if not path.exists():
+                  return 'none'
+              raw = path.read_text(encoding='utf-8', errors='replace').lower()
+              if 'invalid api key' in raw or 'invalid_api_key' in raw:
+                  return 'invalid_api_key'
+              if 'jwt expired' in raw or 'token is expired' in raw:
+                  return 'jwt_expired'
+              if 'invalid jwt' in raw or 'jwt' in raw and 'invalid' in raw:
+                  return 'invalid_jwt'
+              if 'permission denied' in raw or 'unauthorized' in raw:
+                  return 'unauthorized'
+              return 'other_non_200'
+
+          def openapi_status(label, key, base_url, td):
+              if not key or not base_url:
+                  report.append(f'{label}_openapi_status=missing')
+                  return None, [], []
+              body_path = Path(td) / f'{label}.json'
               cmd = [
-                  'curl','-sS','--max-time','20','-o',str(openapi),'-w','%{http_code}',
+                  'curl','-sS','--max-time','20','-o',str(body_path),'-w','%{http_code}',
                   '-H',f'apikey: {key}','-H',f'Authorization: Bearer {key}',
-                  '-H','Accept: application/openapi+json', f'{url}/rest/v1/'
+                  '-H','Accept: application/openapi+json', f'{base_url}/rest/v1/'
               ]
-              status = subprocess.check_output(cmd, text=True).strip()
-              report.append('anon_openapi_status=' + status)
+              try:
+                  status = subprocess.check_output(cmd, text=True).strip()
+              except subprocess.CalledProcessError:
+                  status = 'curl_error'
+              report.append(f'{label}_openapi_status={status}')
+              if status != '200':
+                  report.append(f'{label}_openapi_error_class={classify_error(body_path)}')
+                  return status, [], []
               api_tables, api_rpcs = [], []
-              if status == '200' and openapi.exists():
-                  try:
-                      obj = json.loads(openapi.read_text(encoding='utf-8', errors='replace'))
-                      for path in obj.get('paths', {}):
-                          if path.startswith('/rpc/'):
-                              api_rpcs.append(path.removeprefix('/rpc/'))
-                          elif path.startswith('/') and path.count('/') == 1:
-                              api_tables.append(path[1:])
-                  except Exception as exc:
-                      report.append('openapi_parse_error=' + type(exc).__name__)
-              api_tables = sorted(set(api_tables))
-              api_rpcs = sorted(set(api_rpcs))
+              try:
+                  obj = json.loads(body_path.read_text(encoding='utf-8', errors='replace'))
+                  for path in obj.get('paths', {}):
+                      if path.startswith('/rpc/'):
+                          api_rpcs.append(path.removeprefix('/rpc/'))
+                      elif path.startswith('/') and path.count('/') == 1:
+                          api_tables.append(path[1:])
+              except Exception as exc:
+                  report.append(f'{label}_openapi_parse_error=' + type(exc).__name__)
+              return status, sorted(set(api_tables)), sorted(set(api_rpcs))
+
+          with tempfile.TemporaryDirectory() as td:
+              env_status, env_tables, env_rpcs = openapi_status('env_key', env_key, (env_url or url).rstrip('/'), td)
+              client_status, client_tables, client_rpcs = openapi_status('client_key', client_key, (client_url or url).rstrip('/'), td)
+              chosen_key = env_key if env_status == '200' else client_key if client_status == '200' else ''
+              api_tables = env_tables if env_status == '200' else client_tables if client_status == '200' else []
+              api_rpcs = env_rpcs if env_status == '200' else client_rpcs if client_status == '200' else []
               report.append(f'anon_openapi_tables_count={len(api_tables)}')
               report.append('anon_openapi_tables=' + ','.join(api_tables))
               report.append(f'anon_openapi_rpcs_count={len(api_rpcs)}')
               report.append('anon_openapi_rpcs=' + ','.join(api_rpcs))
 
-              # HEAD only. No row bodies are downloaded or printed.
-              for table in api_tables:
-                  hdr = Path(td) / 'headers.txt'
-                  qurl = f'{url}/rest/v1/{table}?select=*'
-                  cmd = [
-                      'curl','-sS','--max-time','15','-X','HEAD','-D',str(hdr),'-o','/dev/null','-w','%{http_code}',
-                      '-H',f'apikey: {key}','-H',f'Authorization: Bearer {key}',
-                      '-H','Prefer: count=exact', qurl
-                  ]
-                  try:
-                      code = subprocess.check_output(cmd, text=True).strip()
-                  except subprocess.CalledProcessError:
-                      code = 'curl_error'
-                  content_range = ''
-                  if hdr.exists():
-                      for line in hdr.read_text(encoding='utf-8', errors='replace').splitlines():
-                          if line.lower().startswith('content-range:'):
-                              content_range = line.split(':',1)[1].strip()
-                  report.append(f'anon_head={table}|http={code}|content_range={content_range or "none"}')
+              # HEAD only; no table row bodies are ever downloaded or printed.
+              if chosen_key:
+                  for table in api_tables:
+                      hdr = Path(td) / 'headers.txt'
+                      qurl = f'{url}/rest/v1/{table}?select=*'
+                      cmd = [
+                          'curl','-sS','--max-time','15','-X','HEAD','-D',str(hdr),'-o','/dev/null','-w','%{http_code}',
+                          '-H',f'apikey: {chosen_key}','-H',f'Authorization: Bearer {chosen_key}',
+                          '-H','Prefer: count=exact', qurl
+                      ]
+                      try:
+                          code = subprocess.check_output(cmd, text=True).strip()
+                      except subprocess.CalledProcessError:
+                          code = 'curl_error'
+                      content_range = ''
+                      if hdr.exists():
+                          for line in hdr.read_text(encoding='utf-8', errors='replace').splitlines():
+                              if line.lower().startswith('content-range:'):
+                                  content_range = line.split(':',1)[1].strip()
+                      report.append(f'anon_head={table}|http={code}|content_range={content_range or "none"}')
 
           Path('legacy-readonly-audit.txt').write_text('\n'.join(report) + '\n', encoding='utf-8')
           print('\n'.join(report))
