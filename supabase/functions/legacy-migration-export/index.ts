@@ -6,7 +6,8 @@ const MAX_PAGE_SIZE = 500;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-tenant-id",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-tenant-id",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -54,7 +55,11 @@ type TableInventory = {
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
   });
 }
 
@@ -85,7 +90,9 @@ function tableBlockedReason(table: string): string | null {
 async function sha256Hex(text: string) {
   const bytes = new TextEncoder().encode(text);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(digest)).map((b) =>
+    b.toString(16).padStart(2, "0")
+  ).join("");
 }
 
 function safeRunId(value: unknown): string {
@@ -96,27 +103,37 @@ function safeRunId(value: unknown): string {
 
 function safeTableName(value: unknown): string {
   const table = String(value ?? "");
-  if (!/^[a-zA-Z_][a-zA-Z0-9_]{0,127}$/.test(table)) throw new Error("invalid_table");
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]{0,127}$/.test(table)) {
+    throw new Error("invalid_table");
+  }
   return table;
 }
 
 function safeBucketName(value: unknown): string {
   const bucket = String(value ?? "");
-  if (!/^[a-zA-Z0-9._-]{1,100}$/.test(bucket)) throw new Error("invalid_bucket");
+  if (!/^[a-zA-Z0-9._-]{1,100}$/.test(bucket)) {
+    throw new Error("invalid_bucket");
+  }
   return bucket;
 }
 
 function safePrefix(value: unknown): string {
   const prefix = String(value ?? "");
-  if (prefix.includes("..") || prefix.startsWith("/")) throw new Error("invalid_prefix");
+  if (prefix.includes("..") || prefix.startsWith("/")) {
+    throw new Error("invalid_prefix");
+  }
   return prefix.replace(/^\/+|\/+$/g, "");
 }
 
 async function ensureExportBucket(admin: any) {
   const { data: buckets, error: listError } = await admin.storage.listBuckets();
   if (listError) throw new Error(`storage_list_failed:${listError.message}`);
-  if ((buckets ?? []).some((bucket: any) => bucket.name === EXPORT_BUCKET)) return;
-  const { error } = await admin.storage.createBucket(EXPORT_BUCKET, { public: false });
+  if ((buckets ?? []).some((bucket: any) => bucket.name === EXPORT_BUCKET)) {
+    return;
+  }
+  const { error } = await admin.storage.createBucket(EXPORT_BUCKET, {
+    public: false,
+  });
   if (error && !String(error.message).toLowerCase().includes("already")) {
     throw new Error(`storage_bucket_failed:${error.message}`);
   }
@@ -132,16 +149,27 @@ async function uploadJson(admin: any, path: string, value: unknown) {
       upsert: true,
     });
   if (error) throw new Error(`storage_upload_failed:${error.message}`);
-  return { path, checksum_sha256: checksum, bytes: new TextEncoder().encode(raw).byteLength };
+  return {
+    path,
+    checksum_sha256: checksum,
+    bytes: new TextEncoder().encode(raw).byteLength,
+  };
 }
 
 async function downloadJson(admin: any, path: string) {
-  const { data, error } = await admin.storage.from(EXPORT_BUCKET).download(path);
-  if (error || !data) throw new Error(`storage_download_failed:${error?.message ?? "missing"}`);
+  const { data, error } = await admin.storage.from(EXPORT_BUCKET).download(
+    path,
+  );
+  if (error || !data) {
+    throw new Error(`storage_download_failed:${error?.message ?? "missing"}`);
+  }
   return JSON.parse(await data.text());
 }
 
-async function getPublicInventory(supabaseUrl: string, serviceRoleKey: string): Promise<TableInventory[]> {
+async function getPublicInventory(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+): Promise<TableInventory[]> {
   const response = await fetch(`${supabaseUrl}/rest/v1/`, {
     headers: {
       apikey: serviceRoleKey,
@@ -153,7 +181,10 @@ async function getPublicInventory(supabaseUrl: string, serviceRoleKey: string): 
   const openapi = await response.json();
   const definitions = openapi.definitions ?? openapi.components?.schemas ?? {};
   const tableNames = Object.keys(openapi.paths ?? {})
-    .filter((path) => path.startsWith("/") && !path.startsWith("/rpc/") && path.slice(1).indexOf("/") === -1)
+    .filter((path) =>
+      path.startsWith("/") && !path.startsWith("/rpc/") &&
+      path.slice(1).indexOf("/") === -1
+    )
     .map((path) => path.slice(1))
     .filter(Boolean)
     .sort();
@@ -163,7 +194,10 @@ async function getPublicInventory(supabaseUrl: string, serviceRoleKey: string): 
     const blockedReason = tableBlockedReason(name);
     return {
       name,
-      tenant_scoped: Object.prototype.hasOwnProperty.call(properties, "tenant_id"),
+      tenant_scoped: Object.prototype.hasOwnProperty.call(
+        properties,
+        "tenant_id",
+      ),
       blocked: Boolean(blockedReason),
       blocked_reason: blockedReason,
     };
@@ -171,15 +205,30 @@ async function getPublicInventory(supabaseUrl: string, serviceRoleKey: string): 
 }
 
 async function getTenantCount(admin: any) {
-  const { count, error } = await admin.from("tenants").select("id", { count: "exact", head: true });
+  const { count, error } = await admin.from("tenants").select("id", {
+    count: "exact",
+    head: true,
+  });
   if (error) throw new Error(`tenant_count_failed:${error.message}`);
   return count ?? 0;
 }
 
-async function authorize(req: Request) {
+type AuthorizationResult =
+  | { error: Response }
+  | {
+    admin: any;
+    supabaseUrl: string;
+    serviceRoleKey: string;
+    tenantId: string;
+    user: any;
+  };
+
+async function authorize(req: Request): Promise<AuthorizationResult> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) throw new Error("missing_server_configuration");
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("missing_server_configuration");
+  }
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -197,7 +246,9 @@ async function authorize(req: Request) {
   const { data: userData, error: userError } = await admin.auth.getUser(jwt);
   const user = userData?.user;
   if (userError || !user) {
-    return { error: jsonResponse({ error: "invalid_user_token" }, 401) } as const;
+    return {
+      error: jsonResponse({ error: "invalid_user_token" }, 401),
+    } as const;
   }
 
   const { data: tenantLink, error: tenantError } = await admin
@@ -208,7 +259,9 @@ async function authorize(req: Request) {
     .eq("is_active", true)
     .maybeSingle();
   if (tenantError || !tenantLink) {
-    return { error: jsonResponse({ error: "tenant_access_denied" }, 403) } as const;
+    return {
+      error: jsonResponse({ error: "tenant_access_denied" }, 403),
+    } as const;
   }
 
   const { data: roles, error: roleError } = await admin
@@ -216,7 +269,11 @@ async function authorize(req: Request) {
     .select("role")
     .eq("tenant_id", tenantId)
     .eq("user_id", user.id);
-  if (roleError) return { error: jsonResponse({ error: "role_check_failed" }, 500) } as const;
+  if (roleError) {
+    return {
+      error: jsonResponse({ error: "role_check_failed" }, 500),
+    } as const;
+  }
   const roleNames = (roles ?? []).map((row: any) => String(row.role));
   if (!roleNames.includes("admin")) {
     return { error: jsonResponse({ error: "admin_required" }, 403) } as const;
@@ -236,7 +293,9 @@ async function scopedTablePage(
 ) {
   const tableInfo = inventory.find((item) => item.name === table);
   if (!tableInfo) throw new Error("table_not_exposed");
-  if (tableInfo.blocked) throw new Error(`blocked_table:${tableInfo.blocked_reason}`);
+  if (tableInfo.blocked) {
+    throw new Error(`blocked_table:${tableInfo.blocked_reason}`);
+  }
 
   let query = admin.from(table).select("*", { count: "exact" });
 
@@ -248,7 +307,9 @@ async function scopedTablePage(
       .select("user_id")
       .eq("tenant_id", tenantId);
     if (linkError) throw new Error(`profile_scope_failed:${linkError.message}`);
-    const ids = [...new Set((links ?? []).map((row: any) => row.user_id).filter(Boolean))];
+    const ids = [
+      ...new Set((links ?? []).map((row: any) => row.user_id).filter(Boolean)),
+    ];
     if (ids.length === 0) return { rows: [], count: 0 };
     query = query.in("id", ids);
   } else if (tableInfo.tenant_scoped) {
@@ -259,7 +320,10 @@ async function scopedTablePage(
 
   const { data, error, count } = await query.range(offset, offset + limit - 1);
   if (error) throw new Error(`table_export_failed:${error.message}`);
-  return { rows: (data ?? []).map((row: unknown) => redact(row)), count: count ?? 0 };
+  return {
+    rows: (data ?? []).map((row: unknown) => redact(row)),
+    count: count ?? 0,
+  };
 }
 
 async function snapshotAuthUsers(admin: any, tenantId: string, runId: string) {
@@ -273,7 +337,10 @@ async function snapshotAuthUsers(admin: any, tenantId: string, runId: string) {
   let page = 1;
 
   while (true) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    const { data, error } = await admin.auth.admin.listUsers({
+      page,
+      perPage: 1000,
+    });
     if (error) throw new Error(`auth_users_failed:${error.message}`);
     const users = data?.users ?? [];
     for (const user of users) {
@@ -304,14 +371,19 @@ async function snapshotAuthUsers(admin: any, tenantId: string, runId: string) {
   });
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "method_not_allowed" }, 405);
+  }
 
   try {
     const authorization = await authorize(req);
     if ("error" in authorization) return authorization.error;
-    const { admin, supabaseUrl, serviceRoleKey, tenantId, user } = authorization;
+    const { admin, supabaseUrl, serviceRoleKey, tenantId, user } =
+      authorization;
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action ?? "");
     const tenantCount = await getTenantCount(admin);
@@ -320,7 +392,9 @@ Deno.serve(async (req) => {
       case "start": {
         await ensureExportBucket(admin);
         const inventory = await getPublicInventory(supabaseUrl, serviceRoleKey);
-        const runId = `i9-${tenantId.slice(0, 8)}-${new Date().toISOString().replace(/[^0-9TZ]/g, "")}-${crypto.randomUUID().slice(0, 8)}`;
+        const runId = `i9-${tenantId.slice(0, 8)}-${
+          new Date().toISOString().replace(/[^0-9TZ]/g, "")
+        }-${crypto.randomUUID().slice(0, 8)}`;
         const startManifest = {
           exporter_version: EXPORTER_VERSION,
           run_id: runId,
@@ -339,7 +413,11 @@ Deno.serve(async (req) => {
             auth_passwords_or_tokens_exported: false,
           },
         };
-        const stored = await uploadJson(admin, `${runId}/manifest-start.json`, startManifest);
+        const stored = await uploadJson(
+          admin,
+          `${runId}/manifest-start.json`,
+          startManifest,
+        );
         return jsonResponse({ ...startManifest, manifest_start: stored });
       }
 
@@ -347,11 +425,27 @@ Deno.serve(async (req) => {
         await ensureExportBucket(admin);
         const runId = safeRunId(body?.run_id);
         const table = safeTableName(body?.table);
-        const offset = Math.max(0, Number.parseInt(String(body?.offset ?? "0"), 10) || 0);
-        const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, Number.parseInt(String(body?.limit ?? "250"), 10) || 250));
+        const offset = Math.max(
+          0,
+          Number.parseInt(String(body?.offset ?? "0"), 10) || 0,
+        );
+        const limit = Math.min(
+          MAX_PAGE_SIZE,
+          Math.max(1, Number.parseInt(String(body?.limit ?? "250"), 10) || 250),
+        );
         const inventory = await getPublicInventory(supabaseUrl, serviceRoleKey);
-        const { rows, count } = await scopedTablePage(admin, inventory, table, tenantId, tenantCount, offset, limit);
-        const nextOffset = offset + rows.length < count ? offset + rows.length : null;
+        const { rows, count } = await scopedTablePage(
+          admin,
+          inventory,
+          table,
+          tenantId,
+          tenantCount,
+          offset,
+          limit,
+        );
+        const nextOffset = offset + rows.length < count
+          ? offset + rows.length
+          : null;
         const payload = {
           exporter_version: EXPORTER_VERSION,
           run_id: runId,
@@ -365,8 +459,19 @@ Deno.serve(async (req) => {
           exported_at: new Date().toISOString(),
           rows,
         };
-        const stored = await uploadJson(admin, `${runId}/tables/${table}/${String(offset).padStart(12, "0")}.json`, payload);
-        return jsonResponse({ table, offset, page_count: rows.length, total_count: count, next_offset: nextOffset, stored });
+        const stored = await uploadJson(
+          admin,
+          `${runId}/tables/${table}/${String(offset).padStart(12, "0")}.json`,
+          payload,
+        );
+        return jsonResponse({
+          table,
+          offset,
+          page_count: rows.length,
+          total_count: count,
+          next_offset: nextOffset,
+          stored,
+        });
       }
 
       case "snapshot_auth_users": {
@@ -377,32 +482,53 @@ Deno.serve(async (req) => {
       }
 
       case "list_storage_buckets": {
-        if (tenantCount !== 1) return jsonResponse({ error: "storage_requires_manual_review_for_multi_tenant_project" }, 409);
+        if (tenantCount !== 1) {
+          return jsonResponse({
+            error: "storage_requires_manual_review_for_multi_tenant_project",
+          }, 409);
+        }
         const { data, error } = await admin.storage.listBuckets();
         if (error) throw new Error(`storage_list_failed:${error.message}`);
         const buckets = (data ?? [])
           .filter((bucket: any) => bucket.name !== EXPORT_BUCKET)
-          .map((bucket: any) => redact({
-            id: bucket.id,
-            name: bucket.name,
-            public: bucket.public,
-            file_size_limit: bucket.file_size_limit ?? null,
-            allowed_mime_types: bucket.allowed_mime_types ?? null,
-            created_at: bucket.created_at ?? null,
-            updated_at: bucket.updated_at ?? null,
-          }));
+          .map((bucket: any) =>
+            redact({
+              id: bucket.id,
+              name: bucket.name,
+              public: bucket.public,
+              file_size_limit: bucket.file_size_limit ?? null,
+              allowed_mime_types: bucket.allowed_mime_types ?? null,
+              created_at: bucket.created_at ?? null,
+              updated_at: bucket.updated_at ?? null,
+            })
+          );
         return jsonResponse({ buckets });
       }
 
       case "snapshot_storage_index": {
-        if (tenantCount !== 1) return jsonResponse({ error: "storage_requires_manual_review_for_multi_tenant_project" }, 409);
+        if (tenantCount !== 1) {
+          return jsonResponse({
+            error: "storage_requires_manual_review_for_multi_tenant_project",
+          }, 409);
+        }
         await ensureExportBucket(admin);
         const runId = safeRunId(body?.run_id);
         const bucket = safeBucketName(body?.bucket);
-        if (bucket === EXPORT_BUCKET) return jsonResponse({ error: "cannot_index_export_bucket" }, 400);
+        if (bucket === EXPORT_BUCKET) {
+          return jsonResponse({ error: "cannot_index_export_bucket" }, 400);
+        }
         const prefix = safePrefix(body?.prefix ?? "");
-        const offset = Math.max(0, Number.parseInt(String(body?.offset ?? "0"), 10) || 0);
-        const limit = Math.min(1000, Math.max(1, Number.parseInt(String(body?.limit ?? "1000"), 10) || 1000));
+        const offset = Math.max(
+          0,
+          Number.parseInt(String(body?.offset ?? "0"), 10) || 0,
+        );
+        const limit = Math.min(
+          1000,
+          Math.max(
+            1,
+            Number.parseInt(String(body?.limit ?? "1000"), 10) || 1000,
+          ),
+        );
         const { data, error } = await admin.storage.from(bucket).list(prefix, {
           limit,
           offset,
@@ -410,57 +536,125 @@ Deno.serve(async (req) => {
         });
         if (error) throw new Error(`storage_index_failed:${error.message}`);
         const entries = (data ?? []).map((entry: any) => redact(entry));
-        const prefixKey = prefix ? prefix.replace(/[^a-zA-Z0-9._-]+/g, "__") : "__root__";
+        const prefixKey = prefix
+          ? prefix.replace(/[^a-zA-Z0-9._-]+/g, "__")
+          : "__root__";
         const stored = await uploadJson(
           admin,
-          `${runId}/storage-index/${bucket}/${prefixKey}/${String(offset).padStart(12, "0")}.json`,
-          { bucket, prefix, offset, limit, page_count: entries.length, entries },
+          `${runId}/storage-index/${bucket}/${prefixKey}/${
+            String(offset).padStart(12, "0")
+          }.json`,
+          {
+            bucket,
+            prefix,
+            offset,
+            limit,
+            page_count: entries.length,
+            entries,
+          },
         );
-        return jsonResponse({ bucket, prefix, offset, page_count: entries.length, has_more: entries.length === limit, entries, stored });
+        return jsonResponse({
+          bucket,
+          prefix,
+          offset,
+          page_count: entries.length,
+          has_more: entries.length === limit,
+          entries,
+          stored,
+        });
       }
 
       case "create_storage_read_url": {
-        if (tenantCount !== 1) return jsonResponse({ error: "storage_requires_manual_review_for_multi_tenant_project" }, 409);
+        if (tenantCount !== 1) {
+          return jsonResponse({
+            error: "storage_requires_manual_review_for_multi_tenant_project",
+          }, 409);
+        }
         const bucket = safeBucketName(body?.bucket);
         const path = safePrefix(body?.path);
         if (!path) return jsonResponse({ error: "path_required" }, 400);
-        const expiresIn = Math.min(900, Math.max(60, Number.parseInt(String(body?.expires_in ?? "300"), 10) || 300));
-        const { data, error } = await admin.storage.from(bucket).createSignedUrl(path, expiresIn);
-        if (error || !data?.signedUrl) throw new Error(`signed_url_failed:${error?.message ?? "missing"}`);
-        return jsonResponse({ bucket, path, expires_in: expiresIn, signed_url: data.signedUrl });
+        const expiresIn = Math.min(
+          900,
+          Math.max(
+            60,
+            Number.parseInt(String(body?.expires_in ?? "300"), 10) || 300,
+          ),
+        );
+        const { data, error } = await admin.storage.from(bucket)
+          .createSignedUrl(path, expiresIn);
+        if (error || !data?.signedUrl) {
+          throw new Error(`signed_url_failed:${error?.message ?? "missing"}`);
+        }
+        return jsonResponse({
+          bucket,
+          path,
+          expires_in: expiresIn,
+          signed_url: data.signedUrl,
+        });
       }
 
       case "finalize": {
         await ensureExportBucket(admin);
         const runId = safeRunId(body?.run_id);
         const start = await downloadJson(admin, `${runId}/manifest-start.json`);
-        if (start.tenant_id !== tenantId) return jsonResponse({ error: "run_tenant_mismatch" }, 403);
+        if (start.tenant_id !== tenantId) {
+          return jsonResponse({ error: "run_tenant_mismatch" }, 403);
+        }
         const tableFiles: Record<string, string[]> = {};
         for (const tableInfo of start.tables as TableInventory[]) {
           if (tableInfo.blocked) continue;
-          const { data, error } = await admin.storage.from(EXPORT_BUCKET).list(`${runId}/tables/${tableInfo.name}`, {
-            limit: 1000,
-            sortBy: { column: "name", order: "asc" },
-          });
-          if (error) throw new Error(`manifest_list_failed:${tableInfo.name}:${error.message}`);
-          tableFiles[tableInfo.name] = (data ?? []).filter((item: any) => item.id).map((item: any) => `${runId}/tables/${tableInfo.name}/${item.name}`);
+          const { data, error } = await admin.storage.from(EXPORT_BUCKET).list(
+            `${runId}/tables/${tableInfo.name}`,
+            {
+              limit: 1000,
+              sortBy: { column: "name", order: "asc" },
+            },
+          );
+          if (error) {
+            throw new Error(
+              `manifest_list_failed:${tableInfo.name}:${error.message}`,
+            );
+          }
+          tableFiles[tableInfo.name] = (data ?? []).filter((item: any) =>
+            item.id
+          ).map((item: any) =>
+            `${runId}/tables/${tableInfo.name}/${item.name}`
+          );
         }
         const manifest = {
           ...start,
           finalized_at: new Date().toISOString(),
           table_files: tableFiles,
           auth_users_path: `${runId}/auth/users.sanitized.json`,
-          note: "Storage binaries are not embedded in table pages. Use storage-index plus short-lived signed URLs to copy objects before retiring the legacy Supabase project.",
+          note:
+            "Storage binaries are not embedded in table pages. Use storage-index plus short-lived signed URLs to copy objects before retiring the legacy Supabase project.",
         };
-        const stored = await uploadJson(admin, `${runId}/manifest.json`, manifest);
-        const { data: signed, error: signedError } = await admin.storage.from(EXPORT_BUCKET).createSignedUrl(`${runId}/manifest.json`, 900);
-        if (signedError || !signed?.signedUrl) throw new Error(`manifest_signed_url_failed:${signedError?.message ?? "missing"}`);
-        return jsonResponse({ success: true, run_id: runId, manifest: stored, signed_manifest_url: signed.signedUrl, expires_in: 900 });
+        const stored = await uploadJson(
+          admin,
+          `${runId}/manifest.json`,
+          manifest,
+        );
+        const { data: signed, error: signedError } = await admin.storage.from(
+          EXPORT_BUCKET,
+        ).createSignedUrl(`${runId}/manifest.json`, 900);
+        if (signedError || !signed?.signedUrl) {
+          throw new Error(
+            `manifest_signed_url_failed:${signedError?.message ?? "missing"}`,
+          );
+        }
+        return jsonResponse({
+          success: true,
+          run_id: runId,
+          manifest: stored,
+          signed_manifest_url: signed.signedUrl,
+          expires_in: 900,
+        });
       }
 
       default:
-        return jsonResponse({ error: "invalid_action" }, 400);
+        break;
     }
+    return jsonResponse({ error: "invalid_action" }, 400);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return jsonResponse({ error: message }, 500);
