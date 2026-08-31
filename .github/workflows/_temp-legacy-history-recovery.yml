@@ -1,0 +1,173 @@
+name: TEMP Legacy History Recovery
+
+on:
+  push:
+    branches:
+      - audit/legacy-readonly-20260831
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan historical blobs and validate candidates without disclosure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import base64, json, os, re, subprocess, tempfile
+          from pathlib import Path
+
+          EXPECTED = 'moijoyqwapimforpijdc'
+          BASE_URL = f'https://{EXPECTED}.supabase.co'
+          report = ['LEGACY_HISTORY_RECOVERY_V1', f'expected_project_ref={EXPECTED}']
+
+          # Get all historical blob ids + paths without printing contents.
+          raw = subprocess.check_output(['git','rev-list','--objects','--all'], text=True, errors='replace')
+          objects = []
+          for line in raw.splitlines():
+              parts = line.split(' ', 1)
+              if len(parts) == 2:
+                  objects.append((parts[0], parts[1]))
+
+          # Use one cat-file process so contents never enter shell logs.
+          proc = subprocess.Popen(['git','cat-file','--batch'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+          candidates = {'service': set(), 'management': set(), 'database_url': set()}
+          source_paths = {'service': set(), 'management': set(), 'database_url': set()}
+          jwt_re = re.compile(rb'eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}')
+          secret_re = re.compile(rb'\bsb_secret_[A-Za-z0-9._-]{12,}\b')
+          pat_re = re.compile(rb'\bsbp_[A-Za-z0-9._-]{12,}\b')
+          db_re = re.compile(rb'postgres(?:ql)?://[^\s\"\'<>]+', re.I)
+
+          def b64url_decode(s):
+              s += b'=' * ((4 - len(s) % 4) % 4)
+              return base64.urlsafe_b64decode(s)
+
+          for sha, path in objects:
+              # Limit to plausible source/config text paths; avoids binary assets.
+              low = path.lower()
+              if not (low.endswith(('.ts','.tsx','.js','.mjs','.cjs','.json','.toml','.yml','.yaml','.sql','.env','.txt','.md','.sh')) or '.env' in low or 'wrangler' in low or 'config' in low):
+                  continue
+              assert proc.stdin and proc.stdout
+              proc.stdin.write((sha+'\n').encode()); proc.stdin.flush()
+              header = proc.stdout.readline().decode('utf-8', errors='replace').strip()
+              hp = header.split()
+              if len(hp) < 3 or hp[1] != 'blob':
+                  continue
+              size = int(hp[2])
+              if size > 3_000_000:
+                  proc.stdout.read(size + 1)
+                  continue
+              data = proc.stdout.read(size); proc.stdout.read(1)
+
+              for m in secret_re.findall(data):
+                  val = m.decode('utf-8', errors='ignore')
+                  candidates['service'].add(val); source_paths['service'].add(path)
+              for m in pat_re.findall(data):
+                  val = m.decode('utf-8', errors='ignore')
+                  candidates['management'].add(val); source_paths['management'].add(path)
+              for m in db_re.findall(data):
+                  val = m.decode('utf-8', errors='ignore')
+                  if EXPECTED in val or 'supabase' in val.lower():
+                      candidates['database_url'].add(val); source_paths['database_url'].add(path)
+              for m in jwt_re.findall(data):
+                  try:
+                      payload = json.loads(b64url_decode(m.split(b'.')[1]).decode('utf-8'))
+                  except Exception:
+                      continue
+                  if payload.get('role') == 'service_role' and payload.get('ref') == EXPECTED:
+                      val = m.decode('utf-8', errors='ignore')
+                      candidates['service'].add(val); source_paths['service'].add(path)
+
+          if proc.stdin: proc.stdin.close()
+          proc.wait(timeout=10)
+
+          for typ in ('service','management','database_url'):
+              report.append(f'historical_{typ}_candidate_count={len(candidates[typ])}')
+              report.append(f'historical_{typ}_source_paths=' + (','.join(sorted(source_paths[typ])) if source_paths[typ] else 'none'))
+
+          def http_status(url, headers):
+              cmd=['curl','-sS','--max-time','20','-o','/tmp/legacy_probe_body','-w','%{http_code}']
+              for k,v in headers.items(): cmd += ['-H', f'{k}: {v}']
+              cmd.append(url)
+              try: return subprocess.check_output(cmd, text=True).strip()
+              except subprocess.CalledProcessError: return 'curl_error'
+
+          valid_service = ''
+          service_statuses = []
+          for c in candidates['service']:
+              st=http_status(f'{BASE_URL}/rest/v1/', {'apikey':c,'Authorization':f'Bearer {c}','Accept':'application/openapi+json'})
+              service_statuses.append(st)
+              if st == '200' and not valid_service:
+                  valid_service = c
+          report.append('historical_service_valid=' + str(bool(valid_service)).lower())
+          report.append('historical_service_probe_statuses=' + (','.join(sorted(set(service_statuses))) if service_statuses else 'none'))
+
+          valid_management = ''
+          mgmt_statuses = []
+          for c in candidates['management']:
+              st=http_status(f'https://api.supabase.com/v1/projects/{EXPECTED}', {'Authorization':f'Bearer {c}'})
+              mgmt_statuses.append(st)
+              if st == '200' and not valid_management:
+                  valid_management = c
+          report.append('historical_management_valid=' + str(bool(valid_management)).lower())
+          report.append('historical_management_probe_statuses=' + (','.join(sorted(set(mgmt_statuses))) if mgmt_statuses else 'none'))
+
+          # Database URL candidates: connection test only, never emit URI or server data.
+          valid_db = ''
+          db_statuses=[]
+          for c in candidates['database_url']:
+              try:
+                  r=subprocess.run(['psql', c, '-Atqc', 'select 1'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=12, env={**os.environ,'PGCONNECT_TIMEOUT':'5'})
+                  st='ok' if r.returncode == 0 and r.stdout.strip() == '1' else 'failed'
+              except FileNotFoundError:
+                  st='psql_unavailable'
+              except subprocess.TimeoutExpired:
+                  st='timeout'
+              db_statuses.append(st)
+              if st == 'ok' and not valid_db: valid_db=c
+          report.append('historical_database_url_valid=' + str(bool(valid_db)).lower())
+          report.append('historical_database_probe_statuses=' + (','.join(sorted(set(db_statuses))) if db_statuses else 'none'))
+
+          # If service access survived, inventory live row counts without downloading row bodies.
+          if valid_service:
+              with tempfile.TemporaryDirectory() as td:
+                  op=Path(td)/'openapi.json'
+                  cmd=['curl','-sS','--max-time','20','-o',str(op),'-w','%{http_code}','-H',f'apikey: {valid_service}','-H',f'Authorization: Bearer {valid_service}','-H','Accept: application/openapi+json',f'{BASE_URL}/rest/v1/']
+                  st=subprocess.check_output(cmd,text=True).strip()
+                  report.append('service_openapi_status='+st)
+                  tables=[]
+                  if st=='200':
+                      obj=json.loads(op.read_text(encoding='utf-8', errors='replace'))
+                      tables=sorted(path[1:] for path in obj.get('paths',{}) if path.startswith('/') and path.count('/')==1)
+                  report.append('service_tables_count='+str(len(tables)))
+                  for table in tables:
+                      hdr=Path(td)/'h'
+                      q=f'{BASE_URL}/rest/v1/{table}?select=*'
+                      cmd=['curl','-sS','--max-time','20','-X','HEAD','-D',str(hdr),'-o','/dev/null','-w','%{http_code}','-H',f'apikey: {valid_service}','-H',f'Authorization: Bearer {valid_service}','-H','Prefer: count=exact',q]
+                      try: code=subprocess.check_output(cmd,text=True).strip()
+                      except subprocess.CalledProcessError: code='curl_error'
+                      cr='none'
+                      if hdr.exists():
+                          for line in hdr.read_text(encoding='utf-8',errors='replace').splitlines():
+                              if line.lower().startswith('content-range:'): cr=line.split(':',1)[1].strip()
+                      report.append(f'live_count={table}|http={code}|content_range={cr}')
+
+          print('\n'.join(report))
+          Path('legacy-history-recovery.txt').write_text('\n'.join(report)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload sanitized recovery report
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-history-recovery
+          path: legacy-history-recovery.txt
+          if-no-files-found: error
