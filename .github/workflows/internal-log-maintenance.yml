@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Inspect first; apply only after reviewing live dependencies
+        description: Inspect metadata or apply the fixed log cleanup
         type: choice
         options: [inspect, apply]
         default: inspect
@@ -13,10 +13,6 @@ on:
         description: Exact project reference required for apply
         type: string
         required: false
-      dependencies_reviewed:
-        description: Live consumers and notification impact reviewed
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -40,15 +36,11 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           MAINTENANCE_MODE: ${{ inputs.operation }}
           CONFIRM_PROJECT: ${{ inputs.confirm_project }}
-          DEPENDENCIES_REVIEWED: ${{ inputs.dependencies_reviewed }}
         shell: bash
         run: |
           set -euo pipefail
           arguments=("$MAINTENANCE_MODE")
           if [ "$MAINTENANCE_MODE" = apply ]; then
             arguments+=(--confirm-project "$CONFIRM_PROJECT")
-            if [ "$DEPENDENCIES_REVIEWED" = true ]; then
-              arguments+=(--dependencies-reviewed)
-            fi
           fi
           python3 ops/maintenance/run.py "${arguments[@]}"

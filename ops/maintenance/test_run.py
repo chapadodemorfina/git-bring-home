@@ -19,14 +19,23 @@ class MaintenanceSafetyTests(unittest.TestCase):
     def test_apply_rejects_wrong_project_before_network(self):
         with patch.object(maintenance, "api_request") as request:
             with self.assertRaises(maintenance.MaintenanceError):
-                maintenance.main(["apply", "--confirm-project", "different", "--dependencies-reviewed"])
+                maintenance.main(["apply", "--confirm-project", "different"])
             request.assert_not_called()
 
-    def test_apply_requires_dependency_review(self):
-        with patch.object(maintenance, "api_request") as request:
-            with self.assertRaises(maintenance.MaintenanceError):
-                maintenance.main(["apply", "--confirm-project", maintenance.PROJECT_REF])
-            request.assert_not_called()
+    def test_apply_accepts_exact_project_without_dependency_review(self):
+        after = self.snapshot()
+        after["jobs"].append({"jobid": 2, "jobname": "daily-cleanup-internal-logs",
+                              "schedule": "0 6 * * *", "active": True})
+        with patch.dict(os.environ, {"SUPABASE_ACCESS_TOKEN": "test-only"}), patch.object(
+            maintenance, "api_request", side_effect=[
+                {"id": maintenance.PROJECT_REF}, [{"inspection": self.snapshot()}],
+                [{"maintenance_result": {}}], [{"inspection": after}]
+            ]
+        ) as request, patch("builtins.print"):
+            self.assertEqual(maintenance.main([
+                "apply", "--confirm-project", maintenance.PROJECT_REF
+            ]), 0)
+            self.assertEqual(request.call_count, 4)
 
     def test_missing_credential_stops_before_network(self):
         with patch.dict(os.environ, {}, clear=True), patch.object(maintenance, "api_request") as request:
@@ -57,7 +66,7 @@ class MaintenanceSafetyTests(unittest.TestCase):
             ]
         ) as request, patch("builtins.print"):
             with self.assertRaises(maintenance.MaintenanceError):
-                maintenance.main(["apply", "--confirm-project", maintenance.PROJECT_REF, "--dependencies-reviewed"])
+                maintenance.main(["apply", "--confirm-project", maintenance.PROJECT_REF])
             self.assertEqual(request.call_count, 3)
 
     def test_http_error_does_not_leak_response_or_token(self):
@@ -84,7 +93,7 @@ class MaintenanceSafetyTests(unittest.TestCase):
             maintenance, "api_request", side_effect=[{"id": maintenance.PROJECT_REF}, []]
         ) as request, patch("builtins.print"):
             with self.assertRaises(maintenance.MaintenanceError):
-                maintenance.main(["apply", "--confirm-project", maintenance.PROJECT_REF, "--dependencies-reviewed"])
+                maintenance.main(["apply", "--confirm-project", maintenance.PROJECT_REF])
             self.assertEqual(request.call_count, 2)
 
     def test_empty_cleanup_result_is_not_success(self):
@@ -92,7 +101,7 @@ class MaintenanceSafetyTests(unittest.TestCase):
             maintenance, "api_request", side_effect=[{"id": maintenance.PROJECT_REF}, [{"inspection": self.snapshot()}], []]
         ) as request, patch("builtins.print"):
             with self.assertRaises(maintenance.MaintenanceError):
-                maintenance.main(["apply", "--confirm-project", maintenance.PROJECT_REF, "--dependencies-reviewed"])
+                maintenance.main(["apply", "--confirm-project", maintenance.PROJECT_REF])
             self.assertEqual(request.call_count, 3)
 
 

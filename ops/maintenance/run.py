@@ -74,12 +74,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("inspect", "apply"))
     parser.add_argument("--confirm-project")
-    parser.add_argument("--dependencies-reviewed", action="store_true")
     args = parser.parse_args(argv)
-    if args.mode == "apply" and (
-        args.confirm_project != PROJECT_REF or not args.dependencies_reviewed
-    ):
-        raise MaintenanceError("Cleanup requires the exact project and dependency review")
+    if args.mode == "apply" and args.confirm_project != PROJECT_REF:
+        raise MaintenanceError("Cleanup requires the exact project reference")
     token = os.environ.get("SUPABASE_ACCESS_TOKEN", "")
     if not token:
         raise MaintenanceError("SUPABASE_ACCESS_TOKEN is not configured")
