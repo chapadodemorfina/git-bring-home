@@ -1,4 +1,4 @@
-import { Settings, CreditCard, ShieldCheck, FileText, SearchCheck, KeyRound } from "lucide-react";
+import { Settings, CreditCard, ShieldCheck, FileText, SearchCheck, KeyRound, Download } from "lucide-react";
 import ModulePage from "@/components/layout/ModulePage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/modules/billing/pages/SubscriptionPage";
@@ -7,6 +7,7 @@ import AuditLogsPage from "@/pages/AuditLogsPage";
 import FinancialAuditPage from "@/modules/finance/pages/FinancialAuditPage";
 import PermissionsManagementPage from "@/modules/permissions/pages/PermissionsManagementPage";
 import { useAuth } from "@/contexts/AuthContext";
+import AdminBackupPage from "@/pages/AdminBackupPage";
 
 export default function AdminModulePage() {
   const { hasRole } = useAuth();
@@ -14,6 +15,9 @@ export default function AdminModulePage() {
 
   const tabs = [
     { key: "settings", label: "Configurações", icon: Settings, content: <SettingsPage /> },
+    ...(hasRole("admin")
+      ? [{ key: "backup", label: "Backup", icon: Download, content: <AdminBackupPage /> }]
+      : []),
     { key: "subscription", label: "Assinatura", icon: CreditCard, content: <SubscriptionPage /> },
     ...(isAdminOrManager
       ? [{ key: "admin-sub", label: "Admin Assinatura", icon: ShieldCheck, content: <AdminSubscriptionPage /> }]
