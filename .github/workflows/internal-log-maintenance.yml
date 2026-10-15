@@ -1,0 +1,54 @@
+name: Internal database log maintenance
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Inspect first; apply only after reviewing live dependencies
+        type: choice
+        options: [inspect, apply]
+        default: inspect
+        required: true
+      confirm_project:
+        description: Exact project reference required for apply
+        type: string
+        required: false
+      dependencies_reviewed:
+        description: Live consumers and notification impact reviewed
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: legacy-internal-log-maintenance
+  cancel-in-progress: false
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Validate runner safety checks
+        run: python3 -m unittest discover -s ops/maintenance -p 'test_*.py'
+      - name: Run fixed-scope maintenance
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          MAINTENANCE_MODE: ${{ inputs.operation }}
+          CONFIRM_PROJECT: ${{ inputs.confirm_project }}
+          DEPENDENCIES_REVIEWED: ${{ inputs.dependencies_reviewed }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          arguments=("$MAINTENANCE_MODE")
+          if [ "$MAINTENANCE_MODE" = apply ]; then
+            arguments+=(--confirm-project "$CONFIRM_PROJECT")
+            if [ "$DEPENDENCIES_REVIEWED" = true ]; then
+              arguments+=(--dependencies-reviewed)
+            fi
+          fi
+          python3 ops/maintenance/run.py "${arguments[@]}"
