@@ -93,6 +93,7 @@ BEGIN
     RAISE EXCEPTION 'Foreign keys, user triggers or inheritance require review; no changes applied';
   END IF;
 
+  -- BEGIN LOG CONSUMER GUARD
   IF EXISTS (
     SELECT 1
     FROM pg_proc p
@@ -111,6 +112,55 @@ BEGIN
           AND d.refclassid = 'pg_extension'::regclass AND d.deptype = 'e'
           AND e.extname IN ('pg_cron', 'pg_net')
       )
+      -- The platform DDL helper only manages privileges. Accept its reviewed
+      -- body and catalog shape, never its name alone. No helper is executed.
+      -- Source: supabase/postgres@8b0ef1ef942e18493bf5c89087eff7b030c0e26d,
+      -- migrations/db/migrations/20260730000000_revoke_trigger_on_cron_tables_from_postgres.sql
+      AND NOT
+      -- BEGIN VERIFIED PLATFORM GRANT
+      COALESCE((
+        p.pronamespace = to_regnamespace('extensions')
+        AND p.proname = 'grant_pg_cron_access'
+        AND p.prokind = 'f'
+        AND p.pronargs = 0
+        AND p.pronargdefaults = 0
+        AND p.provariadic = 0
+        AND p.proallargtypes IS NULL
+        AND p.proargmodes IS NULL
+        AND p.prorettype = 'pg_catalog.event_trigger'::regtype
+        AND p.prolang = (
+          SELECT oid FROM pg_catalog.pg_language WHERE lanname = 'plpgsql'
+        )
+        AND pg_catalog.pg_get_userbyid(p.proowner) = 'supabase_admin'
+        AND NOT p.prosecdef
+        AND NOT p.proretset
+        AND NOT p.proisstrict
+        AND NOT p.proleakproof
+        AND p.provolatile = 'v'
+        AND p.proparallel = 'u'
+        AND p.proconfig IS NULL
+        AND pg_catalog.encode(
+          pg_catalog.sha256(
+            pg_catalog.convert_to(
+              pg_catalog.btrim(
+                pg_catalog.replace(p.prosrc, E'\r\n', E'\n'), E' \t\r\n'
+              ), 'UTF8'
+            )
+          ), 'hex'
+        ) = 'ccca00e6a47ee295704efda0585689cbb1802071c64adfd62b39879cf1f383a2'
+        AND (
+          SELECT count(*) = 1 AND bool_and(
+            e.evtname = 'issue_pg_cron_access'
+            AND e.evtowner = p.proowner
+            AND e.evtevent = 'ddl_command_end'
+            AND e.evtenabled = 'O'
+            AND e.evttags IS NOT DISTINCT FROM ARRAY['CREATE EXTENSION']::text[]
+          )
+          FROM pg_catalog.pg_event_trigger e
+          WHERE e.evtfoid = p.oid
+        )
+      ), false)
+      -- END VERIFIED PLATFORM GRANT
   ) OR EXISTS (
     SELECT 1 FROM pg_depend d
     JOIN pg_rewrite r ON d.classid = 'pg_rewrite'::regclass AND r.oid = d.objid
@@ -120,6 +170,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Custom routines or views reference the logs; review consumers before cleanup';
   END IF;
+  -- END LOG CONSUMER GUARD
 
   IF EXISTS (
     SELECT 1 FROM cron.job_run_details
